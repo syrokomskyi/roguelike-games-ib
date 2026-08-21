@@ -1,0 +1,68 @@
+---
+import Base from "../layouts/Base.astro";
+import SearchBox from "../components/SearchBox.astro";
+import { createWebContext } from "../lib/context.ts";
+import { getPageMetadata } from "../lib/metadata.ts";
+import type { SearchHit } from "@roguelike-games-ib/search";
+
+const distDir = Astro.locals.distDir ?? "";
+const q = Astro.url.searchParams.get("q") ?? "";
+
+let hits: SearchHit[] = [];
+let total = 0;
+let ctx = null;
+let meta = null;
+
+try {
+  ctx = await createWebContext(distDir);
+  meta = getPageMetadata(ctx);
+  if (q.trim()) {
+    const result = await ctx.searchIndex.search({ text: q, limit: 50 });
+    hits = result.hits;
+    total = result.total;
+  }
+} catch {}
+---
+
+<Base title="Search" metadata={meta ?? undefined}>
+  <div class="space-y-6">
+    <h1 class="text-2xl font-bold text-ib-text">Search</h1>
+
+    <SearchBox placeholder={q || "Search records..."} />
+
+    {q.trim() && (
+      <p class="text-sm text-ib-muted">
+        {total} result{total !== 1 ? "s" : ""} for <span class="font-medium text-ib-text">"{q}"</span>
+      </p>
+    )}
+
+    {q.trim() && hits.length > 0 && (
+      <div class="space-y-3">
+        {hits.map((hit) => (
+          <a href={`/records/${hit.record.key}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-4 hover:border-ib-accent">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs text-ib-accent">{hit.record.key}</span>
+              <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{hit.record.record_type}</span>
+              {hit.record.source_id && <span class="text-xs text-ib-muted">{hit.record.source_id}</span>}
+            </div>
+            {hit.record.title && <h3 class="mt-1 font-semibold text-ib-text">{hit.record.title}</h3>}
+            {hit.record.summary && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{hit.record.summary}</p>}
+            <div class="mt-2 flex items-center gap-3 text-xs text-ib-muted">
+              <span>Score: {hit.scores.final_score.toFixed(3)}</span>
+              <span>FTS: {hit.scores.lexical_score.toFixed(3)}</span>
+              <span>Graph: {hit.scores.graph_boost.toFixed(3)}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+
+    {q.trim() && hits.length === 0 && (
+      <p class="text-sm text-ib-muted">No records found. Try a different query.</p>
+    )}
+
+    {!q.trim() && (
+      <p class="text-sm text-ib-muted">Enter a search query to find records by title, summary, or key.</p>
+    )}
+  </div>
+</Base>

@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–11 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–12 + UI/UX + Semantic Layer Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 11 — Freeze v1 implementation contract (previous sessions: Stages 0–10)
-**Status**: All 366 tests pass (67 test files)
+**Session**: Stage 12 (NetHack extractor) + UI/UX redesign + Semantic records for Cataclysm-BN & NetHack + Coverage dimensions
+**Status**: All 366 tests pass (67 test files). Dev server running at `localhost:4321`.
 
 ## What was done
 
@@ -279,7 +279,99 @@ Built data-driven JSON extractor for Cataclysm-BN. High-cardinality families ext
 
 Gate: C10 conformance (14 tests) and deterministic replay — all pass.
 
-### Additional tests implemented (post-Stage 9)
+### Stage 12 — NetHack extractor
+
+Built C-header parser for NetHack. 809 canonical records promoted.
+
+**Source registration**:
+- Source bundle at `../roguelike-games-ib-source/NetHack/` with `package.json` (id `nethack`, version `5.0.0`)
+- Registered in `knowledge/sources/registry.yaml` and `bindings.yaml` with fingerprint `b500ce40...` and binding digest `bb2d375f...`
+- Payload path: `include` (C header files)
+
+**Extractor (`packages/extractors/nethack-extractor`)**:
+- `c-parser.ts` — Parses `monsters.h` (MON() entries) and `objects.h` (WEAPON/ARMOR/RING/POTION/SCROLL/SPELL/WAND/FOOD/AMULET/TOOL/GEM entries)
+- `extractor.ts` — Deterministic extractor producing 388 `game_definition` records:
+  - 376 creatures (name, difficulty, speed, armor class, attack damage, resistances, flags)
+  - 12 items (name, cost, weight, material, damage)
+- Verified deterministic
+
+**Runner script**: `scripts/run-stage12-nethack.ts`
+
+**Note**: Item extraction is partial (12 of 430 expected) due to OBJECT() macro parsing limitations.
+
+### UI/UX Redesign — TailwindCSS
+
+Complete visual overhaul of the Astro web app using TailwindCSS with a dark theme.
+
+**Configuration**:
+- `@tailwindcss/vite` plugin in `astro.config.mjs`
+- `apps/web/src/styles/global.css` — Dark theme with custom CSS variables (`--ib-bg`, `--ib-surface`, `--ib-accent`, etc.)
+- `apps/web/package.json` — Added `tailwindcss` and `@tailwindcss/vite` dependencies
+
+**Components restyled** (10): `AuthorityBadge`, `CompareTable`, `CoveragePanel`, `DesignAncestry`, `EpistemicBadge`, `EvidenceList`, `RecordHeader`, `RelationGraph`, `SearchBox`, `SourceBindingPanel`
+
+**Pages restyled** (14): Home dashboard with stats, games index with cards, game detail with type filters + pagination, compare with pagination + type/source filters, design explorer, dataset, records, evidence, 404, method, systems, mechanics, definitions, inspiration
+
+**Key UI fixes**:
+- Home page stats correctly count `semantic_record` by `semantic_type` (mechanic/system) and `concept` by `record_type`
+- Game detail page includes semantic records via `scope.source_id` (not just `source_identity.source_id`)
+- Systems/mechanics pages match `semantic_record` with `semantic_type=system/mechanic`
+- Cards on systems/mechanics pages show title + summary
+
+### Semantic Records — Cataclysm-BN & NetHack
+
+**Script**: `scripts/run-stage-semantic.ts` — reads existing canonical factual records, creates semantic records with evidence, claims, relations, and concepts, then promotes them.
+
+**Cataclysm-BN** (6 semantic records):
+- Systems: Mutation System, Monster Faction & Aggression, Crafting & Item Material
+- Mechanics: Profession & Starting Conditions, Monster Species & Weakness
+- Invariant: Volume & Weight Encumbrance
+- Concepts: Mutation Progression Tree, Faction-Based Emergent Infighting
+- Claims: zombie species, mutation category
+- Relations: profession → profession system
+
+**NetHack** (6 semantic records):
+- Systems: Monster Difficulty & Progression, Resistance & Conveyance, Artifact & Named Items
+- Mechanics: Item Identification, Alignment & Sacrifice, Genocide & Extinction
+- Concepts: Corpse-Conveyed Resistance, Risk-Reward Item Identification
+- Claims: grid bug difficulty, dragon fire resistance
+
+### Coverage Dimensions
+
+**Script**: `scripts/run-stage-coverage.ts` — computes coverage states via `computeDimensionState` for each dimension.
+
+**BrogueCE** (5 dimensions):
+- creatures: `exhaustive_for_binding` (67/67/67)
+- terrain: `exhaustive_for_binding` (214/214/214)
+- items: `partial` (46/6/6)
+- semantic_records: `substantially_covered` (12)
+- concepts: `substantially_covered` (2)
+
+**Cataclysm-BN** (6 dimensions):
+- monsters: `exhaustive_for_binding` (597/597/597)
+- professions: `exhaustive_for_binding` (339/339/339)
+- items: `substantially_covered` (5886/5838/5838)
+- mutations: `substantially_covered` (625/621/621)
+- semantic_records: `substantially_covered` (6)
+- concepts: `substantially_covered` (2)
+
+**NetHack** (4 dimensions):
+- creatures: `substantially_covered` (379/376/376)
+- items: `partial` (430/12/12)
+- semantic_records: `substantially_covered` (6)
+- concepts: `substantially_covered` (2)
+
+**Bug fix**: `packages/materializer/src/verify-input.ts` — Added `case "coverage": break;` to `classifyAndStore()` to prevent coverage records from being treated as regular records (which caused `CANONICAL_STATE_INVALID` errors).
+
+### Current dataset totals
+
+- **8558** records (7395 Cataclysm-BN game_definition + 597 BrogueCE game_definition + 388 NetHack game_definition + 12 BrogueCE semantic + 6 Cataclysm-BN semantic + 6 NetHack semantic + 2 BrogueCE concept + 2 Cataclysm-BN concept + 2 NetHack concept + 150 evidence)
+- **6** claims
+- **3** relations
+- **6** concepts
+- **3** coverage records
+- **20861** evidence entries
+- **3** sources (broguece, cataclysm-bn, nethack)
 
 - **COV-001..005**: 20 coverage engine tests (`tests/cover/cover-001-005.test.ts`)
 - **FORGE-006**: 7 release evidence tests (`tests/forge/forge-006.test.ts`)
@@ -314,42 +406,46 @@ Gate: C11 conformance (14 tests) — all pass.
 
 ## What the next agent should do
 
-### Stage 9 — ✅ Complete
+### Completed in prior sessions
 
-Stage 9 (BrogueCE vertical slice) is complete. All 15 C9 conformance tests pass. 692 canonical records promoted (327 game_definition + 12 semantic_record + 346 evidence + 3 claim + 2 relation + 2 concept). See Stage 9 section above for details.
+- **Stages 0–11**: Core packages, extractors, materializer, search, MCP, web, laboratory runtime, BrogueCE slice, Cataclysm-BN scale trial, v1 contract freeze — all complete
+- **Stage 12 (NetHack extractor)**: 388 game_definition records (376 creatures + 12 items). Runner: `scripts/run-stage12-nethack.ts`
+- **UI/UX redesign**: TailwindCSS dark theme across all 14 pages and 10 components
+- **Semantic records**: 12 semantic records + 4 concepts + 3 claims + 1 relation for Cataclysm-BN and NetHack. Runner: `scripts/run-stage-semantic.ts`
+- **Coverage dimensions**: 3 coverage records (15 total dimensions) for all 3 sources. Runner: `scripts/run-stage-coverage.ts`
+- **Bug fix**: `verify-input.ts` coverage records no longer misclassified as regular records
 
-**Note**: The runner script `scripts/run-stage9.ts` is re-runnable. It will replace existing canonical records via transaction.
+### Remaining work
 
-### Stage 10 — ✅ Complete
+**1. NetHack item extractor improvement** (medium priority)
+- Only 12 of 430 items extracted due to `objects.h` OBJECT() macro parsing limitations
+- The `OBJECT()` macro format is complex (multi-line, conditional compilation)
+- Improving this would bring NetHack items coverage from `partial` to `substantially_covered` or `exhaustive`
 
-Stage 10 (Cataclysm-BN scale trial) is complete. All 14 C10 conformance tests pass. 14,894 canonical records promoted (7,447 game_definition + 7,447 evidence). See Stage 10 section above for details.
+**2. BrogueCE item extractor improvement** (low priority)
+- Only 6 of 46 items extracted; same C parser limitation
+- BrogueCE items are spread across multiple `itemTable` arrays with different struct formats
 
-**Note**: The runner script `scripts/run-stage10.ts` is re-runnable.
+**3. Remaining game sources** (17 of 20)
+- Next candidates: Crawl, Angband, DRL (all have source bundles in `../roguelike-games-ib-source/`)
+- Pattern: register source → build extractor → run extractor → create semantic records → coverage → materialize
+- All extractors MUST live under `packages/extractors/` per AGENTS.md convention
 
-### Stage 11 — ✅ Complete
-
-Stage 11 (Freeze v1 implementation contract) is complete. All 14 C11 conformance tests pass. See Stage 11 section above for details.
-
-**What was frozen**:
-- Ontology: 2 new relation types added (`HAS_ABILITY`, `INTERACTS_WITH`), all canonical relations now conform
-- Schema: `game-definition@2` evidence_refs relaxed to `minItems: 0` for data-driven extractors
-- Contract versions: `rgkb/*@2`, `werkstatt/*@1` — frozen
-
-**What remains for future stages**:
-- Extractor SDK patterns — JSON-based extractors (Cataclysm-BN) vs C-source parsers (BrogueCE) both work, no changes needed
-- v1 human curation migration — MIG tests cover candidate staging; actual v1 notes migration still needed (Stage 12)
-
-### Stage 12 — Remaining sources
-
-One source at a time: register → discover → extractor → factual promotion → semantic reconstruction → coverage → projections → release gate.
-
-**Remaining games** (18 of 20): NetHack, Crawl, Angband, DRL, HyperRogue, KeeperRL, Shattered PD, Pixel Dungeon, End of Eden, Harmonist, Hauberk, Infra Arcana, Moonlit Myriad, RogueBot, Sleeping Beauty, SpaceHuggers, SteamSky, TRW.
-
-**v1 human curation**: `notes/` directory in `/home/syrokomskyi/projects/roguelike-games` contains:
-- 22 cross-game analysis files (`_cross_game/`)
+**4. v1 human curation migration** (Stage 13)
+- `notes/` directory in `/home/syrokomskyi/projects/roguelike-games` contains 22 cross-game analysis files
 - Per-game TAKEAWAYS, GAME_CARD.yaml, COVERAGE.md
 - Mechanic matrix comparing 20 games
 - These should be migrated as candidates/hints (not canonical facts) per MIG-001 pattern
+
+**5. Compare page query param filtering** (known limitation)
+- Astro static mode doesn't process URL query params at build time
+- Type/source filter links on `/compare/` and `/games/[sourceId]/` don't filter in dev mode
+- Fix options: (a) add client-side JS filtering, (b) switch to hybrid mode with SSR adapter (e.g. `@astrojs/node`), (c) generate pre-built pages per type/source combination
+
+**6. Design Explorer enrichment**
+- Currently shows 6 cross-game concepts and 0 design primitives/relations
+- Could add design primitives from BrogueCE semantic records (e.g. fire spread algorithm, gas propagation)
+- Could add cross-game relations between concepts (e.g. BrogueCE runic ↔ NetHack artifact)
 
 ## Important paths
 - Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
@@ -374,4 +470,9 @@ pnpm exec tsc --noEmit -p apps/web/tsconfig.json                   # typecheck w
 pnpm exec tsc --noEmit -p packages/laboratory-runtime/tsconfig.json # typecheck laboratory-runtime
 pnpm exec tsx scripts/run-stage9.ts    # re-run BrogueCE extraction + promotion
 pnpm exec tsx scripts/run-stage10.ts   # re-run Cataclysm-BN extraction + promotion
+pnpm exec tsx scripts/run-stage12-nethack.ts  # re-run NetHack extraction + promotion
+pnpm exec tsx scripts/run-stage-semantic.ts   # re-run semantic record creation (CatBN + NetHack)
+pnpm exec tsx scripts/run-stage-coverage.ts   # re-run coverage dimension computation
+pnpm exec tsx scripts/run-materialize.ts      # re-materialize knowledge base to .generated/knowledge/dist
+cd apps/web && npx astro dev --host 0.0.0.0 --port 4321  # start dev server
 ```
