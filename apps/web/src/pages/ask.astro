@@ -1,0 +1,144 @@
+---
+export const prerender = true;
+
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Ask a design question" activeNav="ask">
+  <div class="mx-auto max-w-4xl space-y-8">
+    <section class="space-y-3">
+      <p class="text-sm font-medium text-ib-accent">AUTHOR QUESTION</p>
+      <h1 class="text-3xl font-bold tracking-tight text-ib-text">Ask in the language you think in.</h1>
+      <p class="max-w-2xl text-ib-muted">Turn an open creative problem into a traceable dossier: relevant systems, comparable design ingredients, and grounded next questions. Your question stays in this browser unless you explicitly share its link.</p>
+    </section>
+
+    <form id="question-form" class="space-y-3 rounded-xl border border-ib-border bg-ib-surface p-5">
+      <label class="block space-y-2" for="question">
+        <span class="text-sm font-medium text-ib-text">What are you trying to make or solve?</span>
+        <textarea id="question" name="q" required maxlength="1000" rows="4" placeholder="Например: Как создать напряжение исследования, не используя шкалу рассудка?" class="w-full rounded-lg border border-ib-border bg-ib-surface2 px-4 py-3 text-ib-text placeholder-ib-muted focus:border-ib-accent focus:outline-none"></textarea>
+      </label>
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="submit" class="rounded-lg bg-ib-accent px-4 py-2 font-medium text-white hover:bg-ib-accent2">Build dossier</button>
+        <button id="share-question" type="button" class="rounded-lg border border-ib-border px-4 py-2 text-sm text-ib-muted hover:text-ib-text">Copy share link</button>
+        <span id="question-status" class="text-sm text-ib-muted" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <section id="dossier" class="hidden space-y-5" aria-live="polite">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium text-ib-accent">YOUR DOSSIER</p>
+          <h2 id="dossier-title" class="text-xl font-semibold text-ib-text"></h2>
+        </div>
+        <a id="continue-to-quest" href="/inspiration" class="rounded-lg border border-ib-accent/50 px-4 py-2 text-sm font-medium text-ib-accent hover:bg-ib-accent/10">Turn this into a Creative Quest</a>
+      </div>
+      <div id="dossier-summary" class="rounded-xl border border-ib-border bg-ib-surface p-4 text-sm text-ib-muted"></div>
+      <div id="dossier-hits" class="grid gap-3 md:grid-cols-2"></div>
+    </section>
+  </div>
+
+  <script>
+    const SEARCH_API = import.meta.env.PUBLIC_SEARCH_API_URL ?? "";
+    const HISTORY_KEY = "roguelike-ib.author-question.v1";
+    const form = document.querySelector<HTMLFormElement>("#question-form");
+    const input = document.querySelector<HTMLTextAreaElement>("#question");
+    const status = document.querySelector<HTMLElement>("#question-status");
+    const dossier = document.querySelector<HTMLElement>("#dossier");
+    const title = document.querySelector<HTMLElement>("#dossier-title");
+    const summary = document.querySelector<HTMLElement>("#dossier-summary");
+    const hitsElement = document.querySelector<HTMLElement>("#dossier-hits");
+    const continueLink = document.querySelector<HTMLAnchorElement>("#continue-to-quest");
+    const shareButton = document.querySelector<HTMLButtonElement>("#share-question");
+
+    interface SearchHit {
+      key: string;
+      record_type: string;
+      source_id: string;
+      title: string;
+      summary: string;
+      score: number;
+    }
+
+    interface SearchResponse { hits: SearchHit[]; total: number; query: string; }
+
+    const initialQuestion = new URLSearchParams(window.location.search).get("q");
+    if (initialQuestion && input) input.value = initialQuestion;
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = input?.value.trim() ?? "";
+      if (!question) return;
+      setStatus("Finding relevant mechanics and evidence…");
+      try {
+        const params = new URLSearchParams({ q: question, limit: "12" });
+        const response = await fetch(SEARCH_API ? `${SEARCH_API}/api/search?${params}` : `/api/search?${params}`);
+        if (!response.ok) throw new Error("search failed");
+        const data = await response.json() as SearchResponse;
+        renderDossier(question, data.hits);
+        saveQuestion(question);
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("q", question);
+        window.history.replaceState({}, "", nextUrl);
+        setStatus(data.hits.length ? "Dossier ready. Sources are shown below." : "No close match yet; try naming a desired feeling or system.");
+      } catch {
+        setStatus("The search service is temporarily unavailable. Please try again shortly.");
+      }
+    });
+
+    shareButton?.addEventListener("click", async () => {
+      const question = input?.value.trim();
+      if (!question) return setStatus("Write a question before sharing it.");
+      const url = new URL(window.location.href);
+      url.searchParams.set("q", question);
+      try {
+        await navigator.clipboard.writeText(url.toString());
+        setStatus("Share link copied. It contains only this question.");
+      } catch {
+        setStatus("Copy this link from the browser address bar to share the question.");
+      }
+    });
+
+    function renderDossier(question: string, hits: SearchHit[]) {
+      if (!dossier || !title || !summary || !hitsElement || !continueLink) return;
+      dossier.classList.remove("hidden");
+      title.textContent = question;
+      summary.textContent = hits.length
+        ? `${hits.length} grounded starting points. Treat them as ingredients to transform, not recipes to copy.`
+        : "No grounded starting points were found. Reformulate around an emotion, constraint, interaction, or a known game.";
+      continueLink.href = `/inspiration?q=${encodeURIComponent(question)}`;
+      hitsElement.replaceChildren(...hits.map(createHitCard));
+    }
+
+    function createHitCard(hit: SearchHit): HTMLElement {
+      const link = document.createElement("a");
+      link.href = `/records/${encodeURIComponent(hit.key)}/`;
+      link.className = "block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent";
+      const meta = document.createElement("p");
+      meta.className = "font-mono text-xs text-ib-accent";
+      meta.textContent = `${hit.record_type}${hit.source_id ? ` · ${hit.source_id}` : ""}`;
+      const heading = document.createElement("h3");
+      heading.className = "mt-1 font-semibold text-ib-text";
+      heading.textContent = hit.title || hit.key;
+      const description = document.createElement("p");
+      description.className = "mt-2 text-sm text-ib-muted line-clamp-3";
+      description.textContent = hit.summary || "Open this grounded record.";
+      const provenance = document.createElement("p");
+      provenance.className = "mt-3 text-xs text-ib-muted";
+      provenance.textContent = `Grounded match · relevance ${hit.score.toFixed(2)}`;
+      link.append(meta, heading, description, provenance);
+      return link;
+    }
+
+    function saveQuestion(question: string) {
+      try {
+        const previous = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as string[];
+        const next = [question, ...previous.filter((value) => value !== question)].slice(0, 12);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch { /* local storage may be unavailable */ }
+    }
+
+    function setStatus(message: string) {
+      if (status) status.textContent = message;
+    }
+  </script>
+</Base>

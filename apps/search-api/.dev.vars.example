@@ -1,0 +1,2 @@
+# Used only by `wrangler dev`; do not commit a real token.
+INDEXING_TOKEN=replace-with-a-long-random-local-token

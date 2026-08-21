@@ -1,7 +1,6 @@
 ---
-export const prerender = false;
-
 import Base from "../../layouts/Base.astro";
+import { resolve } from "node:path";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
 import { resolveRecordRoute } from "../../lib/resolve";
@@ -12,15 +11,20 @@ import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
 import RelationGraph from "../../components/RelationGraph.astro";
 
+const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+
+export async function getStaticPaths() {
+  const staticDistDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+  const ctx = await createWebContext(staticDistDir);
+  return ctx.store.records.map((record) => ({ params: { key: record.key } }));
+}
+
 const key = Astro.params.key as string;
-const distDir = Astro.locals.distDir ?? "";
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
 const resolved = resolveRecordRoute(ctx.store, key);
-if (!resolved) {
-  return Astro.redirect("/404");
-}
+if (!resolved) throw new Error(`Record route could not be resolved: ${key}`);
 
 const { record, resolvedFrom, currentKey } = resolved;
 const claims = claimsForRecord(ctx.store.claims, record.id);

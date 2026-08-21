@@ -1,13 +1,20 @@
 ---
-export const prerender = false;
-
 import Base from "../../layouts/Base.astro";
+import { resolve } from "node:path";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
 import { renderEvidence } from "../../lib/evidence";
 
-const { recordId } = Astro.params;
-const distDir = Astro.locals.distDir ?? "";
+const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+
+export async function getStaticPaths() {
+  const staticDistDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+  const ctx = await createWebContext(staticDistDir);
+  const recordIds = new Set(ctx.store.evidence.flatMap((evidence) => [evidence.source_id, evidence.id]).filter(Boolean));
+  return [...recordIds].map((recordId) => ({ params: { recordId } }));
+}
+
+const { recordId = "" } = Astro.params;
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
