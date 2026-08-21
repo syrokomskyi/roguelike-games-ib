@@ -50,6 +50,7 @@ export interface MonsterEntry {
 
 export function parseMonsters(source: string): MonsterEntry[] {
   const entries: MonsterEntry[] = [];
+  const seenIds = new Set<string>();
   const lines = source.split("\n");
 
   let i = 0;
@@ -78,7 +79,10 @@ export function parseMonsters(source: string): MonsterEntry[] {
     }
 
     const entry = finalizeMonsterEntry(fullText, lineStart, lineEnd);
-    if (entry) entries.push(entry);
+    if (entry && !seenIds.has(entry.nativeId)) {
+      seenIds.add(entry.nativeId);
+      entries.push(entry);
+    }
 
     i = lineEnd;
   }
@@ -221,19 +225,19 @@ export function parseObjects(source: string): ObjectEntry[] {
     const line = lines[i];
     const trimmed = line.trim();
 
-    if (trimmed.match(/^#if\\s+0\\b/) || (trimmed.match(/^#if\\b/) && skipDepth > 0) ||
-        (trimmed.match(/^#ifdef\\b/) && skipDepth > 0) ||
-        (trimmed.match(/^#ifndef\\b/) && skipDepth > 0)) {
+    if (trimmed.match(/^#if\s+0\b/) || (trimmed.match(/^#if\b/) && skipDepth > 0) ||
+        (trimmed.match(/^#ifdef\b/) && skipDepth > 0) ||
+        (trimmed.match(/^#ifndef\b/) && skipDepth > 0)) {
       skipDepth++;
       i++;
       continue;
     }
-    if (trimmed.match(/^#endif\\b/)) {
+    if (trimmed.match(/^#endif\b/)) {
       if (skipDepth > 0) skipDepth--;
       i++;
       continue;
     }
-    if (trimmed.match(/^#else\\b/) || trimmed.match(/^#elif\\b/)) {
+    if (trimmed.match(/^#else\b/) || trimmed.match(/^#elif\b/)) {
       i++;
       continue;
     }
@@ -283,7 +287,7 @@ function finalizeObjectEntry(
   lineEnd: number,
 ): ObjectEntry | null {
   const lastTokenMatch = fullText.match(/,\s*([A-Z_][A-Z0-9_]*)\s*\)\s*$/);
-  const nativeId = lastTokenMatch ? lastTokenMatch[1].toLowerCase() : "";
+  const rawNativeId = lastTokenMatch ? lastTokenMatch[1].toLowerCase() : "";
 
   let name = "";
   let rawDesc = "";
@@ -302,7 +306,7 @@ function finalizeObjectEntry(
     }
   } else if (macroName === "XTRA_SCROLL_LABEL") {
     const textMatch = fullText.match(/XTRA_SCROLL_LABEL\(\s*"([^"]*)"/);
-    name = textMatch ? textMatch[1] : nativeId;
+    name = textMatch ? textMatch[1] : rawNativeId;
     rawDesc = name;
   } else {
     const macroStart = fullText.indexOf(macroName + "(");
@@ -315,7 +319,7 @@ function finalizeObjectEntry(
       const descMatch = afterMacro.match(/^\s*"[^"]+"\s*,\s*"([^"]*)"/);
       rawDesc = descMatch ? descMatch[1] : "";
     } else if (afterMacro.match(/^\s*NoDes\b/)) {
-      name = nativeId;
+      name = rawNativeId;
       const descMatch = afterMacro.match(/^\s*NoDes\s*,\s*"([^"]*)"/);
       rawDesc = descMatch ? descMatch[1] : "";
       if (!name) return null;
@@ -338,6 +342,8 @@ function finalizeObjectEntry(
 
   const wtMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/);
   const weight = wtMatch ? parseInt(wtMatch[1], 10) : 0;
+
+  const nativeId = rawNativeId || name.replace(/\s+/g, "_").toLowerCase();
 
   return {
     nativeId,
