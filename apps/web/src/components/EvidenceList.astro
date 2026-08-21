@@ -19,7 +19,11 @@ const { evidence } = Astro.props;
           {ev.locator && (
             <p class="flex gap-3 text-xs text-ib-muted">
               {ev.locator.symbol && <span>Symbol: <code class="text-ib-accent2">{ev.locator.symbol}</code></span>}
-              {ev.locator.line_start && <span>Lines: {ev.locator.line_start}–{ev.locator.line_end}</span>}
+              {ev.locator.line_start && (
+                ev.github_url
+                  ? <span>Lines: <a href={ev.github_url} target="_blank" rel="noopener noreferrer" class="text-ib-accent hover:text-ib-accent2 underline">{ev.locator.line_start}–{ev.locator.line_end}</a></span>
+                  : <span>Lines: {ev.locator.line_start}–{ev.locator.line_end}</span>
+              )}
             </p>
           )}
           {ev.license_ref && <p class="text-xs text-ib-muted">License: {ev.license_ref}</p>}

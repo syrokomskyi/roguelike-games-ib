@@ -50,19 +50,19 @@ describe("WEB-004: restricted evidence text is not rendered", () => {
   afterEach(() => setup.cleanup());
 
   it("restricted evidence is excluded from projection entirely", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const restricted = rendered.find((e) => e.id === "ev-restricted");
     expect(restricted).toBeUndefined();
   });
 
   it("private evidence is excluded from projection entirely", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const privateEv = rendered.find((e) => e.id === "ev-private");
     expect(privateEv).toBeUndefined();
   });
 
   it("public evidence is present and not restricted", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const publicEv = rendered.find((e) => e.id === "ev-public");
     expect(publicEv).toBeDefined();
     expect(publicEv!.restricted).toBe(false);
@@ -70,7 +70,7 @@ describe("WEB-004: restricted evidence text is not rendered", () => {
   });
 
   it("restricted evidence text does not appear in rendered output", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const allText = JSON.stringify(rendered);
     expect(allText).not.toContain("secret excerpt that should not be rendered");
     expect(allText).not.toContain("private excerpt that should not be rendered");

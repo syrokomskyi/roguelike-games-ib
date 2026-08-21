@@ -1,5 +1,6 @@
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";
-import { isRestricted } from "@roguelike-games-ib/projection-sdk";
+import { isRestricted, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
+import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";
 
 export const DEFAULT_EXCERPT_LIMIT = 200;
 
@@ -13,10 +14,12 @@ export interface RenderedEvidence {
   excerpt: string | null;
   license_ref: string | null;
   restricted: boolean;
+  github_url: string | null;
 }
 
 export function renderEvidence(
   evidence: PublicEvidence[],
+  sources: SourceBinding[],
   excerptLimit: number = DEFAULT_EXCERPT_LIMIT,
 ): RenderedEvidence[] {
   return evidence.map((ev) => {
@@ -31,6 +34,7 @@ export function renderEvidence(
         excerpt: null,
         license_ref: null,
         restricted: true,
+        github_url: null,
       };
     }
 
@@ -48,6 +52,7 @@ export function renderEvidence(
       excerpt,
       license_ref: ev.license_ref,
       restricted: false,
+      github_url: buildEvidenceUrl(ev, sources),
     };
   });
 }
@@ -55,6 +60,7 @@ export function renderEvidence(
 export function evidenceForRecord(
   evidence: PublicEvidence[],
   evidenceRefs: string[],
+  sources: SourceBinding[],
   recordId?: string,
   excerptLimit: number = DEFAULT_EXCERPT_LIMIT,
 ): RenderedEvidence[] {
@@ -68,5 +74,5 @@ export function evidenceForRecord(
     }
     return false;
   });
-  return renderEvidence(filtered, excerptLimit);
+  return renderEvidence(filtered, sources, excerptLimit);
 }

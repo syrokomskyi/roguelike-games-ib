@@ -2,7 +2,7 @@ import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { ClaimRecord, RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
-import { claimsForRecord, claimsReferencingRecord, evidenceForClaim } from "@roguelike-games-ib/projection-sdk";
+import { claimsForRecord, claimsReferencingRecord, evidenceForClaim, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import { relationsForRecord, groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
 import { createFrontmatter, serializeFrontmatter } from "./frontmatter.ts";
 import type { PathResolver } from "./paths.ts";
@@ -120,7 +120,9 @@ function renderEvidence(
   const lines: string[] = ["## Evidence"];
   for (const e of ev) {
     const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
-    lines.push(`- [${e.id}]${excerpt}`);
+    const url = buildEvidenceUrl(e, store.sources);
+    const link = url ? ` ([GitHub](${url}))` : "";
+    lines.push(`- [${e.id}]${excerpt}${link}`);
   }
   return lines.join("\n");
 }

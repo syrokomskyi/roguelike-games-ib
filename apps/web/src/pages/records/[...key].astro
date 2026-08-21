@@ -29,7 +29,7 @@ const { outgoing, incoming } = relationsForRecord(ctx.store.relations, record.id
 const allRelations = [...outgoing, ...incoming];
 const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
 const evidenceRefs = [...claims.flatMap((c) => c.evidence_refs), ...refClaims.flatMap((c) => c.evidence_refs), ...recordEvidenceRefs];
-const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs, record.id);
+const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs, ctx.store.sources, record.id);
 const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined;
 ---
 

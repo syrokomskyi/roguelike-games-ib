@@ -12,7 +12,7 @@ const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
 const evidence = ctx.store.evidence.filter((e) => e.source_id === recordId || e.id === recordId);
-const rendered = renderEvidence(evidence);
+const rendered = renderEvidence(evidence, ctx.store.sources);
 ---
 
 <Base title={`Evidence — ${recordId}`} metadata={meta}>

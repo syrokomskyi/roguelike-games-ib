@@ -43,7 +43,7 @@ describe("WEB-003: evidence short excerpt obeys limit", () => {
   afterEach(() => setup.cleanup());
 
   it("excerpt is truncated to default limit", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const ev1 = rendered.find((e) => e.id === "ev-001");
     expect(ev1).toBeDefined();
     expect(ev1!.excerpt).toBeDefined();
@@ -51,26 +51,26 @@ describe("WEB-003: evidence short excerpt obeys limit", () => {
   });
 
   it("excerpt respects custom limit", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence, 50);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources, 50);
     const ev1 = rendered.find((e) => e.id === "ev-001");
     expect(ev1!.excerpt!.length).toBe(50);
   });
 
   it("short excerpt passes through unchanged", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const ev2 = rendered.find((e) => e.id === "ev-002");
     expect(ev2!.excerpt).toBe("short excerpt");
   });
 
   it("locator is included when expose_locator is true", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const ev1 = rendered.find((e) => e.id === "ev-001");
     expect(ev1!.locator).not.toBeNull();
     expect(ev1!.locator!.symbol).toBe("goblin_damage");
   });
 
   it("locator is null when expose_locator is false", () => {
-    const rendered = renderEvidence(setup.ctx.store.evidence);
+    const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     const ev2 = rendered.find((e) => e.id === "ev-002");
     expect(ev2!.locator).toBeNull();
   });

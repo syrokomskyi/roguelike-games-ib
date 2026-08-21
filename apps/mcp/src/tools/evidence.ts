@@ -1,6 +1,6 @@
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
-import { isRestricted } from "@roguelike-games-ib/projection-sdk";
+import { isRestricted, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError } from "../errors.ts";
 
 export function getEvidence(
@@ -24,6 +24,7 @@ export function getEvidence(
       fragment_hash: null,
       excerpt: null,
       license_ref: null,
+      github_url: null,
     });
   }
 
@@ -38,5 +39,6 @@ export function getEvidence(
     fragment_hash: evidence.fragment_hash,
     excerpt: evidence.excerpt,
     license_ref: evidence.license_ref,
+    github_url: buildEvidenceUrl(evidence, ctx.store.sources),
   });
 }

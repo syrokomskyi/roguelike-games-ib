@@ -6,7 +6,7 @@ export type { KeyMap, AliasMap } from "./records.ts";
 export { readSources, findSourceById } from "./sources.ts";
 export { readRelations, relationsForRecord, groupRelationsByType } from "./graph.ts";
 export { readClaims, claimsForRecord, claimsReferencingRecord } from "./claims.ts";
-export { readPublicEvidence, evidenceForClaim, isRestricted } from "./evidence.ts";
+export { readPublicEvidence, evidenceForClaim, isRestricted, buildEvidenceUrl } from "./evidence.ts";
 export { readCoverage, coverageForSource } from "./coverage.ts";
 export { canonicalAuthority, laboratoryAuthority, isCanonical, isLaboratory } from "./authority.ts";
 export type { Authority, AuthorityContext } from "./authority.ts";
