@@ -17,6 +17,9 @@ importers:
       '@roguelike-games-ib/knowledge-schemas':
         specifier: workspace:*
         version: link:packages/knowledge-schemas
+      '@roguelike-games-ib/materializer':
+        specifier: workspace:*
+        version: link:packages/materializer
       '@roguelike-games-ib/test-fixtures':
         specifier: workspace:*
         version: link:packages/test-fixtures
@@ -95,6 +98,25 @@ importers:
         specifier: ^2.7.0
         version: 2.9.0
     devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/materializer:
+    dependencies:
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../knowledge-core
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
+      better-sqlite3:
+        specifier: ^12.2.0
+        version: 12.11.1
       typescript:
         specifier: ^5.8.0
         version: 5.9.3

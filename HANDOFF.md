@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0, 1 & 2 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0, 1, 2 & 3 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 + Stage 2 implementation
-**Status**: All 89 tests pass (22 test files)
+**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 implementation
+**Status**: All 118 tests pass (29 test files)
 
 ## What was done
 
@@ -54,31 +54,60 @@
   - EXT-009: record identity retention across runs
   - EXT-010: record loss detection with threshold
 
+### Stage 3 — Materializer
+- **`packages/materializer`** — Deterministic JSONL/SQLite read model builder:
+  - `types.ts` — Core interfaces: `CanonicalRecord`, `CanonicalState`, `MaterializationManifest`, `MaterializationResult`, `VerificationResult`
+  - `verify-input.ts` — `readCanonicalState()` walks canonical root, classifies by directory name (claim/relation/contradiction/evidence), loads relation types from ontology; `verifyCanonicalState()` runs `validateCanonicalGraph` + required field checks
+  - `normalize.ts` — Record sorting (key then id), field extraction helpers, source identity extraction
+  - `public-evidence.ts` — `redactPublicEvidence()` filters to public-only, redacts locators per policy, limits excerpts; `isPublicEvidence()`, `isRestrictedEvidence()`
+  - `records-jsonl.ts` — Deterministic JSONL writers for records, claims, relations, evidence.public, sources, coverage, key-map, alias-map (all sorted, canonical JSON)
+  - `sqlite.ts` — `buildSqlite()` creates 8 tables + FTS5 virtual table; `computeLogicalDumpHash()` for cross-version stability; `verifySqliteIntegrity()` with FK and integrity checks
+  - `manifest.ts` — `createManifest()` with schema `rgkb/materialization-manifest@2`, canonical hash, license, record counts, binding digests, logical dump hash
+  - `checksums.ts` — File SHA-256 checksum computation
+  - `build.ts` — `materialize()` orchestrates: resolve paths → read state → verify → compute hash → write JSONL → build SQLite → verify integrity → write manifest
+  - `index.ts` — Public exports
+- MAT-001..007 (29 tests across 7 files) — all pass
+  - MAT-001: refuses invalid canonical state (dangling refs, missing fields)
+  - MAT-002: JSONL output deterministic (byte-identical across builds, sorted)
+  - MAT-003: manifest contains canonical hash, license (CC-BY-4.0), schema, dataset info, record counts
+  - MAT-004: SQLite logical integrity mirrors JSONL counts, FK integrity passes
+  - MAT-005: public evidence redaction — private/restricted excluded, locators controlled by policy
+  - MAT-006: alias map resolves old keys to current keys, key map resolves keys to IDs
+  - MAT-007: two builds from same canonical hash produce identical JSONL, same logical dump hash
+
 ## Key technical decisions
 - `tsconfig.base.json` uses `allowImportingTsExtensions: true` + `noEmit: true` (bundler mode)
 - Root `package.json` lists workspace packages as `workspace:*` devDeps for test resolution
 - `vitest.config.ts` at root, tests in `tests/` directory
 - Claim schema `oneOf` for `object_ref` vs `value` includes inline `properties` for AJV strict mode
+- Materializer classifies canonical records by top-level directory name (claim/, relation/, etc.) not `record_type` field
+- SQLite uses `CREATE VIRTUAL TABLE ... USING fts5` for full-text search
+- Aliases table stores `record_key` (not `record_id`) since `retired_to` is a key, not an ID
+- Materialization manifest uses fixed `builtAt: "1970-01-01T00:00:00.000Z"` for determinism
 
 ## What the next agent should do
 
-### Stage 3 — Materializer
-Per spec `03-packages/KNOWLEDGE-MATERIALIZE.md`:
-- JSONL + SQLite materialization, manifest with canonical hash/license
-- Tests MAT-001..007
+### Stage 4 — Search
+Per spec `03-packages/SEARCH.md`:
+- Exact id/key/alias lookup, FTS with stable tie-break, hybrid scoring with exposed components
+- Vector index metadata with canonical hash/model
+- Graph expansion using typed canonical edges only
+- Stale search cursor rejection after canonical hash change
+- Tests SEARCH-001..006
 
-### Then: Search, Obsidian/Web/MCP projections, Laboratory, Release gates, Migration
+### Then: Obsidian, MCP, Web, Laboratory, Release gates, Migration
 
 ## Important paths
-- Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/`
+- Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
 - Test catalog: `07-tests/TEST-CATALOG.md`
 - Build sequence: `10-delivery/BUILD-SEQUENCE.md`
 - Package specs: `03-packages/`
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests
+pnpm exec vitest run                    # all tests (118 tests, 29 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
+pnpm exec tsc --noEmit -p packages/materializer/tsconfig.json      # typecheck materializer
 ```
