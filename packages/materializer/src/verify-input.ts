@@ -43,6 +43,8 @@ function classifyAndStore(
     case "evidence":
       evidence.push(record as unknown as EvidenceAnchor);
       break;
+    case "coverage":
+      break;
     default:
       records.push(record as unknown as CanonicalRecord);
       break;
