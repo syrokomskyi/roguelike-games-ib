@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds an Obsidian vault from materialized canonical state — renders record notes, source notes, MOC, validates links, and writes build manifest.</purpose>
+<non-goals>
+  <item>Does not materialize canonical state — uses materializer output.</item>
+  <item>Does not serve the vault — build-time only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: buildObsidianVault with record/source/MOC rendering and link validation.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { resolveKnowledgePaths } from "@roguelike-games-ib/knowledge-core";

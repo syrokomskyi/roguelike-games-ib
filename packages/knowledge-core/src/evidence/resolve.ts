@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates and validates evidence anchors linking claims to source artifacts with hashes, locators, and publication policies.</purpose>
+<non-goals>
+  <item>Does not re-anchor evidence after refresh — use reanchor module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: EvidenceAnchor type, createEvidenceAnchor, validateEvidenceAnchor.</item>
+</CHANGE_SUMMARY>
+*/
 import { sha256, sha256File, computeFragmentHash } from "../hash.ts";
 import { EvidenceError } from "../errors.ts";
 import { existsSync } from "node:fs";

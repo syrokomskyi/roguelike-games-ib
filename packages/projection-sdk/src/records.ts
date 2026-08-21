@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads canonical records, key maps, and alias maps from materialized output with resolution helpers for IDs, keys, and aliases.</purpose>
+<non-goals>
+  <item>Does not validate records — reading and resolution only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readRecords, findRecordById, findRecordByKey, KeyMap, AliasMap, readKeyMap, readAliasMap, resolveKeyToId, resolveAliasToKey, resolveAliasToId.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { parseJsonl, canonicalJsonParse } from "@roguelike-games-ib/knowledge-core";

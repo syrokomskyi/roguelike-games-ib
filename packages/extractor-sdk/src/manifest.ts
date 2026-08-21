@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates an extractor manifest against the werkstatt/knowledge-extractor@1 schema, enforcing required fields and static-parser determinism.</purpose>
+<non-goals>
+  <item>Does not validate extractor output — only the manifest declaration.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: validateManifest with schema, id, version, sourceKinds, recordKinds, deterministic, and parserMode checks.</item>
+</CHANGE_SUMMARY>
+*/
 import type { ExtractorManifest } from "./types.ts";
 
 export function validateManifest(manifest: unknown): ExtractorManifest {

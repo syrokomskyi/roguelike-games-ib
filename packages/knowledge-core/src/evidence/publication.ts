@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines publication policy types and default policies for public and private sources, with consistency validation.</purpose>
+<non-goals>
+  <item>Does not enforce policy at read time — validation function only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: PublicationPolicy type, defaultPublicPolicy, defaultPrivatePolicy, validatePublicationPolicy.</item>
+</CHANGE_SUMMARY>
+*/
 export type ExcerptPolicy = "none" | "short" | "source_policy";
 export type AccessLevel = "public" | "restricted" | "private";
 

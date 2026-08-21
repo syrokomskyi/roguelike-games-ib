@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds a search index from a materialized SQLite database with optional vector index, providing exact lookup, FTS, graph expansion, and hybrid search.</purpose>
+<non-goals>
+  <item>Does not materialize the database — uses pre-materialized SQLite.</item>
+  <item>Does not implement individual search strategies — delegates to submodules.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: buildSearchIndex, writeSearchManifest, SqliteSearchIndex class.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

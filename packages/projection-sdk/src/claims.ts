@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads claims from materialized output and provides query helpers for finding claims by subject or object reference.</purpose>
+<non-goals>
+  <item>Does not validate claims — reading and querying only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readClaims, claimsForRecord, claimsReferencingRecord.</item>
+</CHANGE_SUMMARY>
+*/
 import { readJsonlFile } from "@roguelike-games-ib/materializer";
 import { join } from "node:path";
 import type { ClaimRecord } from "@roguelike-games-ib/knowledge-core";

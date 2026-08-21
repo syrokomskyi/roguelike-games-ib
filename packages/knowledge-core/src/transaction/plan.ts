@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines transaction operation, plan, diagnostic, and status types, with a factory to prepare promotion plans.</purpose>
+<non-goals>
+  <item>Does not apply or recover transactions — plan preparation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: TransactionOperation, TransactionPlan, TransactionDiagnostic, TransactionStatus types and preparePromotion factory.</item>
+</CHANGE_SUMMARY>
+*/
 export interface TransactionOperation {
   type: "create" | "replace" | "delete";
   record_id: string;

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Performs FTS5 lexical retrieval with BM25 scoring and stable tie-breaking by key and ID.</purpose>
+<non-goals>
+  <item>Does not perform vector or graph search — FTS5 only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ftsSearch with BM25 scoring and FTS5 query escaping.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import type { FtsHit } from "./types.ts";
 

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Renders public evidence for web display — filters restricted evidence, truncates excerpts, and builds GitHub URLs for source artifacts.</purpose>
+<non-goals>
+  <item>Does not redact evidence — uses pre-redacted PublicEvidence from materializer.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: RenderedEvidence type, renderEvidence, evidenceForRecord, DEFAULT_EXCERPT_LIMIT.</item>
+</CHANGE_SUMMARY>
+*/
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";
 import { isRestricted, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds path resolvers mapping canonical record IDs and keys to Obsidian vault file paths with slugification and disambiguation.</purpose>
+<non-goals>
+  <item>Does not render notes — path resolution only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: PathResolver type, buildPathResolver, resolvePathById, resolvePathByKey, resolvePathByAlias.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 
 export interface PathResolver {

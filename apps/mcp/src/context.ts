@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds the MCP server context — loads projection store, search index, and materialization manifest from a dist directory.</purpose>
+<non-goals>
+  <item>Does not implement tool handlers — those live in tools/.</item>
+  <item>Does not manage MCP transport or session lifecycle.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: MCP context with projection store, search index, and dataset envelope.</item>
+</CHANGE_SUMMARY>
+*/
 import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { buildSearchIndex, type SearchIndex } from "@roguelike-games-ib/search";
 import type { MaterializationManifest } from "@roguelike-games-ib/materializer";

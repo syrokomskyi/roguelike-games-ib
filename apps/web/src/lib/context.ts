@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates and caches the web context — projection store, search index, manifest metadata — for serving the web application from materialized output.</purpose>
+<non-goals>
+  <item>Does not materialize — reads pre-materialized dist output only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: WebContext type, createWebContext with caching and search index initialization.</item>
+</CHANGE_SUMMARY>
+*/
 import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { buildSearchIndex, type SearchIndex } from "@roguelike-games-ib/search";
 import type { MaterializationManifest } from "@roguelike-games-ib/materializer";

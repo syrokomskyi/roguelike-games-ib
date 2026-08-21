@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates the MCP tool registry, registers all read-only tool definitions with input schemas, and enforces no-write-tool invariant.</purpose>
+<non-goals>
+  <item>Does not implement individual tool handler logic — delegates to tools/ modules.</item>
+  <item>Does not manage MCP transport (stdio, HTTP) — only tool registration and dispatch.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: tool registry with 18 read-only tools, write-tool guard, and required-tools list.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "./context.ts";
 import { getDatasetInfo } from "./tools/dataset.ts";
 import { listSources, getSourceStatus } from "./tools/sources.ts";

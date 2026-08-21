@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Barrel export for knowledge-core — config, errors, serialization, hashing, source, identity, evidence, graph, coverage, and transaction modules.</purpose>
+<non-goals>
+  <item>Does not implement business logic — re-exports from submodules.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: knowledge-core barrel exporting all public types and functions.</item>
+</CHANGE_SUMMARY>
+*/
 // Config & paths
 export { readKnowledgeConfig, readKnowledgeManifest, resolveKnowledgePaths, resolveSourceRoot } from "./config.ts";
 export type { KnowledgeConfig, KnowledgeManifest } from "./config.ts";

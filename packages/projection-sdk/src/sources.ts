@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads source bindings from materialized output and finds sources by ID.</purpose>
+<non-goals>
+  <item>Does not create bindings — reading and querying only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readSources, findSourceById.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonParse } from "@roguelike-games-ib/knowledge-core";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Compares 2–10 records side by side, or 2–8 games (sources) with optional concept-key filter.</purpose>
+<non-goals>
+  <item>Does not compute semantic similarity — returns structural counts and metadata only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: compare_records and compare_games tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { resolveRecordById } from "@roguelike-games-ib/projection-sdk";

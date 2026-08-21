@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates the dataset manifest with title, ID, version, license, attribution, and canonical hash from knowledge paths.</purpose>
+<non-goals>
+  <item>Does not verify manifest — creation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: createDatasetManifest function.</item>
+</CHANGE_SUMMARY>
+*/
 import {
   resolveKnowledgePaths,
 } from "@roguelike-games-ib/knowledge-core";

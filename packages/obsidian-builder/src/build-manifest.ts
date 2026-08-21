@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates and writes the Obsidian build manifest with canonical hash, note counts, and record type counts.</purpose>
+<non-goals>
+  <item>Does not build the vault — manifest creation and writing only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ObsidianBuildManifest type, createBuildManifest, writeBuildManifest.</item>
+</CHANGE_SUMMARY>
+*/
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";

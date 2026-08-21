@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates source bindings with fingerprint, version, VCS metadata, and binding digest.</purpose>
+<non-goals>
+  <item>Does not compute fingerprints — receives fingerprint value from caller.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SourceBinding type and createSourceBinding function.</item>
+</CHANGE_SUMMARY>
+*/
 import { computeBindingDigest } from "../hash.ts";
 
 export interface SourceBinding {

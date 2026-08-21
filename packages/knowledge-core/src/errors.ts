@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines typed error classes for knowledge-core domains — source root, metadata, identity, evidence, graph, transaction, and schema validation.</purpose>
+<non-goals>
+  <item>Does not handle error recovery — error classes only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: KnowledgeCoreError base and domain-specific subclasses with error codes.</item>
+</CHANGE_SUMMARY>
+*/
 export class KnowledgeCoreError extends Error {
   constructor(
     message: string,

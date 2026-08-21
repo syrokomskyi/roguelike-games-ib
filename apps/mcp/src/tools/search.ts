@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Searches records using hybrid/lexical/vector retrieval with cursor validation and relevance-score disclaimers.</purpose>
+<non-goals>
+  <item>Does not guarantee score semantics — scores are relevance signals, not confidence or truth values.</item>
+  <item>Does not implement the search index — delegates to the search package.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: search_records tool handler with mode selection and cursor validation.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import type { SearchFilters } from "@roguelike-games-ib/search";

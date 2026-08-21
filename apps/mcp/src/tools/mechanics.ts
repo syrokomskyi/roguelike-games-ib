@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Lists mechanic and system records with optional source-id and kind filters, using cursor-based pagination.</purpose>
+<non-goals>
+  <item>Does not traverse relations or return claims — flat record listing only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: find_mechanics and find_systems tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";

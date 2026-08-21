@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates, validates, and explains ancestry records tracking canonical inputs, mutations, and constraint outcomes for laboratory seeds.</purpose>
+<non-goals>
+  <item>Does not create seeds — ancestry records only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: AncestryRecord, createAncestry, validateAncestry, explainAncestry.</item>
+</CHANGE_SUMMARY>
+*/
 import { isCanonicalRecordId, isLaboratoryRecordId } from "./schema.ts";
 import type { GeneratorMetadata } from "./schema.ts";
 import type { MutationResult } from "./mutation.ts";

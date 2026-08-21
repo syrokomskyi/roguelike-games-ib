@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Computes SHA-256 hashes for strings, files, records, canonical trees, source fingerprints, binding digests, and text fragments.</purpose>
+<non-goals>
+  <item>Does not verify hash integrity — hashing functions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: sha256, sha256File, computeRecordHash, computeCanonicalHash, computeSourceFingerprint, computeBindingDigest, computeFragmentHash.</item>
+</CHANGE_SUMMARY>
+*/
 import { createHash } from "node:crypto";
 import { readFileSync, statSync, readdirSync, realpathSync } from "node:fs";
 import { join, relative, sep, posix } from "node:path";

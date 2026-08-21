@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Simple in-process file-based lock for transaction coordination to prevent concurrent promotions.</purpose>
+<non-goals>
+  <item>Does not implement distributed locking — single-process only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: TransactionLock class with acquire, release, isLocked.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { TransactionError } from "../errors.ts";

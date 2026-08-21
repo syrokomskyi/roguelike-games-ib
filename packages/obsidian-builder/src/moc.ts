@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Renders the Map of Content (MOC) note grouping records by type with wiki links.</purpose>
+<non-goals>
+  <item>Does not render individual record notes — MOC index only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: renderMoc, MOC_TITLE, MOC_FILENAME.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { PathResolver } from "./paths.ts";
 

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Static C-source parser for NetHack — extracts monster, object, and artifact entries from C header files using macro-based parsing.</purpose>
+<non-goals>
+  <item>Does not execute or compile C code — pure regex-based static parsing.</item>
+  <item>Does not construct knowledge records — returns structured entries for the extractor.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: parsers for MON, WEAPON/ARMOR/etc., and OBJECT/OBJ macros with line-range tracking.</item>
+</CHANGE_SUMMARY>
+*/
 function findMatchingParen(s: string): number {
   let depth = 0;
   for (let i = 0; i < s.length; i++) {

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>NetHack factual extractor — parses C header files and emits creature and item records with evidence anchors and population counts.</purpose>
+<non-goals>
+  <item>Does not parse JSON or YAML — NetHack source is C headers only.</item>
+  <item>Does not compute design-space relations — factual extraction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: NetHack extractor with monster and object parsing.</item>
+</CHANGE_SUMMARY>
+*/
 import type {
   Extractor,
   ExtractorContext,

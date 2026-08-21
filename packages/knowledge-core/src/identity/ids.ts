@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Generates UUIDv7-based canonical record IDs and validates the ID format for canonical records.</purpose>
+<non-goals>
+  <item>Does not manage key or alias registries — ID generation and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: createRecordId, isValidRecordId, UUIDv7 generator.</item>
+</CHANGE_SUMMARY>
+*/
 import { randomUUID } from "node:crypto";
 
 /**

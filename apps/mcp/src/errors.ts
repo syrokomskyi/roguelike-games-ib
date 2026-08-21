@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines typed error classes (invalid cursor, stale cursor, not found, validation) for MCP tool responses.</purpose>
+<non-goals>
+  <item>Does not handle error recovery or retry logic — callers are responsible.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: MCP error hierarchy with typed error codes.</item>
+</CHANGE_SUMMARY>
+*/
 export class McpError extends Error {
   constructor(
     message: string,

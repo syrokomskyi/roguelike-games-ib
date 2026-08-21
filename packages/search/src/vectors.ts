@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Provides vector index implementations — NullVectorIndex for disabled mode and InMemoryVectorIndex with cosine similarity for local/testing, plus manifest metadata creation.</purpose>
+<non-goals>
+  <item>Does not provide production vector search — use @orama/orama for production.</item>
+  <item>Does not perform text search — vector embeddings and similarity only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: NullVectorIndex, InMemoryVectorIndex, cosineSimilarity, createVectorMetadata.</item>
+</CHANGE_SUMMARY>
+*/
 import type { SearchIndexManifest, SearchRecord, VectorIndex, VectorMatch } from "./types.ts";
 
 /**

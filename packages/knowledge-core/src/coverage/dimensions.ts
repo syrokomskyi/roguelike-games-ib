@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines coverage dimension types — states, denominator kinds, dimension and record interfaces.</purpose>
+<non-goals>
+  <item>Does not compute coverage — type definitions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: CoverageState, DenominatorKind, CoverageDimension, CoverageRecord types.</item>
+</CHANGE_SUMMARY>
+*/
 export type CoverageState =
   | "not_assessed"
   | "partial"

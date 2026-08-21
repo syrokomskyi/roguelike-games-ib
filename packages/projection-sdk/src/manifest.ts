@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads and validates the materialization manifest from the dist directory, checking schema version compatibility.</purpose>
+<non-goals>
+  <item>Does not create manifests — reading and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SUPPORTED_MANIFEST_SCHEMA, readManifest, isManifestSupported.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonParse } from "@roguelike-games-ib/knowledge-core";

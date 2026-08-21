@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Re-anchors evidence locators after source refresh by matching fragment hashes at original or new locations.</purpose>
+<non-goals>
+  <item>Does not modify source files — read-only re-anchoring.</item>
+  <item>Does not auto-resolve ambiguous matches — flags for manual review.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: reanchorEvidence with exact-match, unique-match, and ambiguity detection.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { sha256, computeFragmentHash } from "../hash.ts";

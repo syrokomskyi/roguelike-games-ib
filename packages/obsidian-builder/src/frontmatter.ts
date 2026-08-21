@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates, serializes, and parses YAML frontmatter for Obsidian notes with record metadata.</purpose>
+<non-goals>
+  <item>Does not render note body — frontmatter only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: NoteFrontmatter type, createFrontmatter, serializeFrontmatter, parseFrontmatter.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 
 export interface NoteFrontmatter {

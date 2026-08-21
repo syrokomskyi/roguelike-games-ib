@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Detects source drift by comparing canonical binding fingerprint and version against current values.</purpose>
+<non-goals>
+  <item>Does not trigger re-extraction — drift detection and reporting only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: DriftResult type and detectSourceDrift function.</item>
+</CHANGE_SUMMARY>
+*/
 export interface DriftResult {
   drifted: boolean;
   reason: string;

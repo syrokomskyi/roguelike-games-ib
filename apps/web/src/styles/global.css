@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines the global CSS theme with custom color variables, base typography, link styles, and scrollbar styling for the web application.</purpose>
+<non-goals>
+  <item>Does not define component styles — global theme and base elements only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: global CSS with Tailwind import, IB color theme, base styles, and scrollbar styling.</item>
+</CHANGE_SUMMARY>
+*/
 @import "tailwindcss";
 
 @theme {

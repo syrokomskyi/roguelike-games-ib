@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Returns evidence by id, enforcing publication policy — restricted evidence is redacted to metadata only.</purpose>
+<non-goals>
+  <item>Does not list or search evidence — single-id lookup only.</item>
+  <item>Does not verify evidence artifact integrity — returns stored hashes as-is.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: get_evidence tool handler with publication-policy redaction.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { isRestricted, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";

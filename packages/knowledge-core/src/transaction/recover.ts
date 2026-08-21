@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Recovers interrupted transactions by rolling back uncommitted operations using stored backups.</purpose>
+<non-goals>
+  <item>Does not apply transactions — recovery and rollback only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: recoverInterruptedTransaction with backup restoration and rollback.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, readFileSync, rmSync, renameSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { TransactionPlan, TransactionStatus } from "./plan.ts";

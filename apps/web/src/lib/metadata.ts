@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Extracts page metadata from the web context and converts it to HTML meta tags for dataset provenance and authority signaling.</purpose>
+<non-goals>
+  <item>Does not render pages — metadata extraction and HTML serialization only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: PageMetadata type, getPageMetadata, metadataToHtmlMeta.</item>
+</CHANGE_SUMMARY>
+*/
 import type { WebContext } from "./context.ts";
 
 export interface PageMetadata {

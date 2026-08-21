@@ -1,0 +1,1998 @@
+<compass-inventory>
+  <meta>
+    <document-id>compass-inventory</document-id>
+    <version>2.0.0</version>
+    <status>generated</status>
+    <scope>repository-root</scope>
+    <generated-at>null</generated-at>
+    <generator>@warpgogol/forge:compass.inventory</generator>
+  </meta>
+  <summary>
+    <scanned-files>165</scanned-files>
+    <authored-files>164</authored-files>
+    <excluded-files>1</excluded-files>
+    <standard-required-files>164</standard-required-files>
+    <compliant-files>0</compliant-files>
+    <non-compliant-files>164</non-compliant-files>
+  </summary>
+  <entries>
+    <entry path="apps/mcp/src/context.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>45</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/envelope.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>14</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/errors.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>33</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/index.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>32</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/pagination.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>84</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/server.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>362</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/claims.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>39</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/compare.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>72</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/coverage.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>30</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/dataset.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>16</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/definitions.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>36</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/design.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>99</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/evidence.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>41</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/graph.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>87</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/mechanics.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>61</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/records.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>47</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/search.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>51</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/mcp/src/tools/sources.ts" workspace-kind="app" workspace-name="mcp" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>69</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/astro.config.mjs" workspace-kind="app" workspace-name="web" layer="other" extension=".mjs" authoring-status="excluded" risk-class="low" complexity="trivial" required-scaffolding="none" compliant="true">
+      <non-empty-lines>11</non-empty-lines>
+      <exclusion-reason>framework-config</exclusion-reason>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+    </entry>
+    <entry path="apps/web/src/components/AuthorityBadge.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/CompareTable.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>42</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/CoveragePanel.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>35</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/DesignAncestry.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>25</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/EpistemicBadge.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/EvidenceList.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>32</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/RecordAttributes.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>58</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/RecordHeader.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>23</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/RelationGraph.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>32</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/SearchBox.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>14</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/components/SourceBindingPanel.astro" workspace-kind="app" workspace-name="web" layer="component" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>21</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/env.d.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>6</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/index.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>7</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/layouts/Base.astro" workspace-kind="app" workspace-name="web" layer="layout" extension=".astro" authoring-status="authored" risk-class="high" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>41</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+        <violation>missing @ai-invariant (high-risk)</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/authority.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>26</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/build.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>9</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/context.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>48</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/evidence.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>72</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/metadata.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>29</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/resolve.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>31</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/lib/verify.ts" workspace-kind="app" workspace-name="web" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>45</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/middleware.ts" workspace-kind="app" workspace-name="web" layer="middleware" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>7</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/404.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>17</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/about/method.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>35</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/compare/[...filter].astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>129</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/dataset.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>35</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/design.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>76</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/evidence/[recordId].astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>33</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/games/[sourceId]/definitions/[kind].astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>31</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/games/[sourceId]/index.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>73</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/games/[sourceId]/mechanics.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>42</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/games/[sourceId]/systems.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>42</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/games/index.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>33</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/index.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>75</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/inspiration.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>26</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/records/[...key].astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>78</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/pages/search.astro" workspace-kind="app" workspace-name="web" layer="page" extension=".astro" authoring-status="authored" risk-class="medium" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>123</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="apps/web/src/styles/global.css" workspace-kind="app" workspace-name="web" layer="style" extension=".css" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>46</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/context.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>42</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/deterministic.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>64</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/evidence-builder.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>55</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/identity.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>51</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/index.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>38</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/manifest.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>28</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/output-writer.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>110</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/population.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>32</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/source-reader.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>95</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractor-sdk/src/types.ts" workspace-kind="package" workspace-name="extractor-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>74</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/broguece-extractor/src/c-parser.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>313</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/broguece-extractor/src/extractor.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>261</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/broguece-extractor/src/index.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/cataclysm-bn-extractor/src/extractor.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>353</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/cataclysm-bn-extractor/src/index.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/cataclysm-bn-extractor/src/json-parser.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>199</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/nethack-extractor/src/c-parser.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>358</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/nethack-extractor/src/extractor.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>197</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/extractors/nethack-extractor/src/index.ts" workspace-kind="package" workspace-name="extractors" layer="other" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>9</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/canonical-json.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>65</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/canonical-yaml.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>22</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/config.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>111</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/errors.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>52</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/evidence/fragment.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>1</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/evidence/publication.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>43</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/evidence/reanchor.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>97</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/evidence/resolve.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>91</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/graph/claims.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>37</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/graph/contradictions.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>41</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/graph/references.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>60</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/graph/relations.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>68</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/graph/validate.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>67</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/hash.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>109</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/identity/aliases.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>58</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/identity/ids.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>57</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/identity/keys.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>49</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/identity/refresh-match.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>61</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/index.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>75</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/paths.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>7</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/binding.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>48</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/drift.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>53</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/fingerprint.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/metadata.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>111</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/read-guard.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>66</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/source/root.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>75</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/transaction/apply.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>86</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/transaction/candidate.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>33</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/transaction/lock.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>28</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/transaction/plan.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>51</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-core/src/transaction/recover.ts" workspace-kind="package" workspace-name="knowledge-core" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>48</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/knowledge-schemas/src/index.ts" workspace-kind="package" workspace-name="knowledge-schemas" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>117</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/ancestry.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>81</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/boundary.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>66</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/constraints.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>82</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/generator.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>198</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/index.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>86</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/mutation.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>88</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/schema.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>107</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/seeds.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>175</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/laboratory-runtime/src/sessions.ts" workspace-kind="package" workspace-name="laboratory-runtime" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>48</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/build.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>142</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/checksums.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>20</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/index.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>21</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/manifest.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>38</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/normalize.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>40</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/public-evidence.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>83</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/records-jsonl.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>110</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/sqlite.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>343</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/types.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>55</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/materializer/src/verify-input.ts" workspace-kind="package" workspace-name="materializer" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>171</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/build-manifest.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>32</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/build.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>96</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/frontmatter.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>56</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/index.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>13</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/links.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>53</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/moc.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>41</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/paths.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>64</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/render-record.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>149</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/obsidian-builder/src/render-source.ts" workspace-kind="package" workspace-name="obsidian-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>31</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/authority.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>17</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/claims.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>12</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/coverage.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>14</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/evidence.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>35</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/graph.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>23</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/index.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>12</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/manifest.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>16</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/open.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>62</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/records.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>45</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/projection-sdk/src/sources.ts" workspace-kind="package" workspace-name="projection-sdk" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>14</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/build.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>110</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/check.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>186</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/dataset-manifest.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>20</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/evidence.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>67</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/index.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>11</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/release-builder/src/types.ts" workspace-kind="package" workspace-name="release-builder" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>47</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/build.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>106</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/cursor.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>52</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/exact.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>56</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/filters.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>46</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/fts.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>44</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/graph.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>112</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/hybrid.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>120</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/index.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>28</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/ranking.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>89</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/types.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>101</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/search/src/vectors.ts" workspace-kind="package" workspace-name="search" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>108</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/test-fixtures/src/index.ts" workspace-kind="package" workspace-name="test-fixtures" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>1</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+    <entry path="packages/test-fixtures/src/temp-workspace.ts" workspace-kind="package" workspace-name="test-fixtures" layer="source" extension=".ts" authoring-status="authored" risk-class="low" complexity="non-trivial" required-scaffolding="standard" compliant="false">
+      <non-empty-lines>159</non-empty-lines>
+      <has-module-contract>false</has-module-contract>
+      <has-change-summary>false</has-change-summary>
+      <has-ai-invariant>false</has-ai-invariant>
+      <has-purpose>false</has-purpose>
+      <has-non-goals>false</has-non-goals>
+      <violations>
+        <violation>missing MODULE_CONTRACT</violation>
+        <violation>missing CHANGE_SUMMARY</violation>
+      </violations>
+    </entry>
+  </entries>
+</compass-inventory>

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Loads, compiles, and validates JSON schemas using AJV 2020 with no network fetch — registry-driven schema management for knowledge records.</purpose>
+<non-goals>
+  <item>Does not define schemas — loads and compiles them from YAML files.</item>
+  <item>Does not fetch schemas from the network — local files only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SchemaRegistry, CompiledSchema types, loadSchemaRegistry, compileSchemaRegistry, validateRecord, getSchema.</item>
+</CHANGE_SUMMARY>
+*/
 import Ajv, { type ValidateFunction, type AnySchema } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { readFileSync, existsSync } from "node:fs";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines mutation dimensions, vectors, and results with structural vs cosmetic classification for seed generation.</purpose>
+<non-goals>
+  <item>Does not apply mutations to game data — produces transformation descriptions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: MUTATION_DIMENSIONS, MutationVector, MutationResult, applyMutation, createMutationVector, createCosmeticMutationVector.</item>
+</CHANGE_SUMMARY>
+*/
 export const MUTATION_DIMENSIONS = [
   "sensory_modality",
   "visibility",

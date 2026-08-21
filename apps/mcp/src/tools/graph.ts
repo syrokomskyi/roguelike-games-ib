@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Traverses typed canonical relations from a root record via BFS up to depth 3, with direction and relation-type filters.</purpose>
+<non-goals>
+  <item>Does not compute graph metrics (centrality, clustering) — returns raw edges only.</item>
+  <item>Does not traverse beyond depth 3 — hard max enforced.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: traverse_relations tool handler with BFS, direction filter, and depth cap.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { relationsForRecord, groupRelationsByType } from "@roguelike-games-ib/projection-sdk";

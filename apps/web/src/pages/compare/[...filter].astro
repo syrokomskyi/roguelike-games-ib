@@ -1,3 +1,14 @@
+<!--
+<MODULE_CONTRACT>
+<purpose>Generates static comparison pages for all records with type and source filters, pagination, and a comparison table.</purpose>
+<non-goals>
+  <item>Does not compute comparison metrics — assembles rows from projection store data.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: compare page with getStaticPaths, type/source filters, pagination, and CompareTable.</item>
+</CHANGE_SUMMARY>
+-->
 ---
 import Base from "../../layouts/Base.astro";
 import { createWebContext } from "../../lib/context.ts";

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Cataclysm-BN factual extractor — parses JSON data files and emits creature, item, mutation, and profession records with evidence and population counts.</purpose>
+<non-goals>
+  <item>Does not parse C source — Cataclysm-BN data is JSON only.</item>
+  <item>Does not compute design-space relations — factual extraction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: Cataclysm-BN extractor with monster, item, mutation, and profession parsing.</item>
+</CHANGE_SUMMARY>
+*/
 import type {
   Extractor,
   ExtractorContext,

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates contradiction records ensuring at least 2 claim refs, no dangling refs, and unresolved contradictions have no resolution.</purpose>
+<non-goals>
+  <item>Does not auto-resolve contradictions — validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ContradictionRecord type and validateContradictions function.</item>
+</CHANGE_SUMMARY>
+*/
 export interface ContradictionRecord {
   id: string;
   claim_refs: string[];

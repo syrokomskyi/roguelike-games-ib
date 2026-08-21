@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads public evidence from materialized output, filters evidence by claim references, and builds GitHub URLs for evidence artifacts.</purpose>
+<non-goals>
+  <item>Does not redact evidence — reading and URL building only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readPublicEvidence, evidenceForClaim, isRestricted, buildEvidenceUrl.</item>
+</CHANGE_SUMMARY>
+*/
 import { readJsonlFile } from "@roguelike-games-ib/materializer";
 import { join } from "node:path";
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";

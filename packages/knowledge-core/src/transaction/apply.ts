@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Applies promotion transactions atomically with lock, backup, temp-write, and atomic rename, marking status as COMMITTED or FAILED.</purpose>
+<non-goals>
+  <item>Does not plan transactions — use plan module.</item>
+  <item>Does not recover interrupted transactions — use recover module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: applyPromotionTransaction with backup, atomic rename, and error diagnostics.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync, renameSync, writeFileSync, readFileSync, rmSync, copyFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { TransactionPlan, TransactionStatus } from "./plan.ts";

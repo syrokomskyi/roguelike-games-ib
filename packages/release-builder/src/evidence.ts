@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Generates release evidence with canonical hash, materialization hash, binding digests, record counts, and accepted RFC/ADR references.</purpose>
+<non-goals>
+  <item>Does not check release fitness — evidence generation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: generateReleaseEvidence with hash computation and binding digest collection.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";

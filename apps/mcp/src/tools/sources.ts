@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Lists all registered sources with pagination, and returns per-source status including coverage dimensions and record counts.</purpose>
+<non-goals>
+  <item>Does not return records within a source — use list_definitions or find_mechanics for that.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: list_sources and get_source_status tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";

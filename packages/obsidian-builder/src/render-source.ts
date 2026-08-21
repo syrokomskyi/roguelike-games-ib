@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Renders Obsidian markdown notes for source bindings with binding digest, fingerprint, version, and coverage dimensions.</purpose>
+<non-goals>
+  <item>Does not render record notes — use render-record module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: renderSourceNote with frontmatter, binding metadata, and coverage display.</item>
+</CHANGE_SUMMARY>
+*/
 import type { SourceBinding, CoverageRecord } from "@roguelike-games-ib/knowledge-core";
 import { createFrontmatter, serializeFrontmatter } from "./frontmatter.ts";
 

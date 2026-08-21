@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Barrel export for the extractor SDK — types, source reader, manifest validation, evidence factory, population, output writer, identity, context, and deterministic runner.</purpose>
+<non-goals>
+  <item>Does not implement extractors — provides the SDK for extractor authors.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: extractor SDK barrel exporting all public types and functions.</item>
+</CHANGE_SUMMARY>
+*/
 // Types
 export type {
   ExtractorManifest,

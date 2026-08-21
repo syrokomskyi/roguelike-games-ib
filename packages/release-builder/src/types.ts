@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines core types for release-builder — ReleaseEvidence, DatasetManifest, ReleaseCheckResult, ReleaseBundleResult, ReleaseOptions.</purpose>
+<non-goals>
+  <item>Does not implement release logic — type definitions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ReleaseEvidence, DatasetManifest, ReleaseCheckResult, ReleaseBundleResult, ReleaseOptions types.</item>
+</CHANGE_SUMMARY>
+*/
 export interface ReleaseEvidence {
   schema: string;
   datasetId: string;

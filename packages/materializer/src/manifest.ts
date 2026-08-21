@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates and writes the materialization manifest with dataset ID, version, canonical hash, license, counts, and binding digests.</purpose>
+<non-goals>
+  <item>Does not verify manifest integrity — creation and writing only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: createManifest and writeManifest functions.</item>
+</CHANGE_SUMMARY>
+*/
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";

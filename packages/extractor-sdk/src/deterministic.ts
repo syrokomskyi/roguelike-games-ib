@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Runs an extractor twice and compares SHA-256 hashes of normalized run results to verify determinism.</purpose>
+<non-goals>
+  <item>Does not validate record content — only compares run metadata hashes.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: deterministic run verifier with normalizeRunResult, hashRunResult, and createExtractorContext.</item>
+</CHANGE_SUMMARY>
+*/
 import { createHash } from "node:crypto";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";
 import type { Extractor, ExtractorContext, ExtractorRunResult } from "./types.ts";

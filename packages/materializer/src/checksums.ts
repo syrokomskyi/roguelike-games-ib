@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Computes SHA-256 checksums for output files to verify materialization integrity.</purpose>
+<non-goals>
+  <item>Does not verify checksums against expected values — computation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: fileSha256 and computeChecksums functions.</item>
+</CHANGE_SUMMARY>
+*/
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Static JSON parser for Cataclysm-BN — extracts monster, item, mutation, and profession entries from JSON data files with line-range tracking.</purpose>
+<non-goals>
+  <item>Does not construct knowledge records — returns structured entries for the extractor.</item>
+  <item>Does not validate JSON schema — raw JSON.parse with field extraction.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: JSON parsers for monsters, items, mutations, and professions with line-range computation.</item>
+</CHANGE_SUMMARY>
+*/
 export interface MonsterEntry {
   id: string;
   type: string;

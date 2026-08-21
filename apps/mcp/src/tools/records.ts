@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Resolves a record by id or key, and resolves a key-or-alias to the current canonical record.</purpose>
+<non-goals>
+  <item>Does not search or list records — single-record lookup only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: get_record and resolve_key tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { resolveRecord, resolveRecordById, resolveRecordByKey, resolveRecordByAlias } from "@roguelike-games-ib/projection-sdk";

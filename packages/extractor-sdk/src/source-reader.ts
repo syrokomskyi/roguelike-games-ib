@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Provides a sandboxed read-only source reader that prevents path traversal and symlink escapes while exposing file read, stat, walk, and parse utilities.</purpose>
+<non-goals>
+  <item>Does not write or modify source files — read-only access.</item>
+  <item>Does not follow symlinks — skips them during walk.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ReadonlySourceReader with path-safe resolution, read, stat, walk, and parse methods.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, realpathSync, readFileSync, statSync, readdirSync } from "node:fs";
 import { resolve, relative, isAbsolute, join, sep, posix } from "node:path";
 import { SourceRootError } from "@roguelike-games-ib/knowledge-core";

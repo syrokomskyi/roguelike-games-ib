@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Resolves canonical record IDs/keys to Obsidian wiki links and validates that all links resolve.</purpose>
+<non-goals>
+  <item>Does not render notes — link resolution and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: wikiLinkToPath, resolveLink, makeWikiLink, validateAllLinks.</item>
+</CHANGE_SUMMARY>
+*/
 import type { PathResolver } from "./paths.ts";
 import type { AliasMap } from "@roguelike-games-ib/projection-sdk";
 

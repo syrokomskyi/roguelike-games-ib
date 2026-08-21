@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads relations from materialized output and provides query helpers for finding relations by record and grouping by type.</purpose>
+<non-goals>
+  <item>Does not validate relations — reading and querying only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readRelations, relationsForRecord, groupRelationsByType.</item>
+</CHANGE_SUMMARY>
+*/
 import { readJsonlFile } from "@roguelike-games-ib/materializer";
 import { join } from "node:path";
 import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";

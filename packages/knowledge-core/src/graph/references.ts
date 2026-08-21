@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates canonical references, checks for canonical/laboratory/staging overlaps, and collects referenced IDs from records.</purpose>
+<non-goals>
+  <item>Does not validate relation endpoints — use relations module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: validateReferences, isCanonicalRecordId, collectReferences.</item>
+</CHANGE_SUMMARY>
+*/
 /**
  * Validate that all canonical references exist and no Laboratory/staging refs
  * appear in canonical authority.

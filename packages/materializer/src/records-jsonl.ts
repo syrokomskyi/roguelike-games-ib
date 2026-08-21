@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Writes deterministic JSONL and JSON output files — records, claims, relations, evidence, sources, coverage, key map, and alias map.</purpose>
+<non-goals>
+  <item>Does not build SQLite — JSONL/JSON output only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: writeRecordsJsonl, writeClaimsJsonl, writeRelationsJsonl, writePublicEvidenceJsonl, writeSourcesJson, writeCoverageJson, writeKeyMapJson, writeAliasMapJson, readJsonlFile.</item>
+</CHANGE_SUMMARY>
+*/
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {

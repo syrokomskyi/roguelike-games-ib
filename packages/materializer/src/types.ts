@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines core types for the materializer — CanonicalRecord, CanonicalState, VerificationResult, MaterializationManifest, MaterializationOptions, MaterializationResult.</purpose>
+<non-goals>
+  <item>Does not implement materialization logic — type definitions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: CanonicalRecord, CanonicalState, VerificationResult, MaterializationManifest, MaterializationOptions, MaterializationResult types.</item>
+</CHANGE_SUMMARY>
+*/
 import { ClaimRecord } from "@roguelike-games-ib/knowledge-core";
 import { RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import { ContradictionRecord } from "@roguelike-games-ib/knowledge-core";

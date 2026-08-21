@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines laboratory seed schema types, record ID generation, and seed record validation against authority and ancestry rules.</purpose>
+<non-goals>
+  <item>Does not create or persist seeds — schema and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SeedRecord, SeedScore, GeneratorMetadata types, createLaboratoryRecordId, validateSeedRecord, UUIDv7 generator.</item>
+</CHANGE_SUMMARY>
+*/
 import { randomUUID } from "node:crypto";
 
 export const LABORATORY_AUTHORITY = "laboratory" as const;

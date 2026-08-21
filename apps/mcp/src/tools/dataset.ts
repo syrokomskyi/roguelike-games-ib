@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Returns dataset-level metadata: id, version, canonical hash, license, source count, and record counts.</purpose>
+<non-goals>
+  <item>Does not return per-record or per-source details — those are separate tools.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: get_dataset_info tool handler.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Canonical YAML serialization using YAML 1.2 with 2-space indent and core schema.</purpose>
+<non-goals>
+  <item>Does not support anchors, aliases, or merge keys in canonical data.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: canonical YAML stringify and parse with core schema.</item>
+</CHANGE_SUMMARY>
+*/
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 /**

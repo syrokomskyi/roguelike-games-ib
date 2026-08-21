@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Accumulates staged records, evidence, population counts, and diagnostics during an extractor run, then flushes to JSONL files in a staging directory.</purpose>
+<non-goals>
+  <item>Does not validate staged records — schema validation is the extractor's responsibility.</item>
+  <item>Does not support multiple flush calls — single-use writer.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: CandidateWriter with record, evidence, population, diagnostic accumulation and JSONL flush.</item>
+</CHANGE_SUMMARY>
+*/
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {

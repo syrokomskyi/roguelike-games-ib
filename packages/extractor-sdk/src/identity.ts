@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Resolves or creates record identities on refresh by matching against existing keys and aliases, detecting renames.</purpose>
+<non-goals>
+  <item>Does not persist keys or aliases — returns resolution results only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: RefreshIdentityResolver with resolveOrCreate and isValidId.</item>
+</CHANGE_SUMMARY>
+*/
 import {
   createRecordId,
   isValidRecordId,

@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Static C-source parser for BrogueCE — extracts enums, monster catalog, tile catalog, and item tables from C header/source files.</purpose>
+<non-goals>
+  <item>Does not execute or compile C code — pure regex-based static parsing.</item>
+  <item>Does not construct knowledge records — returns structured entries for the extractor.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: parsers for enum, monsterCatalog, tileCatalog, and item tables with line-range tracking.</item>
+</CHANGE_SUMMARY>
+*/
 export interface EnumEntry {
   name: string;
   values: string[];

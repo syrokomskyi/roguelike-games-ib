@@ -1,3 +1,14 @@
+<!--
+<MODULE_CONTRACT>
+<purpose>Generates static definition pages per source and record kind, listing all records of that kind with links to individual record pages.</purpose>
+<non-goals>
+  <item>Does not render record details — definition listing with links only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: definitions page with getStaticPaths per source/kind and record link grid.</item>
+</CHANGE_SUMMARY>
+-->
 ---
 import Base from "../../../../layouts/Base.astro";
 import { createWebContext } from "../../../../lib/context.ts";

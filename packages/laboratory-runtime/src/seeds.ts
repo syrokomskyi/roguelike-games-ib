@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates, persists, reads, scores, ranks, promotes, and evaluates laboratory seeds with anti-copy penalties and constraint checks.</purpose>
+<non-goals>
+  <item>Does not generate seeds — use generator module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: createSeed, persistSeed, readSeeds, computeAntiCopyPenalty, computeScores, rankSeeds, promoteSeed, evaluateSeed.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonStringify, canonicalJsonParse } from "@roguelike-games-ib/knowledge-core";

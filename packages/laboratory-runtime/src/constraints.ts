@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines design constraints and checks seeds against must-have, must-not-use, and complexity ceiling rules.</purpose>
+<non-goals>
+  <item>Does not score seeds — constraint satisfaction checking only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: DesignConstraints type, defaultConstraints, normalizeConstraints, checkConstraints.</item>
+</CHANGE_SUMMARY>
+*/
 import type { SystemScale, InformationVisibility, NoveltyTarget } from "./schema.ts";
 
 export interface DesignConstraints {

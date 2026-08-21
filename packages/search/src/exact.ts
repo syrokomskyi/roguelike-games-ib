@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Performs exact deterministic lookups by ID, key, or alias against the SQLite records table with no scoring.</purpose>
+<non-goals>
+  <item>Does not perform fuzzy or full-text search — exact match only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: exactLookup with id/key/alias resolution order.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import type { ExactLookupQuery, SearchRecord } from "./types.ts";
 

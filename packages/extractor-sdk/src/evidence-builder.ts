@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds evidence anchors with artifact SHA-256, fragment hashes, and publication policy for extractor output.</purpose>
+<non-goals>
+  <item>Does not verify evidence content — computes hashes only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: EvidenceFactory with create and createPrivate methods.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {

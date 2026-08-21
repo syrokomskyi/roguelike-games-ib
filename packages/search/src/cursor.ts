@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Encodes and validates search cursors for pagination, using base64-encoded canonical hash and offset to reject stale cursors.</purpose>
+<non-goals>
+  <item>Does not perform search — cursor encoding and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: encodeCursor, validateCursor, createCursor, computeCursorHash.</item>
+</CHANGE_SUMMARY>
+*/
 import { sha256 } from "@roguelike-games-ib/knowledge-core";
 
 /**

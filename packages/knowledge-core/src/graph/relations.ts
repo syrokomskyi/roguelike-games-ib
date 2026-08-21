@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates relation records by checking type registration, endpoint existence, domain/range compliance, and evidence requirements.</purpose>
+<non-goals>
+  <item>Does not define relation types — receives type definitions from caller.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: RelationRecord, RelationTypeDefinition types and validateRelations function.</item>
+</CHANGE_SUMMARY>
+*/
 import { GraphIntegrityError } from "../errors.ts";
 
 export interface RelationRecord {

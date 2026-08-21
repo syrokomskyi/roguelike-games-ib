@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads canonical state from the filesystem and verifies graph integrity before materialization.</purpose>
+<non-goals>
+  <item>Does not materialize output — input reading and verification only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readCanonicalState, verifyCanonicalState with directory walking and graph validation.</item>
+</CHANGE_SUMMARY>
+*/
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { parse as parseYaml } from "yaml";

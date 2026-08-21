@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Returns coverage dimensions (expected vs extracted vs validated) for a specific source.</purpose>
+<non-goals>
+  <item>Does not compute aggregate coverage across sources — single source only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: get_coverage tool handler.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { coverageForSource } from "@roguelike-games-ib/projection-sdk";

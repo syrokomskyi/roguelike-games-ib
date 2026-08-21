@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Barrel export for the MCP server package — context, envelope, errors, pagination, and all tool handlers.</purpose>
+<non-goals>
+  <item>Does not implement tool logic — re-exports from individual modules.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: MCP package barrel exporting context, envelope, errors, server, pagination, and tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 export { createMcpContext, datasetEnvelope } from "./context.ts";
 export type { McpContext } from "./context.ts";
 export { envelope } from "./envelope.ts";

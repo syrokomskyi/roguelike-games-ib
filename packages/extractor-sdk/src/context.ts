@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates a schema facade that validates records against compiled JSON schemas, with a null-implementation for schema-less contexts.</purpose>
+<non-goals>
+  <item>Does not compile schemas — receives pre-compiled schemas from the caller.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: schema facade with validate and hasSchema, plus null facade.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CompiledSchema } from "@roguelike-games-ib/knowledge-schemas";
 
 export interface SchemaFacade {

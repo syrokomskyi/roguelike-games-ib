@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Renders Obsidian markdown notes for canonical records with frontmatter, properties, relations, claims, and evidence sections.</purpose>
+<non-goals>
+  <item>Does not render source notes — use render-source module.</item>
+  <item>Does not render MOC — use moc module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: renderRecordNote with properties, relations, claims, and evidence rendering.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { ClaimRecord, RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Matches definitions on refresh by key or alias to detect renames and retain record identity across source updates.</purpose>
+<non-goals>
+  <item>Does not create new records — matching and rename detection only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: matchDefinitionOnRefresh with key match, alias resolution, and rename detection.</item>
+</CHANGE_SUMMARY>
+*/
 import { KeyEntry, resolveRecordKey } from "./keys.ts";
 import { AliasEntry, resolveAlias } from "./aliases.ts";
 

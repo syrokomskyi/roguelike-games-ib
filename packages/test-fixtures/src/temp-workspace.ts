@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates temporary workspaces and source bundles for testing, including config files, manifest, source registries, and symlinks.</purpose>
+<non-goals>
+  <item>Does not run tests — fixture creation and cleanup only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: createTempWorkspace, createSourceBundle, cleanupTempWorkspace, createTestWorkspace.</item>
+</CHANGE_SUMMARY>
+*/
 import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";

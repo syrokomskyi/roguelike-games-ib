@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Combines FTS, vector, and graph expansion retrieval into a unified hybrid search with scoring, filtering, pagination, and cursor support.</purpose>
+<non-goals>
+  <item>Does not build the search index — uses pre-built SQLite and vector index.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: hybridSearch with FTS/vector/graph candidate merging, ranking, filtering, and cursor pagination.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import type {
   FtsHit,

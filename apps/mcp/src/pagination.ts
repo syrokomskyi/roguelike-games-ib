@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Encodes and decodes base64url list cursors with canonical-hash and filter-digest integrity checks for paginated MCP tool responses.</purpose>
+<non-goals>
+  <item>Does not implement search cursors — those use a separate format in the search package.</item>
+  <item>Does not persist cursor state across server restarts.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: list cursor encoding/decoding with hash and filter digest validation, plus paginate helper.</item>
+</CHANGE_SUMMARY>
+*/
 import { sha256 } from "@roguelike-games-ib/knowledge-core";
 import { InvalidCursorError, StaleCursorError } from "./errors.ts";
 

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines core extractor SDK types — manifest, context, run result, diagnostic, extractor interface, and staged output structures.</purpose>
+<non-goals>
+  <item>Does not implement extractors or validation — type definitions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: extractor SDK type definitions for manifest, context, run result, diagnostics, and staged output.</item>
+</CHANGE_SUMMARY>
+*/
 import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";
 import type { ReadonlySourceReader } from "./source-reader.ts";
 import type { EvidenceFactory } from "./evidence-builder.ts";

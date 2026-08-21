@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Runs the inspiration pipeline — generates seeds via AI or deterministic fallback, evaluates constraints, creates ancestry, and persists results.</purpose>
+<non-goals>
+  <item>Does not promote seeds to canonical — use seeds module.</item>
+  <item>Does not manage sessions — use sessions module.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: IdeaGenerator interface, runInspirationPipeline, deterministicGenerate, NullGenerator, FailingGenerator.</item>
+</CHANGE_SUMMARY>
+*/
 import type { DesignConstraints } from "./constraints.ts";
 import type { MutationVector, MutationResult } from "./mutation.ts";
 import type { SeedRecord, SeedScore, GeneratorMetadata } from "./schema.ts";

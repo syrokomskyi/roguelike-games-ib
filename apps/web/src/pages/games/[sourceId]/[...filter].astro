@@ -1,3 +1,14 @@
+<!--
+<MODULE_CONTRACT>
+<purpose>Generates static per-game pages with record listings, type filters, pagination, source binding panel, and coverage panel.</purpose>
+<non-goals>
+  <item>Does not compute coverage — rendering of projection store data only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: game listing page with getStaticPaths, type filters, pagination, binding and coverage panels.</item>
+</CHANGE_SUMMARY>
+-->
 ---
 import Base from "../../../layouts/Base.astro";
 import { createWebContext } from "../../../lib/context.ts";

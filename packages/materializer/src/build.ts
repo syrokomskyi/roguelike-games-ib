@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds the materialized read model from canonical state — writes JSONL, SQLite, manifest, and verifies integrity.</purpose>
+<non-goals>
+  <item>Does not extract or transform source data — materialization only.</item>
+  <item>Does not serve the read model — build-time only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: materialize, readState, verifyState functions.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {

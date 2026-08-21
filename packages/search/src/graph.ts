@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Expands the canonical relation graph from a root record using BFS traversal with direction and relation type filtering.</purpose>
+<non-goals>
+  <item>Does not infer edges — follows canonical typed relations only.</item>
+  <item>Does not perform text search — graph expansion only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: graphExpand with BFS traversal, getOutgoingEdges, getIncomingEdges.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import type { GraphEdge, GraphExpansionOptions, GraphExpansionResult } from "./types.ts";
 

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds and verifies the SQLite read model with FTS5 full-text search, foreign keys, and a logical dump hash for cross-version determinism.</purpose>
+<non-goals>
+  <item>Does not write JSONL files — SQLite build only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: buildSqlite, computeLogicalDumpHash, verifySqliteIntegrity with FTS5 and foreign key checks.</item>
+</CHANGE_SUMMARY>
+*/
 import Database from "better-sqlite3";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";

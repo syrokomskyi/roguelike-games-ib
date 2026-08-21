@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads, writes, and validates the alias registry — retired keys mapped to current keys with collision detection.</purpose>
+<non-goals>
+  <item>Does not create aliases — registry management only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: AliasEntry type, readAliasRegistry, writeAliasRegistry, assertNoAliasCollisions, resolveAlias.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { canonicalJsonStringify, parseJsonl } from "../canonical-json.ts";
 import { IdentityError } from "../errors.ts";

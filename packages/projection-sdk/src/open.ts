@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Opens a projection store from materialized dist directory, loading all records, keys, aliases, sources, relations, claims, evidence, and coverage with resolution helpers.</purpose>
+<non-goals>
+  <item>Does not materialize — reads pre-materialized output only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ProjectionStore type, openProjection, resolveRecordById, resolveRecordByKey, resolveRecordByAlias, resolveRecord.</item>
+</CHANGE_SUMMARY>
+*/
 import { join } from "node:path";
 import { readManifest, isManifestSupported } from "./manifest.ts";
 import { readRecords, readKeyMap, readAliasMap, type KeyMap, type AliasMap } from "./records.ts";

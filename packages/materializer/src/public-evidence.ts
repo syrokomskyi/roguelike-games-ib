@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Redacts evidence anchors for public output — filters by access level, controls locator exposure, and limits excerpts per publication policy.</purpose>
+<non-goals>
+  <item>Does not validate publication policies — redaction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: PublicEvidence type, redactPublicEvidence, isPublicEvidence, isRestrictedEvidence.</item>
+</CHANGE_SUMMARY>
+*/
 import { EvidenceAnchor } from "@roguelike-games-ib/knowledge-core";
 
 /**

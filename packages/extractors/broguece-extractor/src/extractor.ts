@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>BrogueCE factual extractor — parses C source files and emits creature, terrain, and item records with evidence anchors and population counts.</purpose>
+<non-goals>
+  <item>Does not parse JSON or YAML — BrogueCE source is C code only.</item>
+  <item>Does not compute design-space relations — factual extraction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: BrogueCE extractor with monster, tile, and item table parsing.</item>
+</CHANGE_SUMMARY>
+*/
 import type {
   Extractor,
   ExtractorContext,

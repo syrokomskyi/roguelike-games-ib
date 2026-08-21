@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds SQL WHERE clauses from structured search filters and applies them to record ID sets.</purpose>
+<non-goals>
+  <item>Does not perform search — filter clause construction and application only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: buildFilterClause, filterRecordIds.</item>
+</CHANGE_SUMMARY>
+*/
 import type { SearchFilters } from "./types.ts";
 
 /**

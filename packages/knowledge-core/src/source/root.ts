@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Resolves and validates the source bundle root as a sibling directory, with path traversal and symlink escape checks.</purpose>
+<non-goals>
+  <item>Does not read source files — root resolution and validation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ResolvedSourceRoot type, resolveSourceBundleRoot, validateSourcePath, assertNoSourceOverride.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
 import { SourceRootError } from "../errors.ts";

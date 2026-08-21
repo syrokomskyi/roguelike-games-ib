@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Lists definition records for a specific source with optional kind filter and cursor-based pagination.</purpose>
+<non-goals>
+  <item>Does not resolve aliases or traverse relations — returns flat record list.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: list_definitions tool handler with source and kind filters.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";

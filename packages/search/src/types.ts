@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines core types for the search package — SearchRecord, SearchHit, SearchQuery, SearchFilters, SearchResult, VectorIndex, GraphExpansion, and SearchIndex interfaces.</purpose>
+<non-goals>
+  <item>Does not implement search logic — type definitions only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SearchRecord, ScoreComponents, SearchHit, SearchQuery, SearchFilters, SearchResult, SearchIndexManifest, VectorIndex, VectorMatch, GraphExpansionOptions, GraphEdge, GraphExpansionResult, SearchIndex, ExactLookupQuery, FtsHit types.</item>
+</CHANGE_SUMMARY>
+*/
 export interface SearchRecord {
   id: string;
   key: string;

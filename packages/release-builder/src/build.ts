@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Builds a release bundle — runs pre-release checks, copies canonical/materialized output, generates evidence and dataset manifest, computes checksums.</purpose>
+<non-goals>
+  <item>Does not publish releases — bundle assembly only.</item>
+  <item>Does not materialize — uses pre-materialized dist output.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: buildRelease with directory copy, evidence generation, manifest creation, checksum computation.</item>
+</CHANGE_SUMMARY>
+*/
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, copyFileSync, rmSync } from "node:fs";
 import { join, resolve, relative } from "node:path";

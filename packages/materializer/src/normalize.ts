@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Normalizes canonical records for deterministic JSONL output — sorting, field extraction, and source ID extraction.</purpose>
+<non-goals>
+  <item>Does not validate records — normalization and sorting only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: normalizeRecord, sortRecords, getField, extractSourceId.</item>
+</CHANGE_SUMMARY>
+*/
 import { CanonicalRecord } from "./types.ts";
 
 /**

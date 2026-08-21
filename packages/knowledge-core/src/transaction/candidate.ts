@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines candidate record and batch types for staging extractor output before promotion.</purpose>
+<non-goals>
+  <item>Does not validate candidates — type definitions and factory only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: CandidateRecord, CandidateBatch types and createCandidateBatch factory.</item>
+</CHANGE_SUMMARY>
+*/
 export interface CandidateRecord {
   id: string;
   key: string;

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Read guard for source files — prevents path traversal and symlink escapes through a sandboxed read-only interface.</purpose>
+<non-goals>
+  <item>Does not write or modify source files — read-only access.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ReadonlySource class with resolveSafe, exists, read, getRoot.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
 import { SourceRootError } from "../errors.ts";

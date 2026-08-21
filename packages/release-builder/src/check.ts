@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Pre-release checks — license, source drift, canonical integrity, stale projection, source payload exclusion, secret scanning, interrupted transaction detection.</purpose>
+<non-goals>
+  <item>Does not build releases — check-only with blockers and warnings.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: checkRelease with 7 check functions and secret pattern matching.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Barrel export for search — build, exact, filters, fts, graph, hybrid, ranking, cursor, vectors, and types.</purpose>
+<non-goals>
+  <item>Does not implement business logic — re-exports from submodules.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: search barrel exporting all public types and functions.</item>
+</CHANGE_SUMMARY>
+*/
 export { buildSearchIndex, writeSearchManifest } from "./build.ts";
 export type { BuildSearchIndexOptions } from "./build.ts";
 export { exactLookup } from "./exact.ts";

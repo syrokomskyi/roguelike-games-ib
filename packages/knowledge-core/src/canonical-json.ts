@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Canonical JSON serialization with sorted keys, JSONL utilities, and deterministic record ordering.</purpose>
+<non-goals>
+  <item>Does not validate JSON schema — canonicalization only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: canonical JSON stringify/parse, JSONL line/parse/serialize utilities.</item>
+</CHANGE_SUMMARY>
+*/
 /**
  * Canonical JSON serialization per RFC-8785-like rules.
  * - UTF-8

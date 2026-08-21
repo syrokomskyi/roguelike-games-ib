@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Creates, persists, reads, and updates inspiration sessions tracking constraints and associated seed IDs.</purpose>
+<non-goals>
+  <item>Does not create seeds — session lifecycle only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: InspirationSession type, createSession, persistSession, readSession, addSeedToSession.</item>
+</CHANGE_SUMMARY>
+*/
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonStringify, canonicalJsonParse } from "@roguelike-games-ib/knowledge-core";

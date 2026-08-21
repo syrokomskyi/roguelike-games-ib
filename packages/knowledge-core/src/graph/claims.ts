@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates claim records by checking subject IDs, object refs, and evidence refs against known record IDs.</purpose>
+<non-goals>
+  <item>Does not resolve contested claims — flags them for contradiction validation.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ClaimRecord type and validateClaims function.</item>
+</CHANGE_SUMMARY>
+*/
 import { GraphIntegrityError } from "../errors.ts";
 
 export interface ClaimRecord {

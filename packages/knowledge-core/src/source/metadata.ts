@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads source metadata from README.md frontmatter and/or package.json, detecting version mismatches and determining metadata origin.</purpose>
+<non-goals>
+  <item>Does not compute fingerprints — metadata extraction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: SourceMetadata type, readSourceMetadata with README and package.json parsing.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Enforces authority boundaries — no laboratory refs in canonical records, no canonical mutations from laboratory, canonical IDs only in ancestry.</purpose>
+<non-goals>
+  <item>Does not validate seed content — boundary enforcement only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: assertNoLabRefInCanonical, assertNoCanonicalMutation, assertCanonicalIdsOnly, assertNoSeedSelfReference.</item>
+</CHANGE_SUMMARY>
+*/
 import { isLaboratoryRecordId, isCanonicalRecordId } from "./schema.ts";
 
 export interface BoundaryCheckResult {

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Validates the full canonical graph by running reference, claim, relation, contradiction, and authority passes in sequence.</purpose>
+<non-goals>
+  <item>Does not repair graph integrity — reports errors only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: validateCanonicalGraph orchestrating all validation passes.</item>
+</CHANGE_SUMMARY>
+*/
 import { validateClaims, ClaimRecord } from "./claims.ts";
 import { validateRelations, RelationRecord, RelationTypeDefinition } from "./relations.ts";
 import { validateContradictions, ContradictionRecord } from "./contradictions.ts";

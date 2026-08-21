@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Returns claims for a record with optional predicate filter and limit-based pagination.</purpose>
+<non-goals>
+  <item>Does not validate claim truthfulness — returns claims as authored.</item>
+  <item>Does not implement cursor-based pagination — uses simple limit slicing.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: get_claims tool handler with predicate filter and limit.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { claimsForRecord } from "@roguelike-games-ib/projection-sdk";

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Queries cross-game concepts, design primitives, and design-space relations with optional filters and pagination.</purpose>
+<non-goals>
+  <item>Does not compute design-space tensions or knobs — returns stored relations only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: find_cross_game_concepts, find_design_primitives, and query_design_space tool handlers.</item>
+</CHANGE_SUMMARY>
+*/
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";

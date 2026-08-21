@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines population contracts and resolves expected vs extracted counts, with record-loss detection by threshold.</purpose>
+<non-goals>
+  <item>Does not compute population denominators — receives contracts from the extractor manifest.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: PopulationContract, PopulationCount, resolvePopulationCounts, and checkRecordLoss.</item>
+</CHANGE_SUMMARY>
+*/
 export interface PopulationContract {
   dimension: string;
   denominatorKind: "extractor_population" | "declared_target_set" | "qualitative";

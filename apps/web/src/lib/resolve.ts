@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Resolves canonical record routes by ID, key, or alias with fallback resolution order for the web application URL routing.</purpose>
+<non-goals>
+  <item>Does not render pages — record resolution and route mapping only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: ResolvedRecord type, resolveRecordRoute with id/key/alias fallback.</item>
+</CHANGE_SUMMARY>
+*/
 import {
   resolveRecord,
   resolveRecordById,

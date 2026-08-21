@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Defines authority context types and helpers for distinguishing canonical vs laboratory projections.</purpose>
+<non-goals>
+  <item>Does not enforce authority — context creation and checking only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: Authority type, AuthorityContext, canonicalAuthority, laboratoryAuthority, isCanonical, isLaboratory.</item>
+</CHANGE_SUMMARY>
+*/
 export type Authority = "canonical" | "laboratory";
 
 export interface AuthorityContext {

@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Computes coverage dimension states and coverage records, enforcing no universal complete boolean.</purpose>
+<non-goals>
+  <item>Does not compute population denominators — receives expected/extracted counts from callers.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: computeDimensionState, computeCoverage, assertNoCompleteBoolean.</item>
+</CHANGE_SUMMARY>
+*/
 import { CoverageDimension, CoverageState, DenominatorKind, CoverageRecord } from "./dimensions.ts";
 
 /**

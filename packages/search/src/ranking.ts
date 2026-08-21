@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Computes and ranks search scores from lexical, vector, and graph boost components with stable tie-breaking by key and ID.</purpose>
+<non-goals>
+  <item>Does not perform search — score computation and ranking only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: computeScores, rankHits, ftsScoreMap, vectorScoreMap, mergeCandidateIds, buildHits.</item>
+</CHANGE_SUMMARY>
+*/
 import type { FtsHit, ScoreComponents, SearchHit, SearchRecord, VectorMatch } from "./types.ts";
 
 /**

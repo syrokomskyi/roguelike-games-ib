@@ -1,3 +1,14 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Reads knowledge config and manifest YAML files, validates required fields, and resolves workspace paths.</purpose>
+<non-goals>
+  <item>Does not validate projection or search config sections — passes them through as opaque records.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: readKnowledgeConfig, readKnowledgeManifest, resolveKnowledgePaths, resolveSourceRoot.</item>
+</CHANGE_SUMMARY>
+*/
 import { readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { parse as parseYaml } from "yaml";
