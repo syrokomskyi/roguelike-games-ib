@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–5 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–6 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 implementation
-**Status**: All 163 tests pass (41 test files)
+**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 + Stage 6 implementation
+**Status**: All 203 tests pass (51 test files)
 
 ## What was done
 
@@ -136,9 +136,41 @@
   - SEARCH-005: graph expansion uses typed canonical edges only (relation_type filter, direction, maxDepth)
   - SEARCH-006: stale search cursor rejected after canonical hash change
 
+### Stage 6 — MCP
+- **`apps/mcp`** — Public read-only MCP server over materialized dataset:
+  - `context.ts` — `createMcpContext()` opens projection + builds search index, exposes dataset metadata
+  - `errors.ts` — `McpError` hierarchy: `InvalidCursorError`, `StaleCursorError`, `NotFoundError`, `ValidationError`
+  - `envelope.ts` — `envelope()` wraps every response with `{ dataset, authority: "canonical", data }`
+  - `pagination.ts` — `encodeListCursor()` / `decodeListCursor()` with canonical hash + filter digest binding; `paginate()` with stable key ASC then id ASC sort
+  - `tools/dataset.ts` — `get_dataset_info` returns dataset/model version, canonical hash, license, source count, record counts
+  - `tools/sources.ts` — `list_sources` (paginated), `get_source_status` (coverage dimensions, record count)
+  - `tools/records.ts` — `get_record` (by id or key), `resolve_key` (key/alias → current record)
+  - `tools/search.ts` — `search_records` (hybrid/lexical/vector) with score disclaimer, cursor validation
+  - `tools/definitions.ts` — `list_definitions` (by source_id, optional kind filter, paginated)
+  - `tools/mechanics.ts` — `find_mechanics` / `find_systems` (canonical only, structured filters)
+  - `tools/graph.ts` — `traverse_relations` (typed canonical edges, depth hard max 3, direction filter)
+  - `tools/claims.ts` — `get_claims` (by record_id, optional predicate filter)
+  - `tools/evidence.ts` — `get_evidence` (enforces publication policy, restricted evidence not in projection)
+  - `tools/compare.ts` — `compare_records` (2..10), `compare_games` (2..8 sources, optional concept_key)
+  - `tools/design.ts` — `find_cross_game_concepts`, `find_design_primitives`, `query_design_space` (design-scope relations)
+  - `tools/coverage.ts` — `get_coverage` (coverage dimensions per source)
+  - `server.ts` — `createMcpToolRegistry()` registers all 18 required tools; `assertNoWriteTools()` validates read-only; `REQUIRED_TOOLS` list
+  - `index.ts` — Public exports
+- MCP-001..010 (40 tests across 10 files) — all pass
+  - MCP-001: all 18 required tools registered, all read-only, have description + input schema
+  - MCP-002: get_record by id and key agree, response includes dataset/authority metadata
+  - MCP-003: pagination stable for equal sort values (key ASC then id ASC), no gaps or duplicates
+  - MCP-004: cursor bound to canonical hash, stale hash → StaleCursorError, tampered → error
+  - MCP-005: no tool provides arbitrary source file access, no file/path parameters
+  - MCP-006: restricted evidence redacted (filtered by materializer, not accessible via MCP)
+  - MCP-007: traversal depth hard max 3 enforced, depth 0/negative rejected
+  - MCP-008: search scores labeled as relevance signals not confidence, score_disclaimer present
+  - MCP-009: CC-BY-4.0 license in dataset info and response envelope
+  - MCP-010: no canonical write tool registered, no lab_write/lab_generate, all tools read-only
+
 ## What the next agent should do
 
-### Then: MCP, Web, Laboratory, Release gates, Migration
+### Then: Web, Laboratory, Release gates, Migration
 
 ## Important paths
 - Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
@@ -148,7 +180,7 @@
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (163 tests, 41 files)
+pnpm exec vitest run                    # all tests (203 tests, 51 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
@@ -156,4 +188,5 @@ pnpm exec tsc --noEmit -p packages/materializer/tsconfig.json      # typecheck m
 pnpm exec tsc --noEmit -p packages/search/tsconfig.json            # typecheck search
 pnpm exec tsc --noEmit -p packages/projection-sdk/tsconfig.json    # typecheck projection-sdk
 pnpm exec tsc --noEmit -p packages/obsidian-builder/tsconfig.json  # typecheck obsidian-builder
+pnpm exec tsc --noEmit -p apps/mcp/tsconfig.json                   # typecheck mcp
 ```

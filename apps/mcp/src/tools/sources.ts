@@ -1,0 +1,73 @@
+import type { McpContext } from "../context.ts";
+import { envelope } from "../envelope.ts";
+import { paginate } from "../pagination.ts";
+import { NotFoundError } from "../errors.ts";
+
+export function listSources(
+  ctx: McpContext,
+  input: { cursor?: string; limit?: number },
+) {
+  const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
+  const filters: Record<string, unknown> = {};
+  const { items, nextCursor } = paginate(
+    ctx.store.sources.map((s) => ({
+      ...s,
+      key: s.source_id,
+      id: s.source_id,
+    })),
+    ctx.canonicalHash,
+    filters,
+    input.cursor,
+    limit,
+  );
+  return envelope(ctx, {
+    sources: items.map((s) => ({
+      source_id: s.source_id,
+      declared_version: s.declared_version,
+      version_scheme: s.version_scheme,
+      binding_digest: s.binding_digest,
+      fingerprint_algorithm: s.fingerprint.algorithm,
+      fingerprint_value: s.fingerprint.value,
+    })),
+    cursor: nextCursor,
+  });
+}
+
+export function getSourceStatus(
+  ctx: McpContext,
+  input: { source_id: string },
+) {
+  const source = ctx.store.sources.find((s) => s.source_id === input.source_id);
+  if (!source) {
+    throw new NotFoundError(`Source not found: ${input.source_id}`);
+  }
+
+  const coverage = ctx.store.coverage.filter((c) => c.source_id === input.source_id);
+  const recordCount = ctx.store.records.filter(
+    (r) => {
+      const sourceId = (r as unknown as Record<string, unknown>)["source_identity"] as
+        Record<string, unknown> | undefined;
+      return sourceId?.["source_id"] === input.source_id;
+    },
+  ).length;
+
+  return envelope(ctx, {
+    source_id: source.source_id,
+    declared_version: source.declared_version,
+    binding_digest: source.binding_digest,
+    fingerprint: source.fingerprint,
+    vcs: source.vcs,
+    record_count: recordCount,
+    coverage_dimensions: coverage.flatMap((c) =>
+      c.dimensions.map((d) => ({
+        dimension_id: d.id,
+        state: d.state,
+        basis: d.basis,
+        expected: d.expected,
+        extracted: d.extracted,
+        validated: d.validated,
+        unresolved: d.unresolved,
+      })),
+    ),
+  });
+}

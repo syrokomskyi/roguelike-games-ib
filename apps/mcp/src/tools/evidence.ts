@@ -1,0 +1,42 @@
+import type { McpContext } from "../context.ts";
+import { envelope } from "../envelope.ts";
+import { isRestricted } from "@roguelike-games-ib/projection-sdk";
+import { NotFoundError } from "../errors.ts";
+
+export function getEvidence(
+  ctx: McpContext,
+  input: { evidence_id: string },
+) {
+  const evidence = ctx.store.evidence.find((e) => e.id === input.evidence_id);
+  if (!evidence) {
+    throw new NotFoundError(`Evidence not found: ${input.evidence_id}`);
+  }
+
+  if (isRestricted(evidence)) {
+    return envelope(ctx, {
+      evidence_id: evidence.id,
+      source_id: evidence.source_id,
+      restricted: true,
+      message: "Evidence is not publicly accessible",
+      artifact_path: null,
+      artifact_sha256: null,
+      locator: null,
+      fragment_hash: null,
+      excerpt: null,
+      license_ref: null,
+    });
+  }
+
+  return envelope(ctx, {
+    evidence_id: evidence.id,
+    source_id: evidence.source_id,
+    restricted: false,
+    message: null,
+    artifact_path: evidence.artifact_path,
+    artifact_sha256: evidence.artifact_sha256,
+    locator: evidence.locator,
+    fragment_hash: evidence.fragment_hash,
+    excerpt: evidence.excerpt,
+    license_ref: evidence.license_ref,
+  });
+}
