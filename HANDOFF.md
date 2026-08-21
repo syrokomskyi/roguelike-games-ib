@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–7 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–8 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 7 — Web implementation (previous sessions: Stages 0–6)
-**Status**: All 234 tests pass (57 test files)
+**Session**: Stage 8 — Laboratory runtime (previous sessions: Stages 0–7)
+**Status**: All 261 tests pass (58 test files)
 
 ## What was done
 
@@ -189,16 +189,14 @@
   - WEB-005: Laboratory content has non-authoritative badge (canonical vs laboratory class/label)
   - WEB-006: page metadata reports canonical hash (in PageMetadata + HTML meta tags)
 
-## What the next agent should do
+### Stage 8 — Laboratory runtime
 
-### Stage 8 — Laboratory runtime (next priority)
-
-Implement `packages/laboratory-runtime` per spec `03-packages/LABORATORY-RUNTIME.md` and `05-laboratory/INSPIRATION-ENGINE.md`.
+Implemented `packages/laboratory-runtime` per spec `03-packages/LABORATORY-RUNTIME.md` and `05-laboratory/INSPIRATION-ENGINE.md`.
 
 Required files: `src/index.ts`, `schema.ts`, `sessions.ts`, `seeds.ts`, `constraints.ts`, `mutation.ts`, `ancestry.ts`, `generator.ts`, `boundary.ts`.
 
 Key rules:
-- Laboratory records use `authority: laboratory`, own schema/id namespace
+- Laboratory records use `authority: laboratory`, own schema/id namespace (`urn:roguelike-games-ib:lab:<uuid-v7>`)
 - May reference canonical record ids as ancestry/input
 - May never be referenced by canonical `evidence_refs`
 - Seed promotion = new canonical candidate via transaction, not direct canonical mutation
@@ -206,7 +204,7 @@ Key rules:
 - Provider failure must never write/alter canonical knowledge
 - Anti-copy ranking penalizes cosmetic-only mutation
 
-Tests: LAB-001..007 (see `07-tests/TEST-CATALOG.md`):
+Tests: LAB-001..007 (27 tests in 1 file) — all pass:
 - LAB-001: seed may reference canonical ancestry
 - LAB-002: canonical evidence cannot reference seed
 - LAB-003: seed carries authority=laboratory
@@ -216,6 +214,8 @@ Tests: LAB-001..007 (see `07-tests/TEST-CATALOG.md`):
 - LAB-007: persisted generated seed records provider/model/template and ancestry
 
 Gate: LAB-001..007 and C8 (authority boundary).
+
+## What the next agent should do
 
 ### Stage 9 — BrogueCE real vertical slice
 
@@ -253,7 +253,7 @@ Migration tests (MIG-001..005) are gated on Stages 9–10. See `08-migration/V1-
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (234 tests, 57 files)
+pnpm exec vitest run                    # all tests (261 tests, 58 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
@@ -263,4 +263,5 @@ pnpm exec tsc --noEmit -p packages/projection-sdk/tsconfig.json    # typecheck p
 pnpm exec tsc --noEmit -p packages/obsidian-builder/tsconfig.json  # typecheck obsidian-builder
 pnpm exec tsc --noEmit -p apps/mcp/tsconfig.json                   # typecheck mcp
 pnpm exec tsc --noEmit -p apps/web/tsconfig.json                   # typecheck web
+pnpm exec tsc --noEmit -p packages/laboratory-runtime/tsconfig.json # typecheck laboratory-runtime
 ```
