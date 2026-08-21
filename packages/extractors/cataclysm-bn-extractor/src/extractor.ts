@@ -201,15 +201,17 @@ export function createCataclysmBNExtractor(): Extractor {
           for (const item of items) {
             const seenCount = seenItemIds.get(item.id) ?? 0;
             let slug = item.id.replace(/-/g, "_");
+            let nativeId = item.id;
             if (seenCount > 0) {
               const fileSuffix = file
                 .replace(/^items\//, "")
                 .replace(/\.json$/, "")
                 .replace(/[/]/g, "_");
               slug = `${slug}__${fileSuffix}`;
+              nativeId = `${item.id}__${fileSuffix}`;
             }
             seenItemIds.set(item.id, seenCount + 1);
-            const resolved = ctx.ids.resolveOrCreate("item", slug, item.id);
+            const resolved = ctx.ids.resolveOrCreate("item", slug, nativeId);
             const envelope = makeRecordEnvelope(
               ctx.binding.source_id,
               resolved.key,
@@ -224,7 +226,7 @@ export function createCataclysmBNExtractor(): Extractor {
               name: { canonical: item.name || item.id, original: item.id },
               source_identity: {
                 source_id: ctx.binding.source_id,
-                native_id: item.id,
+                native_id: nativeId,
                 path: file,
               },
               activation: "active" as const,
@@ -275,15 +277,17 @@ export function createCataclysmBNExtractor(): Extractor {
           for (const mut of mutations) {
             const seenCount = seenMutationIds.get(mut.id) ?? 0;
             let slug = mut.id.replace(/-/g, "_");
+            let nativeId = mut.id;
             if (seenCount > 0) {
               const fileSuffix = file
                 .replace(/^mutations\//, "")
                 .replace(/\.json$/, "")
                 .replace(/[/]/g, "_");
               slug = `${slug}__${fileSuffix}`;
+              nativeId = `${mut.id}__${fileSuffix}`;
             }
             seenMutationIds.set(mut.id, seenCount + 1);
-            const resolved = ctx.ids.resolveOrCreate("mutation", slug, mut.id);
+            const resolved = ctx.ids.resolveOrCreate("mutation", slug, nativeId);
             const envelope = makeRecordEnvelope(
               ctx.binding.source_id,
               resolved.key,
@@ -298,7 +302,7 @@ export function createCataclysmBNExtractor(): Extractor {
               name: { canonical: mut.name || mut.id, original: mut.id },
               source_identity: {
                 source_id: ctx.binding.source_id,
-                native_id: mut.id,
+                native_id: nativeId,
                 path: file,
               },
               activation: "active" as const,
