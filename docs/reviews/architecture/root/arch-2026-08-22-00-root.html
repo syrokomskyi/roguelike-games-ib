@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — roguelike-games-ib</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Repository architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              roguelike-games-ib
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 · repository root
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">8,627</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              materialized records
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">24</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              semantic records
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">9 / 14</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              concepts / relations
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">Build blocked</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              static output + server page
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">→</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="creative-quest"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Collapse the Creative Quest loop
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800"
+                >in-process</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/laboratory-runtime/src/{generator,constraints,mutation,ancestry,seeds,sessions}.ts
+              · apps/web/src/pages/inspiration.astro ·
+              apps/web/src/lib/context.ts · packages/search/src/hybrid.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before · capability without a journey
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  U[Author intent] -. missing seam .-> P[Static Inspiration page]
+                  P -. dead end .-> X[Warning + paragraph]
+                  S[Search records] --> R[Raw ranked hits]
+                  L1[constraints.ts] --> L2[generator.ts]
+                  L2 --> L3[ancestry.ts]
+                  L3 --> L4[seeds.ts]
+                  L4 --> L5[sessions.ts]
+                  P -. not connected .-> L2
+                  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+                  class P,X,L2 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After · one deep Creative Quest module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  U[Creative brief] -->|small seam| Q[Creative Quest]
+                  subgraph QI[Deep implementation]
+                    I[Find causal ingredients]
+                    M[Apply structural mutations]
+                    E[Evaluate constraints + anti-copy]
+                    A[Explain ancestry]
+                    S[Persist session + seeds]
+                    I --> M --> E --> A --> S
+                  end
+                  Q --> O[Ranked, explainable directions]
+                  Q --> C[Remixable capsule]
+                  Q -.contains.-> QI
+                  class Q,QI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                A tested Laboratory implementation exists, but no product caller
+                crosses its seam; the public page is a dead end.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Make Creative Quest the deep module that owns intent, retrieval,
+                mutation, constraint evaluation, ancestry, session state, and
+                the final creative artifact.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: journey in one module</li>
+              <li>leverage: Web and MCP reuse</li>
+              <li>depth: intent hides machinery</li>
+              <li>tests: whole quest survives</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="meaning-compiler"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen semantic reconstruction into a Meaning Compiler
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >local-substitutable</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              scripts/run-stage-semantic.ts ·
+              scripts/run-stage-design-enrichment.ts ·
+              knowledge/ontology/{semantic-record,concept,relation}.schema.yaml
+              · packages/knowledge-core/src/transaction/*
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before · meaning embedded in scripts
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  F[8,594 definitions] --> H1[574-line semantic script]
+                  H1 --> H2[456-line design script]
+                  A[Absolute paths] -.leak.-> H1
+                  D[Hard-coded digests] -.leak.-> H1
+                  C[Hand-authored concepts] -.leak.-> H2
+                  H2 --> O[24 semantics · 9 concepts · 14 relations]
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class A,D,C,H1,H2 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After · evidence-to-meaning depth
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  F[Definitions + source evidence] -->|small seam| M[Meaning Compiler]
+                  subgraph MI[Deep implementation]
+                    P[Evidence packets]
+                    R[Semantic reconstruction]
+                    K[Cross-game abstraction]
+                    V[Schema + graph verification]
+                    G[Governed review queue]
+                    P --> R --> K --> V --> G
+                  end
+                  M --> O[Promotion-ready meaning batch]
+                  M -.contains.-> MI
+                  A1[Deterministic adapter] -.-> M
+                  A2[AI-assisted adapter] -.-> M
+                  class M,MI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The product promise lives inside two one-off scripts, so meaning
+                grows linearly with curator effort while raw definitions grow
+                automatically.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Concentrate evidence selection, reconstruction, abstraction,
+                validation, and review-state production inside one deep module
+                with deterministic and AI-assisted adapters.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: meaning rules concentrate</li>
+              <li>leverage: every game compounds</li>
+              <li>seam: providers stay replaceable</li>
+              <li>tests: fixtures prove promotion</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="author-query"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Collapse retrieval into an Author Question module
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >local-substitutable</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/search/src/{build,hybrid,ranking,filters}.ts ·
+              packages/projection-sdk/src/{open,records,claims,graph}.ts ·
+              apps/web/src/{lib/page-data.ts,pages/search.astro} ·
+              apps/mcp/src/tools/{search,mechanics,design,compare}.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before · callers assemble semantics
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  Q[Natural-language question] --> H[Hybrid search]
+                  H --> N[Null vector adapter]
+                  H --> R[Raw records + numeric scores]
+                  W[Web] -->|own filters| R
+                  M[MCP] -->|different filters| R
+                  W -. semantic_record special case .-> S[Mechanics]
+                  M -. only record_type=mechanic .-> S
+                  W -. concept_type=design_primitive .-> D[Design]
+                  M -. record_type=design_primitive .-> D
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class W,M,S,D,N leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After · questions become design dossiers
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  Q[Author question] -->|small seam| A[Author Question]
+                  subgraph AI[Deep implementation]
+                    I[Normalize ontology kinds]
+                    R[Retrieve lexical + semantic]
+                    G[Expand causal graph]
+                    E[Attach evidence + uncertainty]
+                    C[Contrast games + structures]
+                    I --> R --> G --> E --> C
+                  end
+                  A --> D[Evidence-backed design dossier]
+                  W[Web adapter] -.-> A
+                  M[MCP adapter] -.-> A
+                  A -.contains.-> AI
+                  class A,AI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The interface exposes storage taxonomy and ranking internals;
+                Web and MCP reconstruct domain meaning differently and already
+                disagree.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Place ontology normalization, retrieval, graph expansion,
+                evidence attachment, uncertainty, and cross-game contrast behind
+                one author-language module.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: ontology mapping once</li>
+              <li>leverage: every projection benefits</li>
+              <li>depth: questions hide storage</li>
+              <li>tests: Web equals MCP</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="publication-snapshot"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen publication into an immutable Snapshot module
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >ports &amp; adapters</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              package.json · turbo.json ·
+              scripts/{run-materialize,run-build-web,run-build-obsidian}.ts ·
+              packages/{materializer,release-builder,obsidian-builder}/src/* ·
+              apps/web/astro.config.mjs · apps/web/src/pages/search.astro
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before · build knowledge leaks everywhere
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  K[Canonical knowledge] --> M[Materializer]
+                  M --> O[Obsidian builder]
+                  M --> W[Astro static build]
+                  M --> P[MCP context]
+                  M --> R[Release builder]
+                  A[Absolute workspace paths] -.leak.-> M
+                  S[Server-rendered search] -.leak.-> W
+                  C[Static output] -. conflict .-> W
+                  W --> X[NoAdapterInstalled]
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class A,S,C,W,X leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After · one content-addressed snapshot
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  K[Verified canonical knowledge] -->|small seam| S[Publication Snapshot]
+                  subgraph SI[Deep implementation]
+                    V[Verify]
+                    M[Materialize]
+                    I[Index]
+                    B[Bundle]
+                    C[Checksum + manifest]
+                    V --> M --> I --> B --> C
+                  end
+                  S --> A1[Static Web adapter]
+                  S --> A2[MCP adapter]
+                  S --> A3[Obsidian adapter]
+                  S --> A4[Dataset adapter]
+                  S -.contains.-> SI
+                  class S,SI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                Publication is a choreography callers must know, and the current
+                Web build deterministically fails before deployment.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Concentrate verification, materialization, search indexing,
+                projection assembly, and content hashes in one deep module;
+                deployment targets become adapters.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: one release truth</li>
+              <li>leverage: every projection ships</li>
+              <li>seam: hosts stay replaceable</li>
+              <li>tests: snapshot boots everywhere</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="share-capsule"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 05
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Make inspiration travel as a Remix Capsule
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >ports &amp; adapters</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/laboratory-runtime/src/{schema,ancestry,seeds,sessions}.ts
+              · apps/web/src/pages/inspiration.astro ·
+              apps/web/src/layouts/Base.astro · apps/mcp/src/server.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before · artifacts stop at local files
+              </p>
+              <pre class="mermaid">
+                flowchart LR
+                  A[Author] --> S[Local session JSON]
+                  S --> D[Local seed JSON]
+                  D -. no public route .-> X[Dead end]
+                  B[Another author] -. cannot remix .-> X
+                  E[Evidence ancestry] -. invisible .-> X
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class X,D,E leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After · sharing preserves creative lineage
+              </p>
+              <pre class="mermaid">
+                flowchart LR
+                  A[Author] -->|small seam| C[Remix Capsule]
+                  C --> U[Stable public URL]
+                  C --> J[Portable JSON]
+                  C --> O[Social preview]
+                  U --> B[Another author]
+                  B --> R[Remix]
+                  R --> C2[New capsule]
+                  C -. pins .-> H[Dataset hash + ancestry]
+                  C2 -. links .-> C
+                  class C,C2 deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The only potentially viral artifact—the transformed idea with
+                provenance—has no durable public form, remix lineage, or share
+                path.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep, content-addressed laboratory module that freezes
+                the brief, selected structures, transformations, dataset hash,
+                and parent capsule without crossing canonical authority.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>leverage: every result recruits</li>
+              <li>locality: lineage stays intact</li>
+              <li>seam: exports stay adapters</li>
+              <li>tests: remixes remain reproducible</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#creative-quest"
+            >Close the Creative Quest loop first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          It turns the repository's strongest existing assets into one complete
+          author outcome, creates the most valuable test seam, and exposes
+          exactly which meaning, retrieval, publication, and sharing depth must
+          be added next.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> One real creative brief
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> One evidence-backed quest
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> One durable result
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> One remix invitation
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from source modules, canonical ontology, the current
+        materialized snapshot, scoped type checks, focused tests, and the Web
+        build on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>
