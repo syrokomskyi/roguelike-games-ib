@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–9 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–10 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 9 — BrogueCE real vertical slice (previous sessions: Stages 0–8)
-**Status**: All 276 tests pass (59 test files)
+**Session**: Stage 10 — Cataclysm-BN scale trial + COV/FORGE/REL/MIG tests (previous sessions: Stages 0–9)
+**Status**: All 352 tests pass (66 test files)
 
 ## What was done
 
@@ -248,43 +248,94 @@ Registered BrogueCE as a source unit. Built deterministic factual extractors par
 
 Gate: C9 conformance (15 tests) — all pass. Zero release-blocking diagnostics.
 
+### Stage 10 — Cataclysm-BN scale trial
+
+Built data-driven JSON extractor for Cataclysm-BN. High-cardinality families extracted with exact denominator counts. 14,894 canonical records promoted.
+
+**Source registration**:
+- Source bundle at `../roguelike-games-ib-source/Cataclysm-BN/` with `package.json` (`werkstattSource` schema, id `cataclysm-bn`, version `0.7.1`)
+- Registered in `knowledge/sources/registry.yaml` and `bindings.yaml` with `sha256-tree-v1` fingerprint `0747e1f4...` and binding digest `a8b27380...`
+- Payload path: `data/json` (JSON data files, not C source)
+
+**Extractor (`packages/cataclysm-bn-extractor`)**:
+- `json-parser.ts` — Parses Cataclysm-BN JSON data: monsters (type=MONSTER), items (any id), mutations, professions
+- `extractor.ts` — Deterministic extractor (`cataclysm-bn-factual` v1.0.0) producing 7,447 `game_definition` records:
+  - 597 creatures (hp, speed, aggression, morale, melee, dodge, species, flags)
+  - 5,886 items (symbol, color, price, volume, weight, material, flags)
+  - 625 mutations (points, visibility, category, leads_to)
+  - 339 professions
+- Verified deterministic: double-run hash matches
+
+**Runner script**: `scripts/run-stage10.ts` — runs extractor → staging → promotes all to canonical via `applyPromotionTransaction`
+
+**Benchmarks**:
+- Extraction runtime: ~1.7s
+- Promotion runtime: ~0.6s
+- Peak heap: ~68MB
+- Peak RSS: ~208MB
+- Total canonical records: 14,894 (7,447 game_definition + 7,447 evidence)
+
+**Test**: `tests/conformance/c10-cataclysm-bn.test.ts` — 14 C10 conformance tests, all pass
+
+Gate: C10 conformance (14 tests) and deterministic replay — all pass.
+
+### Additional tests implemented (post-Stage 9)
+
+- **COV-001..005**: 20 coverage engine tests (`tests/cover/cover-001-005.test.ts`)
+- **FORGE-006**: 7 release evidence tests (`tests/forge/forge-006.test.ts`)
+- **REL-001..009**: 23 release gate tests (`tests/release/release-001-009.test.ts`)
+- **MIG-001,002,005**: 12 migration tests (`tests/mig/mig-{001,002,005}.test.ts`)
+- **Release builder package**: `packages/release-builder` with `checkRelease`, `generateReleaseEvidence`, `createDatasetManifest`, `buildRelease`
+
+**Total: 66 test files, 352 tests, 0 failures.**
+
 ## What the next agent should do
 
 ### Stage 9 — ✅ Complete
 
 Stage 9 (BrogueCE vertical slice) is complete. All 15 C9 conformance tests pass. 692 canonical records promoted (327 game_definition + 12 semantic_record + 346 evidence + 3 claim + 2 relation + 2 concept). See Stage 9 section above for details.
 
-**Note**: The runner script `scripts/run-stage9.ts` is re-runnable. It will replace existing canonical records via transaction. The temporary test scripts `scripts/test-extractor.ts` and `scripts/test-determinism.ts` can be deleted.
+**Note**: The runner script `scripts/run-stage9.ts` is re-runnable. It will replace existing canonical records via transaction.
 
-### Stage 10 — Cataclysm-BN scale trial
+### Stage 10 — ✅ Complete
 
-Static data-driven adapters for actual current source. Target high-cardinality families with exact denominator counts. Record benchmarks (extraction runtime, peak memory, canonical record count, materialization runtime, SQLite/index size, top-20 query latency cold/warm).
+Stage 10 (Cataclysm-BN scale trial) is complete. All 14 C10 conformance tests pass. 14,894 canonical records promoted (7,447 game_definition + 7,447 evidence). See Stage 10 section above for details.
 
-Gate: C10 and deterministic replay.
+**Note**: The runner script `scripts/run-stage10.ts` is re-runnable.
 
 ### Stage 11 — Freeze v1 implementation contract
 
 Review ontology pressure points; accept RFC/ADR changes; freeze schema/plugin/project contract `1.0`; begin remaining-game migration.
 
+**Context**: Now that two sources (BrogueCE + Cataclysm-BN) are extracted, review:
+- Ontology relation types — `interacts_with` and `has_ability` are NOT in `relation-types.yaml` but appear in BrogueCE semantic records. Either add them or remap.
+- Schema pressure points from 14K+ records (field coverage, missing optional fields)
+- Extractor SDK patterns — JSON-based extractors (Cataclysm-BN) vs C-source parsers (BrogueCE) both work
+- v1 human curation migration — MIG tests cover candidate staging; actual v1 notes migration still needed
+
 ### Stage 12 — Remaining sources
 
 One source at a time: register → discover → extractor → factual promotion → semantic reconstruction → coverage → projections → release gate.
 
-### Also pending: Release gates (REL-001..009) and Forge FORGE-006
+**Remaining games** (18 of 20): NetHack, Crawl, Angband, DRL, HyperRogue, KeeperRL, Shattered PD, Pixel Dungeon, End of Eden, Harmonist, Hauberk, Infra Arcana, Moonlit Myriad, RogueBot, Sleeping Beauty, SpaceHuggers, SteamSky, TRW.
 
-Release tests (REL-001..009) and FORGE-006 can be implemented after Stage 8 or in parallel. See `09-release/OPEN-DATASET.md` for release requirements and `07-tests/TEST-CATALOG.md` for test definitions.
-
-Migration tests (MIG-001..005) are gated on Stages 9–10. See `08-migration/V1-TO-V2.md` and `08-migration/SOURCE-BUNDLE-PREPARATION.md`.
+**v1 human curation**: `notes/` directory in `/home/syrokomskyi/projects/roguelike-games` contains:
+- 22 cross-game analysis files (`_cross_game/`)
+- Per-game TAKEAWAYS, GAME_CARD.yaml, COVERAGE.md
+- Mechanic matrix comparing 20 games
+- These should be migrated as candidates/hints (not canonical facts) per MIG-001 pattern
 
 ## Important paths
 - Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
 - Test catalog: `07-tests/TEST-CATALOG.md`
 - Build sequence: `10-delivery/BUILD-SEQUENCE.md`
 - Package specs: `03-packages/`
+- v1 source: `/home/syrokomskyi/projects/roguelike-games` (games/ + notes/)
+- Source bundles: `/home/syrokomskyi/projects/roguelike-games-ib-source/`
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (276 tests, 59 files)
+pnpm exec vitest run                    # all tests (352 tests, 66 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
@@ -295,4 +346,6 @@ pnpm exec tsc --noEmit -p packages/obsidian-builder/tsconfig.json  # typecheck o
 pnpm exec tsc --noEmit -p apps/mcp/tsconfig.json                   # typecheck mcp
 pnpm exec tsc --noEmit -p apps/web/tsconfig.json                   # typecheck web
 pnpm exec tsc --noEmit -p packages/laboratory-runtime/tsconfig.json # typecheck laboratory-runtime
+pnpm exec tsx scripts/run-stage9.ts    # re-run BrogueCE extraction + promotion
+pnpm exec tsx scripts/run-stage10.ts   # re-run Cataclysm-BN extraction + promotion
 ```

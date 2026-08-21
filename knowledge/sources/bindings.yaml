@@ -14,3 +14,17 @@ bindings:
       commit: null
       clean: null
     binding_digest: 5fb1793f11b3fda3bee098aa6af7dda7166111cc06cffcaeeceae4fa7d1fb5b2
+  - source_id: cataclysm-bn
+    source_unit_path: Cataclysm-BN
+    declared_version: "0.7.1"
+    version_scheme: semver
+    metadata_origin: package_json
+    payload_path: data/json
+    fingerprint:
+      algorithm: sha256-tree-v1
+      value: 0747e1f4fd386b076663592f1a2ffafaf625b93c140117ae609e18b30c8e2713
+    vcs:
+      repository: "https://github.com/cataclysmbnteam/Cataclysm-BN"
+      commit: null
+      clean: null
+    binding_digest: a8b27380f9ca96a859a50604569e6993c3da98bd1c8507f9a8421f5f5d979cbd

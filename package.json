@@ -38,6 +38,8 @@
     "@roguelike-games-ib/laboratory-runtime": "workspace:*",
     "@roguelike-games-ib/test-fixtures": "workspace:*",
     "@roguelike-games-ib/broguece-extractor": "workspace:*",
+    "@roguelike-games-ib/cataclysm-bn-extractor": "workspace:*",
+    "@roguelike-games-ib/release-builder": "workspace:*",
     "prettier": "^3.9.6",
     "vitest": "^3.2.4",
     "typescript": "^5.8.0",

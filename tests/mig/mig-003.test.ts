@@ -183,7 +183,10 @@ describe("C9: BrogueCE vertical slice", () => {
     const evidence = readJsonlDir(join(CANONICAL_ROOT, "evidence"));
     expect(evidence.length).toBeGreaterThan(0);
 
-    for (const ev of evidence) {
+    const brogueceEvidence = evidence.filter((ev) => ev.anchor?.source_id === "broguece");
+    expect(brogueceEvidence.length).toBeGreaterThan(0);
+
+    for (const ev of brogueceEvidence) {
       expect(ev.anchor).toBeDefined();
       expect(ev.anchor.source_id).toBe("broguece");
       expect(ev.anchor.artifact.path).toBeDefined();
