@@ -1,7 +1,7 @@
 ---
 id: ADR-0004
 title: Namespace duplicate native_ids with file suffix instead of skipping
-status: proposed
+status: accepted
 scope: package
 decider: architecture
 reviewers:
@@ -9,7 +9,7 @@ reviewers:
 related:
   - ADR-0003
 created: 2026-08-21
-accepted: null
+accepted: 2026-08-21
 implementedAt: null
 closedAt: null
 ---
