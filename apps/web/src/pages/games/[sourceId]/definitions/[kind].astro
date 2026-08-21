@@ -1,20 +1,48 @@
 ---
-export const prerender = false;
-
 import Base from "../../../../layouts/Base.astro";
 import { createWebContext } from "../../../../lib/context.ts";
 import { getPageMetadata } from "../../../../lib/metadata.ts";
+import { resolve } from "node:path";
 
-const { sourceId, kind } = Astro.params;
-const distDir = Astro.locals.distDir ?? "";
-const ctx = await createWebContext(distDir);
-const meta = getPageMetadata(ctx);
+interface DefRecord {
+  key: string;
+}
 
-const records = ctx.store.records.filter((r) => {
-  if (r.record_type !== kind) return false;
-  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  return si?.["source_id"] === sourceId;
-});
+export async function getStaticPaths() {
+  const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+  const ctx = await createWebContext(distDir);
+  const meta = getPageMetadata(ctx);
+
+  const paths: {
+    params: { sourceId: string; kind: string };
+    props: { sourceId: string; kind: string; records: DefRecord[]; meta: typeof meta };
+  }[] = [];
+
+  for (const source of ctx.store.sources) {
+    const sourceId = source.source_id;
+    const sourceRecords = ctx.store.records.filter((r) => {
+      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+      return si?.["source_id"] === sourceId;
+    });
+
+    const kinds = [...new Set(sourceRecords.map((r) => r.record_type))].sort();
+
+    for (const kind of kinds) {
+      const records: DefRecord[] = sourceRecords
+        .filter((r) => r.record_type === kind)
+        .map((r) => ({ key: r.key }));
+
+      paths.push({
+        params: { sourceId, kind },
+        props: { sourceId, kind, records, meta },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { sourceId, kind, records, meta } = Astro.props;
 ---
 
 <Base title={`${kind} — ${sourceId}`} metadata={meta}>

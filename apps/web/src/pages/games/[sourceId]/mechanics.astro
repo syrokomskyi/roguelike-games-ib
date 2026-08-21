@@ -1,26 +1,42 @@
 ---
-export const prerender = false;
-
 import Base from "../../../layouts/Base.astro";
 import { createWebContext } from "../../../lib/context.ts";
 import { getPageMetadata } from "../../../lib/metadata.ts";
+import { resolve } from "node:path";
 
-const { sourceId } = Astro.params;
-const distDir = Astro.locals.distDir ?? "";
-const ctx = await createWebContext(distDir);
-const meta = getPageMetadata(ctx);
+interface MechanicRecord {
+  key: string;
+  title: string | undefined;
+  summary: string | undefined;
+}
 
-const records = ctx.store.records.filter((r) => {
-  const isMechanic = r.record_type === "mechanic" || (r.record_type === "semantic_record" && (r as Record<string, unknown>)["semantic_type"] === "mechanic");
-  if (!isMechanic) return false;
-  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-  return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
-}).map((r) => ({
-  key: r.key,
-  title: (r as Record<string, unknown>)["title"] as string | undefined,
-  summary: (r as Record<string, unknown>)["summary"] as string | undefined,
-}));
+export async function getStaticPaths() {
+  const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+  const ctx = await createWebContext(distDir);
+  const meta = getPageMetadata(ctx);
+
+  return ctx.store.sources.map((source) => {
+    const sourceId = source.source_id;
+    const records: MechanicRecord[] = ctx.store.records.filter((r) => {
+      const isMechanic = r.record_type === "mechanic" || (r.record_type === "semantic_record" && (r as Record<string, unknown>)["semantic_type"] === "mechanic");
+      if (!isMechanic) return false;
+      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+      const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+      return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+    }).map((r) => ({
+      key: r.key,
+      title: (r as Record<string, unknown>)["title"] as string | undefined,
+      summary: (r as Record<string, unknown>)["summary"] as string | undefined,
+    }));
+
+    return {
+      params: { sourceId },
+      props: { sourceId, records, meta },
+    };
+  });
+}
+
+const { sourceId, records, meta } = Astro.props;
 ---
 
 <Base title={`Mechanics — ${sourceId}`} metadata={meta}>
