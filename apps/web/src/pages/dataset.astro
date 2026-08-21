@@ -10,19 +10,28 @@ const manifest = ctx.manifest;
 ---
 
 <Base title="Dataset" metadata={meta}>
-  <h1>Dataset</h1>
-  <dl>
-    <dt>Dataset ID</dt><dd>{manifest.datasetId}</dd>
-    <dt>Dataset Version</dt><dd>{manifest.datasetVersion}</dd>
-    <dt>Model Version</dt><dd>{manifest.modelVersion}</dd>
-    <dt>Canonical Hash</dt><dd>{manifest.canonicalHash}</dd>
-    <dt>License</dt><dd>{manifest.license}</dd>
-    <dt>Logical Dump Hash</dt><dd>{manifest.logicalDumpHash}</dd>
-  </dl>
-  <h2>Record Counts</h2>
-  <ul>
-    {Object.entries(manifest.recordCounts).map(([type, count]) => (
-      <li>{type}: {count}</li>
-    ))}
-  </ul>
+  <div class="space-y-6">
+    <h1 class="text-2xl font-bold text-ib-text">Dataset</h1>
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+        <dt class="font-semibold text-ib-muted">Dataset ID</dt><dd class="text-ib-text">{manifest.datasetId}</dd>
+        <dt class="font-semibold text-ib-muted">Dataset Version</dt><dd class="text-ib-text">{manifest.datasetVersion}</dd>
+        <dt class="font-semibold text-ib-muted">Model Version</dt><dd class="text-ib-text">{manifest.modelVersion}</dd>
+        <dt class="font-semibold text-ib-muted">Canonical Hash</dt><dd class="font-mono text-xs text-ib-text">{manifest.canonicalHash}</dd>
+        <dt class="font-semibold text-ib-muted">License</dt><dd class="text-ib-text">{manifest.license}</dd>
+        <dt class="font-semibold text-ib-muted">Logical Dump Hash</dt><dd class="font-mono text-xs text-ib-text">{manifest.logicalDumpHash}</dd>
+      </dl>
+    </div>
+    <div>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Record Counts</h2>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {Object.entries(manifest.recordCounts).map(([type, count]) => (
+          <div class="rounded-lg border border-ib-border bg-ib-surface p-4 text-center">
+            <div class="text-2xl font-bold text-ib-accent">{count}</div>
+            <div class="mt-1 text-xs text-ib-muted">{type}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
 </Base>

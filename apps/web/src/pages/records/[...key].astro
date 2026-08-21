@@ -37,27 +37,38 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
 ---
 
 <Base title={record.key} metadata={meta}>
-  <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
-  {resolvedFrom === "alias" && <p class="alias-notice">Redirected from alias to current key: {currentKey}</p>}
-  <section>
-    <h2>Claims</h2>
-    <ul>
-      {claims.map((c) => (
-        <li>
-          <strong>{c.predicate}</strong>
-          {c.object_ref && <span> → {c.object_ref}</span>}
-          {c.value !== undefined && <span> = {JSON.stringify(c.value)}</span>}
-          <em>({c.assertion_state})</em>
-        </li>
-      ))}
-    </ul>
-  </section>
-  <section>
-    <h2>Evidence</h2>
-    <EvidenceList evidence={evidence} />
-  </section>
-  <section>
-    <h2>Relations</h2>
-    <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => ({ id: r.id, key: r.key, record_type: r.record_type }))} />
-  </section>
+  <div class="space-y-6">
+    <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
+    {resolvedFrom === "alias" && <p class="rounded-lg border border-ib-amber/30 bg-ib-amber/10 px-4 py-2 text-sm text-ib-amber">Redirected from alias to current key: {currentKey}</p>}
+
+    <section>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Claims <span class="text-sm font-normal text-ib-muted">({claims.length})</span></h2>
+      {claims.length > 0 ? (
+        <div class="space-y-2">
+          {claims.map((c) => (
+            <div class="rounded-lg border border-ib-border bg-ib-surface p-3">
+              <div class="flex items-center gap-2 text-sm">
+                <strong class="text-ib-accent2">{c.predicate}</strong>
+                {c.object_ref && <span class="text-ib-muted">→ <span class="font-mono text-xs">{c.object_ref}</span></span>}
+                {c.value !== undefined && <span class="text-ib-muted">= <code class="text-ib-text">{JSON.stringify(c.value)}</code></span>}
+                <span class={`rounded-md px-2 py-0.5 text-xs ${c.assertion_state === "supported" ? "bg-ib-green/15 text-ib-green" : c.assertion_state === "contested" ? "bg-ib-red/15 text-ib-red" : "bg-ib-surface2 text-ib-muted"}`}>{c.assertion_state}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="text-sm text-ib-muted">No claims recorded.</p>
+      )}
+    </section>
+
+    <section>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Evidence</h2>
+      <EvidenceList evidence={evidence} />
+    </section>
+
+    <section>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Relations</h2>
+      <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => ({ id: r.id, key: r.key, record_type: r.record_type }))} />
+    </section>
+  </div>
 </Base>

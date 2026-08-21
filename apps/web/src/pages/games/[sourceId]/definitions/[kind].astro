@@ -40,10 +40,18 @@ const records = ctx.store.records.filter((r) => {
 ---
 
 <Base title={`${kind} — ${sourceId}`} metadata={meta}>
-  <h1>Definitions: {kind}</h1>
-  <ul>
-    {records.map((r) => (
-      <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
-    ))}
-  </ul>
+  <div class="space-y-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-ib-text">Definitions: {kind}</h1>
+      <span class="rounded-md bg-ib-surface2 px-2 py-1 text-sm text-ib-muted">{sourceId}</span>
+    </div>
+    <p class="text-ib-muted">{records.length} records</p>
+    <div class="grid gap-2 sm:grid-cols-2">
+      {records.map((r) => (
+        <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface p-3 hover:border-ib-accent">
+          <div class="font-mono text-xs text-ib-accent">{r.key}</div>
+        </a>
+      ))}
+    </div>
+  </div>
 </Base>

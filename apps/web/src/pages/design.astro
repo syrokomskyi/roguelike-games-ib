@@ -10,32 +10,63 @@ const meta = getPageMetadata(ctx);
 const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
 const primitives = ctx.store.records.filter((r) => r.record_type === "design_primitive");
 const designRelations = ctx.store.relations.filter((r) => r.relation_scope === "design");
+
+const conceptCards = concepts.map((r) => ({
+  key: r.key,
+  title: (r as Record<string, unknown>)["title"] as string | null ?? r.key,
+  summary: (r as Record<string, unknown>)["summary"] as string | null,
+}));
 ---
 
 <Base title="Design Explorer" metadata={meta}>
-  <h1>Design Space Explorer</h1>
-  <section>
-    <h2>Cross-Game Concepts</h2>
-    <ul>
-      {concepts.map((r) => (
-        <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
-      ))}
-    </ul>
-  </section>
-  <section>
-    <h2>Design Primitives</h2>
-    <ul>
-      {primitives.map((r) => (
-        <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
-      ))}
-    </ul>
-  </section>
-  <section>
-    <h2>Design Relations ({designRelations.length})</h2>
-    <ul>
-      {designRelations.map((rel) => (
-        <li>{rel.relation_type}: {rel.source_record_id} → {rel.target_record_id}</li>
-      ))}
-    </ul>
-  </section>
+  <div class="space-y-6">
+    <h1 class="text-2xl font-bold text-ib-text">Design Space Explorer</h1>
+
+    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Cross-Game Concepts <span class="text-sm font-normal text-ib-muted">({concepts.length})</span></h2>
+      {concepts.length > 0 ? (
+        <div class="grid gap-3 sm:grid-cols-2">
+          {conceptCards.map((c) => (
+            <a href={`/records/${c.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
+              <div class="font-semibold text-ib-text">{c.title}</div>
+              {c.summary && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.summary}</p>}
+              <div class="mt-2 font-mono text-xs text-ib-accent">{c.key}</div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-sm text-ib-muted">No cross-game concepts yet.</p>
+      )}
+    </section>
+
+    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Primitives <span class="text-sm font-normal text-ib-muted">({primitives.length})</span></h2>
+      {primitives.length > 0 ? (
+        <div class="grid gap-3 sm:grid-cols-2">
+          {primitives.map((r) => (
+            <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
+              <div class="font-mono text-xs text-ib-accent">{r.key}</div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-sm text-ib-muted">No design primitives yet.</p>
+      )}
+    </section>
+
+    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Relations <span class="text-sm font-normal text-ib-muted">({designRelations.length})</span></h2>
+      {designRelations.length > 0 ? (
+        <ul class="space-y-1">
+          {designRelations.map((rel) => (
+            <li class="text-sm text-ib-muted">
+              <span class="text-ib-accent2">{rel.relation_type}</span>: {rel.source_record_id} → {rel.target_record_id}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-sm text-ib-muted">No design relations yet.</p>
+      )}
+    </section>
+  </div>
 </Base>

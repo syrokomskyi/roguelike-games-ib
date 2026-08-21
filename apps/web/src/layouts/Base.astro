@@ -1,5 +1,6 @@
 ---
 import { metadataToHtmlMeta, type PageMetadata } from "../lib/metadata.ts";
+import "../styles/global.css";
 
 interface Props {
   title: string;
@@ -18,25 +19,25 @@ const { title, metadata } = Astro.props;
   {metadata && <Fragment set:html={metadataToHtmlMeta(metadata)} />}
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/games/">Games</a>
-    <a href="/compare/">Compare</a>
-    <a href="/design/">Design</a>
-    <a href="/dataset/">Dataset</a>
-    <a href="/about/method/">Method</a>
+  <nav class="sticky top-0 z-50 border-b border-ib-border bg-ib-surface/95 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
+      <a href="/" class="flex items-center gap-2 text-lg font-bold text-ib-text hover:no-underline">
+        <span class="text-ib-accent">◈</span> Roguelike IB
+      </a>
+      <div class="flex items-center gap-4 text-sm">
+        <a href="/games/" class="text-ib-muted hover:text-ib-text">Games</a>
+        <a href="/compare/" class="text-ib-muted hover:text-ib-text">Compare</a>
+        <a href="/design/" class="text-ib-muted hover:text-ib-text">Design</a>
+        <a href="/dataset/" class="text-ib-muted hover:text-ib-text">Dataset</a>
+        <a href="/about/method/" class="text-ib-muted hover:text-ib-text">Method</a>
+      </div>
+    </div>
   </nav>
-  <main>
+  <main class="mx-auto max-w-7xl px-4 py-8">
     <slot />
   </main>
-  <footer>
+  <footer class="border-t border-ib-border py-6 text-center text-sm text-ib-muted">
     <p>Roguelike Inspiration Base — CC-BY-4.0</p>
   </footer>
 </body>
 </html>
-
-<style>
-nav { display: flex; gap: 1rem; padding: 1rem; background: #f5f5f5; }
-main { max-width: 960px; margin: 0 auto; padding: 1rem; }
-footer { padding: 1rem; text-align: center; color: #999; }
-</style>

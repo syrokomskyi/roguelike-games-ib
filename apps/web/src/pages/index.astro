@@ -1,12 +1,82 @@
 ---
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
+import { createWebContext } from "../lib/context.ts";
+
+const distDir = Astro.locals.distDir ?? "";
+let stats: { records: number; sources: number; claims: number; relations: number; concepts: number; mechanics: number; systems: number } | null = null;
+let games: { source_id: string; declared_version: string }[] = [];
+
+try {
+  const ctx = await createWebContext(distDir);
+  const records = ctx.store.records;
+  stats = {
+    records: records.length,
+    sources: ctx.store.sources.length,
+    claims: ctx.store.claims.length,
+    relations: ctx.store.relations.length,
+    concepts: records.filter((r) => r.record_type === "concept").length,
+    mechanics: records.filter((r) => r.record_type === "semantic_record" && (r as any).semantic_type === "mechanic").length,
+    systems: records.filter((r) => r.record_type === "semantic_record" && (r as any).semantic_type === "system").length,
+  };
+  games = ctx.store.sources;
+} catch {}
 ---
 
 <Base title="Home">
-  <h1>Roguelike Inspiration Base</h1>
-  <SearchBox />
-  <p>
-    <a href="/games/">Browse all games</a>
-  </p>
+  <div class="space-y-8">
+    <section class="text-center py-8">
+      <h1 class="text-4xl font-bold text-ib-text">Roguelike Inspiration Base</h1>
+      <p class="mt-3 text-lg text-ib-muted">Evidence-backed knowledge base of roguelike game mechanics, systems, and design patterns.</p>
+    </section>
+
+    <section class="max-w-2xl mx-auto">
+      <SearchBox />
+    </section>
+
+    {stats && (
+      <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+          <div class="text-3xl font-bold text-ib-accent">{stats.records}</div>
+          <div class="mt-1 text-sm text-ib-muted">Records</div>
+        </div>
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+          <div class="text-3xl font-bold text-ib-green">{stats.sources}</div>
+          <div class="mt-1 text-sm text-ib-muted">Games</div>
+        </div>
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+          <div class="text-3xl font-bold text-ib-blue">{stats.mechanics + stats.systems}</div>
+          <div class="mt-1 text-sm text-ib-muted">Mechanics & Systems</div>
+        </div>
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+          <div class="text-3xl font-bold text-ib-accent2">{stats.concepts}</div>
+          <div class="mt-1 text-sm text-ib-muted">Design Concepts</div>
+        </div>
+      </section>
+    )}
+
+    {games.length > 0 && (
+      <section>
+        <h2 class="mb-4 text-xl font-semibold text-ib-text">Games</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {games.map((g) => (
+            <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-ib-text">{g.source_id}</h3>
+                <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{g.declared_version}</span>
+              </div>
+              <p class="mt-2 text-sm text-ib-muted">View definitions, mechanics, systems →</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="flex flex-wrap gap-3 justify-center">
+      <a href="/compare/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Compare Records</a>
+      <a href="/design/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Design Explorer</a>
+      <a href="/dataset/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Dataset Info</a>
+      <a href="/about/method/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Methodology</a>
+    </section>
+  </div>
 </Base>

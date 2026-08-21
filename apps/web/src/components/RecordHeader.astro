@@ -14,18 +14,13 @@ const { record, authority = "canonical", assertionState, canonicalHash } = Astro
 const title = (record as Record<string, unknown>)["title"] ?? record.key;
 ---
 
-<div class="record-header" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
-  <h1>{title as string}</h1>
-  <div class="meta">
-    <span class="record-key">Key: {record.key}</span>
-    <span class="record-id">ID: {record.id}</span>
-    <span class="record-type">Type: {record.record_type}</span>
+<div class="rounded-xl border border-ib-border bg-ib-surface p-6" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
+  <h1 class="text-2xl font-bold text-ib-text">{title as string}</h1>
+  <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-ib-muted">
+    <span class="rounded-md bg-ib-surface2 px-2 py-1 font-mono text-xs">{record.key}</span>
+    <span class="rounded-md bg-ib-surface2 px-2 py-1 font-mono text-xs text-ib-muted">{record.id}</span>
+    <span class="rounded-md bg-ib-accent/15 px-2 py-1 text-xs font-medium text-ib-accent">{record.record_type}</span>
     <AuthorityBadge authority={authority} />
     <EpistemicBadge assertionState={assertionState} />
   </div>
 </div>
-
-<style>
-.record-header h1 { margin-bottom: 0.5rem; }
-.meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem; color: #666; }
-</style>

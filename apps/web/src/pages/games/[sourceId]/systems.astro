@@ -18,17 +18,36 @@ const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
 const records = ctx.store.records.filter((r) => {
-  if (r.record_type !== "system") return false;
+  const isSystem = r.record_type === "system" || (r.record_type === "semantic_record" && (r as Record<string, unknown>)["semantic_type"] === "system");
+  if (!isSystem) return false;
   const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  return si?.["source_id"] === sourceId;
-});
+  const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+  return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+}).map((r) => ({
+  key: r.key,
+  title: (r as Record<string, unknown>)["title"] as string | undefined,
+  summary: (r as Record<string, unknown>)["summary"] as string | undefined,
+}));
 ---
 
 <Base title={`Systems — ${sourceId}`} metadata={meta}>
-  <h1>Systems</h1>
-  <ul>
-    {records.map((r) => (
-      <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
-    ))}
-  </ul>
+  <div class="space-y-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-ib-text">Systems</h1>
+      <span class="rounded-md bg-ib-surface2 px-2 py-1 text-sm text-ib-muted">{sourceId}</span>
+    </div>
+    {records.length > 0 ? (
+      <div class="grid gap-3 sm:grid-cols-2">
+        {records.map((r) => (
+          <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface p-4 hover:border-ib-accent">
+            <div class="font-mono text-xs text-ib-accent">{r.key}</div>
+            {r.title && <div class="mt-1 text-sm text-ib-text">{r.title}</div>}
+            {r.summary && <div class="mt-1 text-xs text-ib-muted line-clamp-2">{r.summary}</div>}
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-ib-muted">No systems records found for this source.</p>
+    )}
+  </div>
 </Base>

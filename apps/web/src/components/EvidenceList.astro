@@ -8,30 +8,24 @@ interface Props {
 const { evidence } = Astro.props;
 ---
 
-<ul class="evidence-list">
+<div class="space-y-3">
   {evidence.map((ev) => (
-    <li class="evidence-item" data-evidence-id={ev.id} data-restricted={ev.restricted}>
+    <div class="rounded-lg border-l-2 border-ib-border bg-ib-surface p-3" data-evidence-id={ev.id} data-restricted={ev.restricted}>
       {ev.restricted ? (
-        <p class="restricted-notice">Evidence is not publicly accessible.</p>
+        <p class="text-sm italic text-ib-amber">Evidence is not publicly accessible.</p>
       ) : (
-        <div>
-          {ev.excerpt && <p class="excerpt">{ev.excerpt}</p>}
+        <div class="space-y-1">
+          {ev.excerpt && <p class="font-mono text-sm whitespace-pre-wrap text-ib-text">{ev.excerpt}</p>}
           {ev.locator && (
-            <p class="locator">
-              {ev.locator.symbol && <span>Symbol: {ev.locator.symbol}</span>}
+            <p class="flex gap-3 text-xs text-ib-muted">
+              {ev.locator.symbol && <span>Symbol: <code class="text-ib-accent2">{ev.locator.symbol}</code></span>}
               {ev.locator.line_start && <span>Lines: {ev.locator.line_start}–{ev.locator.line_end}</span>}
             </p>
           )}
-          {ev.license_ref && <p class="license">License: {ev.license_ref}</p>}
+          {ev.license_ref && <p class="text-xs text-ib-muted">License: {ev.license_ref}</p>}
         </div>
       )}
-    </li>
+    </div>
   ))}
-</ul>
-
-<style>
-.evidence-list { list-style: none; padding: 0; }
-.evidence-item { margin-bottom: 1rem; padding: 0.5rem; border-left: 3px solid #ccc; }
-.restricted-notice { color: #856404; font-style: italic; }
-.excerpt { font-family: monospace; white-space: pre-wrap; }
-</style>
+  {evidence.length === 0 && <p class="text-sm text-ib-muted">No public evidence available.</p>}
+</div>

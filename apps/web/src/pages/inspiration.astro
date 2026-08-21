@@ -15,7 +15,14 @@ const meta: import("../lib/metadata.ts").PageMetadata = {
 ---
 
 <Base title="Inspiration" metadata={meta}>
-  <h1>Inspiration Lab</h1>
-  <AuthorityBadge authority="laboratory" />
-  <p>Laboratory content is non-authoritative. It may not be presented as "what the game does".</p>
+  <div class="space-y-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-ib-text">Inspiration Lab</h1>
+      <AuthorityBadge authority="laboratory" />
+    </div>
+    <div class="rounded-xl border border-ib-amber/30 bg-ib-amber/10 p-5">
+      <p class="text-sm text-ib-amber">⚠ Laboratory content is non-authoritative. It may not be presented as "what the game does".</p>
+    </div>
+    <p class="text-ib-muted">The Inspiration Lab is a space for generating and exploring experimental game design ideas derived from canonical knowledge. Content here is explicitly marked as laboratory output.</p>
+  </div>
 </Base>

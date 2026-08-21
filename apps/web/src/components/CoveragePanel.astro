@@ -9,26 +9,30 @@ const { coverage } = Astro.props;
 const dimensions = coverage.flatMap((c) => c.dimensions);
 ---
 
-<div class="coverage-panel">
-  <table>
+<div class="overflow-x-auto rounded-lg border border-ib-border">
+  <table class="w-full border-collapse text-sm">
     <thead>
-      <tr><th>Dimension</th><th>State</th><th>Expected</th><th>Extracted</th><th>Validated</th></tr>
+      <tr class="bg-ib-surface2 text-ib-muted">
+        <th class="px-3 py-2 text-left">Dimension</th>
+        <th class="px-3 py-2 text-left">State</th>
+        <th class="px-3 py-2 text-right">Expected</th>
+        <th class="px-3 py-2 text-right">Extracted</th>
+        <th class="px-3 py-2 text-right">Validated</th>
+      </tr>
     </thead>
     <tbody>
       {dimensions.map((d) => (
-        <tr>
-          <td>{d.id}</td>
-          <td>{d.state}</td>
-          <td>{d.expected ?? "—"}</td>
-          <td>{d.extracted ?? "—"}</td>
-          <td>{d.validated ?? "—"}</td>
+        <tr class="border-t border-ib-border">
+          <td class="px-3 py-2 font-mono text-xs text-ib-text">{d.id}</td>
+          <td class="px-3 py-2"><span class={`rounded-md px-2 py-0.5 text-xs ${d.state === "exhaustive_for_binding" ? "bg-ib-green/15 text-ib-green" : d.state === "substantially_covered" ? "bg-ib-blue/15 text-ib-blue" : d.state === "partial" ? "bg-ib-amber/15 text-ib-amber" : d.state === "blocked" ? "bg-ib-red/15 text-ib-red" : "bg-ib-surface2 text-ib-muted"}`}>{d.state}</span></td>
+          <td class="px-3 py-2 text-right text-ib-muted">{d.expected ?? "—"}</td>
+          <td class="px-3 py-2 text-right text-ib-muted">{d.extracted ?? "—"}</td>
+          <td class="px-3 py-2 text-right text-ib-muted">{d.validated ?? "—"}</td>
         </tr>
       ))}
+      {dimensions.length === 0 && (
+        <tr class="border-t border-ib-border"><td colspan="5" class="px-3 py-4 text-center text-ib-muted">No coverage data yet.</td></tr>
+      )}
     </tbody>
   </table>
 </div>
-
-<style>
-.coverage-panel table { width: 100%; border-collapse: collapse; }
-.coverage-panel th, .coverage-panel td { padding: 4px 8px; border: 1px solid #ddd; text-align: left; }
-</style>

@@ -18,16 +18,19 @@
     "build:web": "astro build"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@roguelike-games-ib/knowledge-core": "workspace:*",
+    "@roguelike-games-ib/materializer": "workspace:*",
     "@roguelike-games-ib/projection-sdk": "workspace:*",
     "@roguelike-games-ib/search": "workspace:*",
-    "@roguelike-games-ib/materializer": "workspace:*",
-    "@roguelike-games-ib/knowledge-core": "workspace:*"
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "astro": "^5.13.0",
-    "typescript": "^5.8.0",
-    "vitest": "^3.2.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "astro": "^7.2.4",
     "better-sqlite3": "^12.2.0",
-    "@types/better-sqlite3": "^7.6.13"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

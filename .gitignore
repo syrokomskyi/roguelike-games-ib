@@ -3,6 +3,8 @@ dist/
 .generated/
 .turbo/
 .cache/
+.astro/
+staging/
 operator-profile.md
 
 # Secrets and environment

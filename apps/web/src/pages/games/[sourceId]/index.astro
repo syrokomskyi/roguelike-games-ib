@@ -22,23 +22,70 @@ const meta = getPageMetadata(ctx);
 const source = ctx.store.sources.find((s) => s.source_id === sourceId);
 const records = ctx.store.records.filter((r) => {
   const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  return si?.["source_id"] === sourceId;
+  const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+  return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
 });
 const coverage = ctx.store.coverage.filter((c) => c.source_id === sourceId);
+
+const byType = new Map<string, typeof records>();
+for (const r of records) {
+  const arr = byType.get(r.record_type) ?? [];
+  arr.push(r);
+  byType.set(r.record_type, arr);
+}
+
+const PAGE_SIZE = 50;
+const page = Number(Astro.url.searchParams.get("page") ?? "1");
+const activeType = Astro.url.searchParams.get("type") ?? "all";
+const filtered = activeType === "all" ? records : records.filter((r) => r.record_type === activeType);
+const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+const currentPage = Math.min(Math.max(1, page), totalPages || 1);
+const pageRecords = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 ---
 
 <Base title={sourceId ?? "Game"} metadata={meta}>
-  {source && <SourceBindingPanel binding={source} />}
-  <h2>Records ({records.length})</h2>
-  <ul>
-    {records.map((r) => (
-      <li><a href={`/records/${r.key}/`}>{r.key}</a> — {r.record_type}</li>
-    ))}
-  </ul>
-  <h2>Coverage</h2>
-  <CoveragePanel coverage={coverage} />
-  <p>
-    <a href={`/games/${sourceId}/mechanics/`}>Mechanics</a> |
-    <a href={`/games/${sourceId}/systems/`}>Systems</a>
-  </p>
+  <div class="space-y-6">
+    {source && <SourceBindingPanel binding={source} />}
+
+    <div class="flex flex-wrap gap-2">
+      <a href={`/games/${sourceId}/`} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All ({records.length})</a>
+      {[...byType.entries()].map(([type, recs]) => (
+        <a href={`/games/${sourceId}/?type=${type}`} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === type ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{type} ({recs.length})</a>
+      ))}
+    </div>
+
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-4 text-lg font-semibold text-ib-text">Records ({filtered.length})</h2>
+      <div class="grid gap-2 sm:grid-cols-2">
+        {pageRecords.map((r) => (
+          <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm hover:border-ib-accent">
+            <span class="font-mono text-xs text-ib-accent">{r.key}</span>
+            <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{r.record_type}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    {totalPages > 1 && (
+      <div class="flex items-center justify-center gap-2">
+        {currentPage > 1 && (
+          <a href={`/games/${sourceId}/?type=${activeType}&page=${currentPage - 1}`} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">← Prev</a>
+        )}
+        <span class="text-sm text-ib-muted">Page {currentPage} of {totalPages}</span>
+        {currentPage < totalPages && (
+          <a href={`/games/${sourceId}/?type=${activeType}&page=${currentPage + 1}`} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">Next →</a>
+        )}
+      </div>
+    )}
+
+    <div>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Coverage</h2>
+      <CoveragePanel coverage={coverage} />
+    </div>
+
+    <div class="flex gap-4">
+      <a href={`/games/${sourceId}/mechanics/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Mechanics</a>
+      <a href={`/games/${sourceId}/systems/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Systems</a>
+    </div>
+  </div>
 </Base>

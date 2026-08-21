@@ -8,22 +8,17 @@ interface Props {
 const { binding } = Astro.props;
 ---
 
-<div class="source-binding-panel">
-  <h3>Source Binding</h3>
-  <dl>
-    <dt>Source ID</dt><dd>{binding.source_id}</dd>
-    <dt>Version</dt><dd>{binding.declared_version}</dd>
-    <dt>Fingerprint</dt><dd>{binding.fingerprint.algorithm}: {binding.fingerprint.value}</dd>
-    <dt>Binding Digest</dt><dd>{binding.binding_digest}</dd>
+<div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+  <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ib-accent2">Source Binding</h3>
+  <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+    <dt class="font-semibold text-ib-muted">Source ID</dt><dd class="text-ib-text">{binding.source_id}</dd>
+    <dt class="font-semibold text-ib-muted">Version</dt><dd class="text-ib-text">{binding.declared_version}</dd>
+    <dt class="font-semibold text-ib-muted">Fingerprint</dt><dd class="font-mono text-xs text-ib-text">{binding.fingerprint.algorithm}: {binding.fingerprint.value}</dd>
+    <dt class="font-semibold text-ib-muted">Binding Digest</dt><dd class="font-mono text-xs text-ib-text">{binding.binding_digest}</dd>
     {binding.vcs && binding.vcs.repository && (
       <>
-        <dt>VCS Repository</dt><dd>{binding.vcs.repository}</dd>
+        <dt class="font-semibold text-ib-muted">VCS Repository</dt><dd><a href={binding.vcs.repository} class="text-ib-accent hover:text-ib-accent2">{binding.vcs.repository}</a></dd>
       </>
     )}
   </dl>
 </div>
-
-<style>
-.source-binding-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 1rem; }
-.source-binding-panel dt { font-weight: 600; }
-</style>

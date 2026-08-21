@@ -14,18 +14,15 @@ interface Props {
 const { ancestry } = Astro.props;
 ---
 
-<div class="design-ancestry">
-  <h3>Ancestry</h3>
-  <ul class="ancestry-tree">
+<div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+  <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-ib-accent2">Ancestry</h3>
+  <div class="space-y-1">
     {ancestry.map((node: AncestryNode) => (
-      <li style={`margin-left: ${node.depth * 1.5}rem`}>
-        <a href={`/records/${node.record_key}/`}>{node.record_key}</a>
-        {node.title ? ` — ${node.title}` : ""}
-      </li>
+      <div style={`margin-left: ${node.depth * 1.5}rem`} class="flex items-center gap-2 text-sm">
+        <span class="text-ib-muted">{node.depth === 0 ? "●" : "└─"}</span>
+        <a href={`/records/${node.record_key}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{node.record_key}</a>
+        {node.title ? <span class="text-ib-muted">— {node.title}</span> : ""}
+      </div>
     ))}
-  </ul>
+  </div>
 </div>
-
-<style>
-.ancestry-tree { list-style: none; padding: 0; }
-</style>

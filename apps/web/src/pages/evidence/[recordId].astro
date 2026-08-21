@@ -23,19 +23,22 @@ const rendered = renderEvidence(evidence);
 ---
 
 <Base title={`Evidence — ${recordId}`} metadata={meta}>
-  <h1>Evidence</h1>
-  <ul>
-    {rendered.map((ev) => (
-      <li data-evidence-id={ev.id} data-restricted={ev.restricted}>
-        {ev.restricted ? (
-          <p>Restricted — not publicly accessible.</p>
-        ) : (
-          <div>
-            {ev.excerpt && <p class="excerpt">{ev.excerpt}</p>}
-            {ev.locator && <p>Locator: {JSON.stringify(ev.locator)}</p>}
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
+  <div class="space-y-6">
+    <h1 class="text-2xl font-bold text-ib-text">Evidence</h1>
+    <div class="space-y-3">
+      {rendered.map((ev) => (
+        <div class="rounded-lg border-l-2 border-ib-border bg-ib-surface p-3" data-evidence-id={ev.id} data-restricted={ev.restricted}>
+          {ev.restricted ? (
+            <p class="text-sm italic text-ib-amber">Restricted — not publicly accessible.</p>
+          ) : (
+            <div class="space-y-1">
+              {ev.excerpt && <p class="font-mono text-sm whitespace-pre-wrap text-ib-text">{ev.excerpt}</p>}
+              {ev.locator && <p class="text-xs text-ib-muted">Locator: {JSON.stringify(ev.locator)}</p>}
+            </div>
+          )}
+        </div>
+      ))}
+      {rendered.length === 0 && <p class="text-sm text-ib-muted">No evidence found for this record.</p>}
+    </div>
+  </div>
 </Base>

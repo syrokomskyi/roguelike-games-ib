@@ -12,28 +12,24 @@ const byType = groupRelationsByType(relations);
 const recordMap = new Map(records.map((r) => [r.id, r]));
 ---
 
-<div class="relation-graph">
+<div class="space-y-4">
   {[...byType.entries()].map(([type, rels]) => (
-    <div class="relation-group">
-      <h4>{type}</h4>
-      <ul>
+    <div class="rounded-lg border border-ib-border bg-ib-surface p-4">
+      <h4 class="mb-2 text-sm font-semibold uppercase tracking-wide text-ib-accent2">{type}</h4>
+      <div class="flex flex-col gap-2">
         {rels.map((rel) => {
           const source = recordMap.get(rel.source_record_id);
           const target = recordMap.get(rel.target_record_id);
           return (
-            <li>
-              <a href={`/records/${source?.key ?? rel.source_record_id}/`}>{source?.key ?? rel.source_record_id}</a>
-              →
-              <a href={`/records/${target?.key ?? rel.target_record_id}/`}>{target?.key ?? rel.target_record_id}</a>
-            </li>
+            <div class="flex items-center gap-2 text-sm">
+              <a href={`/records/${source?.key ?? rel.source_record_id}/`} class="rounded-md bg-ib-surface2 px-2 py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{source?.key ?? rel.source_record_id}</a>
+              <span class="text-ib-muted">→</span>
+              <a href={`/records/${target?.key ?? rel.target_record_id}/`} class="rounded-md bg-ib-surface2 px-2 py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{target?.key ?? rel.target_record_id}</a>
+            </div>
           );
         })}
-      </ul>
+      </div>
     </div>
   ))}
+  {relations.length === 0 && <p class="text-sm text-ib-muted">No relations found.</p>}
 </div>
-
-<style>
-.relation-group { margin-bottom: 1rem; }
-.relation-group h4 { font-size: 0.9rem; text-transform: capitalize; }
-</style>

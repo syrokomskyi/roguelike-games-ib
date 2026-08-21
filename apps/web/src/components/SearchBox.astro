@@ -6,13 +6,7 @@ interface Props {
 const { placeholder = "Search records..." } = Astro.props;
 ---
 
-<form class="search-box" action="/search" method="get">
-  <input type="text" name="q" placeholder={placeholder} />
-  <button type="submit">Search</button>
+<form class="flex gap-2" action="/search" method="get">
+  <input type="text" name="q" placeholder={placeholder} class="flex-1 rounded-lg border border-ib-border bg-ib-surface2 px-4 py-2 text-ib-text placeholder-ib-muted focus:border-ib-accent focus:outline-none" />
+  <button type="submit" class="rounded-lg bg-ib-accent px-4 py-2 font-medium text-white hover:bg-ib-accent2">Search</button>
 </form>
-
-<style>
-.search-box { display: flex; gap: 0.5rem; }
-.search-box input { flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; }
-.search-box button { padding: 6px 16px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
-</style>
