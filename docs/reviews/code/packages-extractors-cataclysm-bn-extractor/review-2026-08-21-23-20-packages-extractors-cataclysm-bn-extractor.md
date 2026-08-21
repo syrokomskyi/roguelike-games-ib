@@ -4,17 +4,17 @@ date: 2026-08-21
 reviewer:
   skill: fo-review
   model: unknown
-verdict: needs-revision
+verdict: approved
 diffRange: afab88527^...HEAD
 filesReviewed:
   - packages/extractors/cataclysm-bn-extractor/src/extractor.ts
 ---
 
-# Code Review: afab88527^...HEAD
+# Code Review: afab88527^...HEAD (re-run after fix)
 
-### Verdict: Needs revision
+### Verdict: Approved
 
-The code correctly implements the ADR-0004 decision to namespace duplicate native_ids with file suffixes. However, there is a duplicated code pattern between items and mutations deduplication logic that should be extracted.
+The duplicated dedup logic has been extracted into a shared `namespaceDuplicateId` helper. All axes pass.
 
 ### Mechanical floor
 
@@ -22,7 +22,7 @@ Pass — `tsc --noEmit` clean, 15/15 quality tests pass.
 
 ### Axis A — Structural correctness
 
-**Finding A1: Duplicated Code (Fowler).** The deduplication logic for items (lines 201-213) and mutations (lines 277-289) is structurally identical — same `Map<string, number>` pattern, same file suffix derivation, same slug/nativeId namespacing. The only difference is the `items/` vs `mutations/` prefix in the regex. This should be extracted into a shared helper function (e.g., `namespaceDuplicateId(id, file, prefix)` returning `{ slug, nativeId }`).
+No issues. The `namespaceDuplicateId` helper eliminates the duplicated code pattern. Both call sites are concise and clear.
 
 ### Axis B — DNA alignment
 
@@ -30,33 +30,33 @@ No invariants file — invariant alignment skipped.
 
 ### Axis C — Ecosystem fit
 
-No issues. Package boundaries respected, no cross-app imports.
+No issues.
 
 ### Axis D — Forward-only compliance
 
-No issues. The old `item.id` / `mut.id` direct usage is replaced, not maintained alongside.
+No issues.
 
 ### Axis E — Agent-facing clarity
 
-No issues. Variable names are clear (`seenItemIds`, `seenMutationIds`, `nativeId`, `fileSuffix`).
+No issues.
 
 ### Axis F — Pragmatism
 
-**Finding F1: Same as A1.** The duplicated dedup pattern is a pragmatism concern — a helper would reduce 24 lines to ~10.
+No issues. The helper reduces 24 lines to ~10 per call site.
 
 ### Axis G — Blind spots
 
-No issues. Edge cases (first occurrence keeps original id) are handled correctly.
+No issues.
 
 ### Spec compliance
 
 | Requirement from ADR-0004 | Status | Evidence |
 | --- | --- | --- |
-| Namespace duplicate native_ids with file suffix | Done | `extractor.ts:211` `nativeId = \`${item.id}__${fileSuffix}\`` |
-| First occurrence keeps original native_id | Done | `extractor.ts:204` `let nativeId = item.id` (only modified when `seenCount > 0`) |
-| Preserve all records and evidence anchors | Done | No skip/drop logic, all entries written |
-| Population counts remain unchanged | Done | `itemCount++` / `mutationCount++` still increments for every entry |
+| Namespace duplicate native_ids with file suffix | Done | `namespaceDuplicateId` helper |
+| First occurrence keeps original native_id | Done | `seenCount > 0` guard |
+| Preserve all records and evidence anchors | Done | No skip logic |
+| Population counts remain unchanged | Done | All entries counted |
 
 ### Questions for the author
 
-1. Could the items and mutations dedup logic be extracted into a shared helper to reduce duplication?
+None.
