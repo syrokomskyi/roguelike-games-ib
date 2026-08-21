@@ -16,3 +16,11 @@ sources:
       access: public
       evidence_locators: true
       excerpts: short
+  - id: nethack
+    unit_path: NetHack
+    domain: roguelike
+    kind: game_repository
+    publication:
+      access: public
+      evidence_locators: true
+      excerpts: short
