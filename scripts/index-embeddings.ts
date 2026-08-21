@@ -77,12 +77,16 @@ async function indexRecords(
   indexingToken: string,
 ): Promise<{ indexed: number; errors: string[] }> {
   const BATCH_SIZE = 100;
+  const startBatch = parseNonNegativeInteger(process.env.INDEX_START_BATCH, 0);
+  const batchCount = parsePositiveInteger(process.env.INDEX_BATCH_COUNT, Math.ceil(records.length / BATCH_SIZE));
+  const startOffset = startBatch * BATCH_SIZE;
+  const selectedRecords = records.slice(startOffset, startOffset + batchCount * BATCH_SIZE);
   let totalIndexed = 0;
   const allErrors: string[] = [];
 
-  for (let i = 0; i < records.length; i += BATCH_SIZE) {
-    const batch = records.slice(i, i + BATCH_SIZE);
-    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+  for (let i = 0; i < selectedRecords.length; i += BATCH_SIZE) {
+    const batch = selectedRecords.slice(i, i + BATCH_SIZE);
+    const batchNum = startBatch + Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(records.length / BATCH_SIZE);
 
     console.log(`Indexing batch ${batchNum}/${totalBatches} (${batch.length} records)...`);
@@ -115,6 +119,16 @@ async function indexRecords(
   }
 
   return { indexed: totalIndexed, errors: allErrors };
+}
+
+function parseNonNegativeInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function parsePositiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 async function main() {
