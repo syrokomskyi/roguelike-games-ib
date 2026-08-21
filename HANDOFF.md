@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0 & 1 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0, 1 & 2 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 implementation
-**Status**: All 64 tests pass (14 test files)
+**Session**: Stage 0 + Stage 1 + Stage 2 implementation
+**Status**: All 89 tests pass (22 test files)
 
 ## What was done
 
@@ -30,6 +30,30 @@
 - **`packages/test-fixtures`** — Temp workspace/source bundle builders
 - CORE-001..024 (36 tests), SCHEMA-001..005 (7 tests), GRAPH-001..008 (8 tests) — all pass
 
+### Stage 2 — Extractor SDK + staging pipeline
+- **`packages/extractor-sdk`** — Full extractor SDK for building source-specific static adapters:
+  - `types.ts` — Core interfaces: `ExtractorManifest`, `ExtractorContext`, `Extractor`, `ExtractorRunResult`, `StagedRecord`, `StagedEvidence`, `StagedPopulation`
+  - `source-reader.ts` — `ReadonlySourceReader` with `readBytes`, `readText`, `stat`, `walk`, `parseJson`, `parseYaml`; path traversal & symlink escape protection; no exec/write/network APIs
+  - `manifest.ts` — `validateManifest()` enforcing schema version `werkstatt/knowledge-extractor@1`, `deterministic: true`, `parserMode: "static"`
+  - `evidence-builder.ts` — `EvidenceFactory` with `create()` / `createPrivate()` wrapping `createEvidenceAnchor`
+  - `population.ts` — `PopulationContract`, `resolvePopulationCounts()`, `checkRecordLoss()` for record-loss detection
+  - `output-writer.ts` — `CandidateWriter` writing to staging only (batch.jsonl, evidence.jsonl, population.jsonl, batch-manifest.json, diagnostics.jsonl)
+  - `identity.ts` — `RefreshIdentityResolver` wrapping `matchDefinitionOnRefresh` for key/alias-based identity retention
+  - `context.ts` — `SchemaFacade` interface, `createSchemaFacade()`, `createNullSchemaFacade()`
+  - `deterministic.ts` — `hashRunResult()`, `runExtractorDeterministic()` (double-run hash comparison), `createExtractorContext()`
+  - `index.ts` — Public exports
+- EXT-001..010 (25 tests across 8 files) — all pass
+  - EXT-001: absolute path rejection
+  - EXT-002: `..` traversal rejection
+  - EXT-003: symlink escape rejection
+  - EXT-004: no exec/write/network API surface
+  - EXT-005: deterministic replay (identical hashes on double-run)
+  - EXT-006: population denominator recording
+  - EXT-007: output to staging only, not canonical
+  - EXT-008: schema validation flags invalid records
+  - EXT-009: record identity retention across runs
+  - EXT-010: record loss detection with threshold
+
 ## Key technical decisions
 - `tsconfig.base.json` uses `allowImportingTsExtensions: true` + `noEmit: true` (bundler mode)
 - Root `package.json` lists workspace packages as `workspace:*` devDeps for test resolution
@@ -37,11 +61,6 @@
 - Claim schema `oneOf` for `object_ref` vs `value` includes inline `properties` for AJV strict mode
 
 ## What the next agent should do
-
-### Stage 2 — Extractor SDK + staging pipeline
-Per spec `03-packages/KNOWLEDGE-EXTRACT.md`:
-- Create `packages/knowledge-extract` with `ReadonlySource`, extractor SDK, deterministic replay
-- Tests EXT-001..010
 
 ### Stage 3 — Materializer
 Per spec `03-packages/KNOWLEDGE-MATERIALIZE.md`:
@@ -61,4 +80,5 @@ Per spec `03-packages/KNOWLEDGE-MATERIALIZE.md`:
 pnpm exec vitest run                    # all tests
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
+pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
 ```
