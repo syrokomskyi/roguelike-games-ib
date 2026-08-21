@@ -93,3 +93,16 @@ status: active
 **Situation:** The quality contour Q-007 reports massive duplication (×71, ×86, ×28) of category-level keys like `weapon:`, `armor:`, `ring:`. This was found in the nethack extractor: the C parser uses enum category labels (e.g., `WEAPON`, `ARMOR`) as `native_id` for all items in that category, instead of using the individual item's identifier.
 
 **Action:** Each record must have a unique `native_id` that identifies the specific item, not its category. For C enum-based parsers, use the enum member name (e.g., `elven_dagger`, `dwarvish_mithril_coat`) as the `native_id`, not the enum type name. If individual names are not available in the source, derive them from the description or display name field.
+
+### K-0008: Double-escaped backslashes in JS regex literals
+
+```knowledge-entry
+id: K-0008
+layer: L1
+created: 2026-08-21
+status: active
+```
+
+**Situation:** Preprocessor directive regex patterns in `parseObjects()` used `\\s` and `\\b` instead of `\s` and `\b`. In a JS regex literal (e.g., `/^#if\\s+0\\b/`), `\\s` matches a literal backslash + `s`, not whitespace. This caused `#if 0` blocks to never be skipped, leaking extra entries into the output (458 items instead of correct count) and producing massive duplicates with empty `nativeId` values.
+
+**Action:** When writing regex literals in JS, use single backslash for escape sequences: `\s`, `\b`, `\d`, `\w`. Double backslashes (`\\s`) are only needed in string arguments passed to `new RegExp()`. Always test preprocessor directive handling with a known `#if 0` block to verify it is correctly skipped.
