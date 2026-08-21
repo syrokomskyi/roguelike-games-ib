@@ -7,8 +7,9 @@ const distDir = Astro.locals.distDir ?? "";
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
-const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
-const primitives = ctx.store.records.filter((r) => r.record_type === "design_primitive");
+const allConcepts = ctx.store.records.filter((r) => r.record_type === "concept");
+const concepts = allConcepts.filter((r) => (r as Record<string, unknown>)["concept_type"] !== "design_primitive");
+const primitives = allConcepts.filter((r) => (r as Record<string, unknown>)["concept_type"] === "design_primitive");
 const designRelations = ctx.store.relations.filter((r) => r.relation_scope === "design");
 
 const conceptCards = concepts.map((r) => ({
@@ -16,6 +17,14 @@ const conceptCards = concepts.map((r) => ({
   title: (r as Record<string, unknown>)["title"] as string | null ?? r.key,
   summary: (r as Record<string, unknown>)["summary"] as string | null,
 }));
+
+const primitiveCards = primitives.map((r) => ({
+  key: r.key,
+  title: (r as Record<string, unknown>)["title"] as string | null ?? r.key,
+  definition: (r as Record<string, unknown>)["definition"] as string | null,
+}));
+
+const idToKey = new Map(ctx.store.records.map((r) => [r.id, r.key]));
 ---
 
 <Base title="Design Explorer" metadata={meta}>
@@ -43,9 +52,11 @@ const conceptCards = concepts.map((r) => ({
       <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Primitives <span class="text-sm font-normal text-ib-muted">({primitives.length})</span></h2>
       {primitives.length > 0 ? (
         <div class="grid gap-3 sm:grid-cols-2">
-          {primitives.map((r) => (
-            <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
-              <div class="font-mono text-xs text-ib-accent">{r.key}</div>
+          {primitiveCards.map((p) => (
+            <a href={`/records/${p.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
+              <div class="font-semibold text-ib-text">{p.title}</div>
+              {p.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{p.definition}</p>}
+              <div class="mt-2 font-mono text-xs text-ib-accent">{p.key}</div>
             </a>
           ))}
         </div>
@@ -60,7 +71,9 @@ const conceptCards = concepts.map((r) => ({
         <ul class="space-y-1">
           {designRelations.map((rel) => (
             <li class="text-sm text-ib-muted">
-              <span class="text-ib-accent2">{rel.relation_type}</span>: {rel.source_record_id} → {rel.target_record_id}
+              <a href={`/records/${idToKey.get(rel.source_record_id) ?? ""}/`} class="text-ib-accent hover:text-ib-accent2">{idToKey.get(rel.source_record_id) ?? rel.source_record_id}</a>
+              <span class="text-ib-accent2"> —{rel.relation_type}→ </span>
+              <a href={`/records/${idToKey.get(rel.target_record_id) ?? ""}/`} class="text-ib-accent hover:text-ib-accent2">{idToKey.get(rel.target_record_id) ?? rel.target_record_id}</a>
             </li>
           ))}
         </ul>

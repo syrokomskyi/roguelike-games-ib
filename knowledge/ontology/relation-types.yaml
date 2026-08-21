@@ -298,3 +298,19 @@ relations:
   range:
   - game_definition
   - semantic_record
+- id: pressures
+  semantics: Source design primitive creates a design pressure that the target design primitive must address or resolve.
+  direction: directed
+  evidence_required: false
+  domain:
+  - concept
+  range:
+  - concept
+- id: tensions_with
+  semantics: Source and target design primitives create opposing design forces that cannot be fully satisfied simultaneously.
+  direction: symmetric
+  evidence_required: false
+  domain:
+  - concept
+  range:
+  - concept
