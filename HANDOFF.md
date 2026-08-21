@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0, 1, 2 & 3 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0, 1, 2, 3 & 4 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 implementation
-**Status**: All 118 tests pass (29 test files)
+**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 implementation
+**Status**: All 153 tests pass (35 test files)
 
 ## What was done
 
@@ -85,15 +85,28 @@
 - Aliases table stores `record_key` (not `record_id`) since `retired_to` is a key, not an ID
 - Materialization manifest uses fixed `builtAt: "1970-01-01T00:00:00.000Z"` for determinism
 
-## What the next agent should do
-
 ### Stage 4 — Search
-Per spec `03-packages/SEARCH.md`:
-- Exact id/key/alias lookup, FTS with stable tie-break, hybrid scoring with exposed components
-- Vector index metadata with canonical hash/model
-- Graph expansion using typed canonical edges only
-- Stale search cursor rejection after canonical hash change
-- Tests SEARCH-001..006
+- **`packages/search`** — Search index built on materialized SQLite, 5 retrieval layers:
+  - `types.ts` — Core interfaces: `SearchIndex`, `SearchRecord`, `SearchHit`, `ScoreComponents`, `SearchQuery`, `SearchFilters`, `SearchResult`, `SearchIndexManifest`, `VectorIndex`, `VectorMatch`, `GraphExpansionOptions`, `GraphEdge`, `GraphExpansionResult`, `ExactLookupQuery`, `FtsHit`
+  - `exact.ts` — `exactLookup()` resolves by id → key → alias (deterministic, no scoring)
+  - `filters.ts` — `buildFilterClause()` + `filterRecordIds()` for structured filtering (source_id, record_type, kind, epistemic_status)
+  - `fts.ts` — `ftsSearch()` using SQLite FTS5 with `bm25()` scoring, stable tie-break by key ASC then id ASC
+  - `graph.ts` — `graphExpand()` traverses typed canonical relations only (no inferred/vector edges), supports direction filtering and maxDepth
+  - `vectors.ts` — `VectorIndex` interface, `NullVectorIndex` (no-op), `InMemoryVectorIndex` (cosine similarity), `createVectorMetadata()` for manifest
+  - `ranking.ts` — `computeScores()` returns lexical_score + vector_score + graph_boost → final_score (all exposed separately), `rankHits()` with stable tie-breaker
+  - `hybrid.ts` — `hybridSearch()` combines FTS + vector + graph boost, applies filters, paginates with cursor
+  - `cursor.ts` — `encodeCursor()` / `validateCursor()` with canonical hash binding; stale cursors rejected
+  - `build.ts` — `buildSearchIndex()` creates `SqliteSearchIndex` from materialized DB + optional vector index; `writeSearchManifest()` writes JSON manifest
+  - `index.ts` — Public exports
+- SEARCH-001..006 (35 tests across 6 files) — all pass
+  - SEARCH-001: exact id/key/alias lookup deterministic
+  - SEARCH-002: FTS stable tie break by key/id
+  - SEARCH-003: hybrid scores expose components separately (lexical, vector, graph_boost, final)
+  - SEARCH-004: vector index metadata contains canonical hash/model/provider/dimensionality
+  - SEARCH-005: graph expansion uses typed canonical edges only (relation_type filter, direction, maxDepth)
+  - SEARCH-006: stale search cursor rejected after canonical hash change
+
+## What the next agent should do
 
 ### Then: Obsidian, MCP, Web, Laboratory, Release gates, Migration
 
@@ -105,9 +118,10 @@ Per spec `03-packages/SEARCH.md`:
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (118 tests, 29 files)
+pnpm exec vitest run                    # all tests (153 tests, 35 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
 pnpm exec tsc --noEmit -p packages/materializer/tsconfig.json      # typecheck materializer
+pnpm exec tsc --noEmit -p packages/search/tsconfig.json            # typecheck search
 ```

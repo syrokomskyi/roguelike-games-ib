@@ -30,6 +30,7 @@
     "@roguelike-games-ib/knowledge-schemas": "workspace:*",
     "@roguelike-games-ib/extractor-sdk": "workspace:*",
     "@roguelike-games-ib/materializer": "workspace:*",
+    "@roguelike-games-ib/search": "workspace:*",
     "@roguelike-games-ib/test-fixtures": "workspace:*",
     "prettier": "^3.9.6",
     "vitest": "^3.2.4",
