@@ -1,41 +1,26 @@
 <!--
 <MODULE_CONTRACT>
-<purpose>Renders the design space explorer page showing cross-game concepts, design primitives, and design relations from the projection store.</purpose>
+<purpose>Renders the design space explorer page showing cross-game concepts, design primitives, design relations, and cross-game realization links from the projection store.</purpose>
 <non-goals>
   <item>Does not compute design relations — rendering of projection store data only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: design page with concept cards, primitive cards, and relation list.</item>
+  <item>Enriched: ancestry/source games, mutation dimensions, REALIZES_CONCEPT cross-game links, relation rationale.</item>
 </CHANGE_SUMMARY>
 -->
 ---
 import Base from "../layouts/Base.astro";
 import { createWebContext } from "../lib/context.ts";
 import { getPageMetadata } from "../lib/metadata.ts";
+import { buildDesignData } from "../lib/design-data.ts";
 
 const distDir = Astro.locals.distDir ?? "";
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
-const allConcepts = ctx.store.records.filter((r) => r.record_type === "concept");
-const concepts = allConcepts.filter((r) => (r as Record<string, unknown>)["concept_type"] !== "design_primitive");
-const primitives = allConcepts.filter((r) => (r as Record<string, unknown>)["concept_type"] === "design_primitive");
-const designRelations = ctx.store.relations.filter((r) => r.relation_scope === "design");
-
-const conceptCards = concepts.map((r) => ({
-  key: r.key,
-  title: (r as Record<string, unknown>)["title"] as string | null ?? r.key,
-  summary: (r as Record<string, unknown>)["summary"] as string | null,
-}));
-
-const primitiveCards = primitives.map((r) => ({
-  key: r.key,
-  title: (r as Record<string, unknown>)["title"] as string | null ?? r.key,
-  definition: (r as Record<string, unknown>)["definition"] as string | null,
-}));
-
-const idToKey = new Map(ctx.store.records.map((r) => [r.id, r.key]));
+const { concepts, primitives, conceptCards, primitiveCards, designRelationCards, realizesCards } = buildDesignData(ctx.store);
 ---
 
 <Base title="Design Explorer" metadata={meta}>
@@ -49,7 +34,21 @@ const idToKey = new Map(ctx.store.records.map((r) => [r.id, r.key]));
           {conceptCards.map((c) => (
             <a href={`/records/${c.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
               <div class="font-semibold text-ib-text">{c.title}</div>
-              {c.summary && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.summary}</p>}
+              {c.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.definition}</p>}
+              {c.sourceGames.length > 0 && (
+                <div class="mt-2 flex flex-wrap gap-1">
+                  {c.sourceGames.map((g: string) => (
+                    <span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">{g}</span>
+                  ))}
+                </div>
+              )}
+              {c.mutationDimensions.length > 0 && (
+                <div class="mt-1.5 flex flex-wrap gap-1">
+                  {c.mutationDimensions.map((d: string) => (
+                    <span class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-muted">{d}</span>
+                  ))}
+                </div>
+              )}
               <div class="mt-2 font-mono text-xs text-ib-accent">{c.key}</div>
             </a>
           ))}
@@ -67,6 +66,20 @@ const idToKey = new Map(ctx.store.records.map((r) => [r.id, r.key]));
             <a href={`/records/${p.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
               <div class="font-semibold text-ib-text">{p.title}</div>
               {p.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{p.definition}</p>}
+              {p.sourceGames.length > 0 && (
+                <div class="mt-2 flex flex-wrap gap-1">
+                  {p.sourceGames.map((g: string) => (
+                    <span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">{g}</span>
+                  ))}
+                </div>
+              )}
+              {p.mutationDimensions.length > 0 && (
+                <div class="mt-1.5 flex flex-wrap gap-1">
+                  {p.mutationDimensions.map((d: string) => (
+                    <span class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-muted">{d}</span>
+                  ))}
+                </div>
+              )}
               <div class="mt-2 font-mono text-xs text-ib-accent">{p.key}</div>
             </a>
           ))}
@@ -77,19 +90,44 @@ const idToKey = new Map(ctx.store.records.map((r) => [r.id, r.key]));
     </section>
 
     <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Relations <span class="text-sm font-normal text-ib-muted">({designRelations.length})</span></h2>
-      {designRelations.length > 0 ? (
-        <ul class="space-y-1">
-          {designRelations.map((rel) => (
-            <li class="text-sm text-ib-muted">
-              <a href={`/records/${idToKey.get(rel.source_record_id) ?? ""}/`} class="text-ib-accent hover:text-ib-accent2">{idToKey.get(rel.source_record_id) ?? rel.source_record_id}</a>
-              <span class="text-ib-accent2"> —{rel.relation_type}→ </span>
-              <a href={`/records/${idToKey.get(rel.target_record_id) ?? ""}/`} class="text-ib-accent hover:text-ib-accent2">{idToKey.get(rel.target_record_id) ?? rel.target_record_id}</a>
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Relations <span class="text-sm font-normal text-ib-muted">({designRelationCards.length})</span></h2>
+      {designRelationCards.length > 0 ? (
+        <ul class="space-y-2">
+          {designRelationCards.map((rel) => (
+            <li class="rounded-lg border border-ib-border bg-ib-surface2 p-3">
+              <div class="text-sm">
+                <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
+                <span class="text-ib-accent2"> —{rel.relationType}→ </span>
+                <a href={`/records/${rel.targetKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.targetKey}</a>
+              </div>
+              {rel.rationale && <p class="mt-1 text-xs text-ib-muted">{rel.rationale}</p>}
             </li>
           ))}
         </ul>
       ) : (
         <p class="text-sm text-ib-muted">No design relations yet.</p>
+      )}
+    </section>
+
+    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Cross-Game Realizations <span class="text-sm font-normal text-ib-muted">({realizesCards.length})</span></h2>
+      {realizesCards.length > 0 ? (
+        <ul class="space-y-2">
+          {realizesCards.map((rel) => (
+            <li class="rounded-lg border border-ib-border bg-ib-surface2 p-3">
+              <div class="text-sm">
+                <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
+                <span class="text-ib-accent2"> realizes → </span>
+                <a href={`/records/${rel.targetKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.targetKey}</a>
+              </div>
+              <div class="mt-1 text-xs text-ib-muted">
+                {rel.sourceRecordType} → {rel.targetRecordType}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-sm text-ib-muted">No cross-game realizations yet.</p>
       )}
     </section>
   </div>
