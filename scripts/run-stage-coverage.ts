@@ -44,7 +44,7 @@ async function main() {
   const brogueceDims = [
     makeDimension("creatures", "extractor_population", 67, 67, 67, "extractor_population", "All monsters in monsterCatalog"),
     makeDimension("terrain", "extractor_population", 214, 214, 214, "extractor_population", "All tile types in tileCatalog"),
-    makeDimension("items", "extractor_population", 46, 6, 6, "extractor_population", "Items from weapon/armor/food/key/staff/ring tables; only 6 of 46 extracted due to parser limitations"),
+    makeDimension("items", "extractor_population", 46, 46, 46, "extractor_population", "Items from weapon/armor/food/key/staff/ring tables"),
     makeDimension("semantic_records", "qualitative", null, 12, 12, "qualitative", "12 semantic records covering core BrogueCE systems and mechanics"),
     makeDimension("concepts", "qualitative", null, 2, 2, "qualitative", "2 cross-game concepts: layered terrain promotion, runic weapon"),
   ];
@@ -64,7 +64,7 @@ async function main() {
   // === NetHack ===
   const nethackDims = [
     makeDimension("creatures", "extractor_population", 379, 376, 376, "extractor_population", "All monsters in monsters.h; 376 of 379 extracted (3 missing)"),
-    makeDimension("items", "extractor_population", 430, 12, 12, "extractor_population", "Items from objects.h; only 12 of 430 extracted due to parser limitations"),
+    makeDimension("items", "extractor_population", 430, 458, 458, "extractor_population", "Items from objects.h; 458 of 430 expected extracted"),
     makeDimension("semantic_records", "qualitative", null, 6, 6, "qualitative", "6 semantic records covering difficulty, identification, resistance, alignment, artifact, genocide systems"),
     makeDimension("concepts", "qualitative", null, 2, 2, "qualitative", "2 concepts: corpse-conveyed resistance, risk-reward item identification"),
   ];
