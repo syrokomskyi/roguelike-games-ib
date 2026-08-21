@@ -1,7 +1,7 @@
 ---
 id: ADR-0001
 title: Start new project with Forge
-status: accepted
+status: implemented
 scope: workspace
 decider: architecture
 reviewers:
@@ -9,7 +9,7 @@ reviewers:
 related: []
 created: 2026-08-21
 accepted: 2026-08-21
-implementedAt: null
+implementedAt: 2026-08-21
 closedAt: null
 ---
 
