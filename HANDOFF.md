@@ -435,10 +435,12 @@ Gate: C11 conformance (14 tests) — all pass.
 - Mechanic matrix comparing 20 games
 - These should be migrated as candidates/hints (not canonical facts) per MIG-001 pattern
 
-**4. Compare page query param filtering** (known limitation)
-- Astro static mode doesn't process URL query params at build time
-- Type/source filter links on `/compare/` and `/games/[sourceId]/` don't filter in dev mode
-- Fix options: (a) add client-side JS filtering, (b) switch to hybrid mode with SSR adapter (e.g. `@astrojs/node`), (c) generate pre-built pages per type/source combination
+**4. Compare page filtering** ✅ resolved
+- Replaced `compare.astro` (prerender=false, query params) with `compare/[...filter].astro` using `getStaticPaths()`
+- Pre-generates all type×source×page combinations as static pages
+- URL structure: `/compare/` (default) and `/compare/{type}/{source}/{page}/`
+- Commit `bfa01de`
+- **Still applies to `/games/[sourceId]/`**: uses `prerender=false` + query params (works in dev, not in static build)
 
 **5. Design Explorer enrichment**
 - Currently shows 6 cross-game concepts and 0 design primitives/relations
@@ -493,3 +495,19 @@ cd apps/web && npx astro dev --host 0.0.0.0 --port 4321  # start dev server
 **Known issue**: When re-running extraction stages, semantic claims/relations must also be re-run. The `run-stage-semantic.ts` script uses `type: "create"` in promotion transactions, so stale records must be deleted before re-running. A future improvement would be to use `type: "upsert"` or add an idempotent refresh mechanism.
 
 **Dev server note**: The Astro dev server caches aggressively. After code or data changes, always kill and restart the server process.
+
+### Session 2026-08-21 (late) — Compare page pre-built pages
+
+**Problem**: `/compare/` page used `prerender=false` + query params for type/source filtering. This works in dev mode but fails in Astro static build (no adapter installed).
+
+**Fix** (commit `bfa01de`):
+- Deleted `pages/compare.astro`
+- Created `pages/compare/[...filter].astro` with `getStaticPaths()` generating all type×source×page combinations
+- URL structure: `/compare/` (all/all/1) and `/compare/{type}/{source}/{page}/`
+- All filter links use path-based URLs instead of query params
+- Pagination links use path-based URLs
+- TypeScript clean, verified in dev server: all filter combinations and pagination work
+
+**Astro gotchas encountered**:
+- `getStaticPaths` is hoisted to separate scope — all constants (`PAGE_SIZE`, `distDir`) must be defined inside the function
+- Astro 7 expects `string` (joined with `/`), not `string[]` for rest parameter `filter`
