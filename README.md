@@ -540,30 +540,44 @@ Third-party source payloads are excluded from dataset releases unless redistribu
 
 ---
 
-## Dataset license
+## Licensing
+
+The project uses a clean dual-license separation:
+
+| What | License |
+| --- | --- |
+| Source code of `roguelike-games-ib` itself | **Apache License 2.0** |
+| Authored knowledge dataset | **CC BY 4.0** |
+| Source code of studied games | Their own upstream licenses |
+| Assets / screenshots / excerpts | Upstream license + publication policy |
+
+### Source-code license
+
+The repository's own software is licensed under:
+
+**Apache License, Version 2.0**
+
+- SPDX Identifier: Apache-2.0
+- License URI: https://www.apache.org/licenses/LICENSE-2.0/
+
+See `LICENSES/Apache-2.0.txt` for the full license text.
+
+Apache 2.0 was chosen over MIT because the project involves substantial infrastructure, plugins, MCP integrations, extractors and third-party reuse — Apache 2.0 provides an explicit patent grant in addition to permissive reuse terms.
+
+### Dataset license
 
 The **canonical knowledge dataset** is licensed under:
 
 **Creative Commons Attribution 4.0 International — CC BY 4.0**
 
+- SPDX Identifier: CC-BY-4.0
+- License URI: https://creativecommons.org/licenses/by/4.0/
+
 This license applies to the project's authored knowledge dataset.
 
 It does **not** change or replace the licenses of upstream games, source repositories, assets, documentation or other evidence material.
 
-See:
-
-```text
-LICENSES/CC-BY-4.0.txt
-NOTICE.dataset.md
-```
-
-for the complete dataset licensing and attribution information.
-
-### Source-code license
-
-**TBD before the first public open-source release.**
-
-The software license for the repository's own source code is separate from the CC BY 4.0 dataset license and must be declared explicitly.
+See `LICENSES/CC-BY-4.0.txt` and `NOTICE.dataset.md` for the complete dataset licensing and attribution information.
 
 ---
 
