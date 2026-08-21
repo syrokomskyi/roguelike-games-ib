@@ -215,6 +215,7 @@ const OBJECT_MACROS: ObjectMacro[] = [
 
 export function parseObjects(source: string): ObjectEntry[] {
   const entries: ObjectEntry[] = [];
+  const seenKeys = new Set<string>();
   const lines = source.split("\n");
   const macroNames = OBJECT_MACROS.map((m) => m.name);
   const macroPattern = new RegExp(`^\\s*(${macroNames.join("|")})\\(`);
@@ -271,7 +272,13 @@ export function parseObjects(source: string): ObjectEntry[] {
     }
 
     const entry = finalizeObjectEntry(fullText, macroName, objClass, lineStart, lineEnd);
-    if (entry) entries.push(entry);
+    if (entry) {
+      const key = `${entry.objClass}:${entry.nativeId}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        entries.push(entry);
+      }
+    }
 
     i = lineEnd;
   }

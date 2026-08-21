@@ -276,7 +276,7 @@ export function createBrogueCEExtractor(): Extractor {
       ctx.output.writePopulation("items", 46, itemCount);
 
       return {
-        extractorId: ctx.binding.source_id,
+        extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "broguece-run",
         recordCount: creatureCount + terrainCount + itemCount,

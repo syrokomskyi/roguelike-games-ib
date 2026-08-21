@@ -45,14 +45,14 @@ const manifest: ExtractorManifest = {
     {
       dimension: "items",
       denominatorKind: "extractor_population",
-      expected: 5886,
-      description: "All item entries with id in data/json/items/**/*.json",
+      expected: 5838,
+      description: "All item entries with id in data/json/items/**/*.json (deduplicated by id across files)",
     },
     {
       dimension: "mutations",
       denominatorKind: "extractor_population",
-      expected: 625,
-      description: "All mutation entries with id in data/json/mutations/*.json",
+      expected: 621,
+      description: "All mutation entries with id in data/json/mutations/*.json (deduplicated by id across files)",
     },
     {
       dimension: "professions",
@@ -187,6 +187,7 @@ export function createCataclysmBNExtractor(): Extractor {
       }
 
       // --- Items ---
+      const seenItemIds = new Map<string, number>();
       for (const dir of ITEM_DIRS) {
         const files = walkJsonFiles(allFiles, dir);
         for (const file of files) {
@@ -198,7 +199,16 @@ export function createCataclysmBNExtractor(): Extractor {
             continue;
           }
           for (const item of items) {
-            const slug = item.id.replace(/-/g, "_");
+            const seenCount = seenItemIds.get(item.id) ?? 0;
+            let slug = item.id.replace(/-/g, "_");
+            if (seenCount > 0) {
+              const fileSuffix = file
+                .replace(/^items\//, "")
+                .replace(/\.json$/, "")
+                .replace(/[/]/g, "_");
+              slug = `${slug}__${fileSuffix}`;
+            }
+            seenItemIds.set(item.id, seenCount + 1);
             const resolved = ctx.ids.resolveOrCreate("item", slug, item.id);
             const envelope = makeRecordEnvelope(
               ctx.binding.source_id,
@@ -251,6 +261,7 @@ export function createCataclysmBNExtractor(): Extractor {
       }
 
       // --- Mutations ---
+      const seenMutationIds = new Set<string>();
       for (const dir of MUTATION_DIRS) {
         const files = walkJsonFiles(allFiles, dir);
         for (const file of files) {
@@ -262,6 +273,8 @@ export function createCataclysmBNExtractor(): Extractor {
             continue;
           }
           for (const mut of mutations) {
+            if (seenMutationIds.has(mut.id)) continue;
+            seenMutationIds.add(mut.id);
             const slug = mut.id.replace(/-/g, "_");
             const resolved = ctx.ids.resolveOrCreate("mutation", slug, mut.id);
             const envelope = makeRecordEnvelope(
@@ -366,19 +379,19 @@ export function createCataclysmBNExtractor(): Extractor {
       }
 
       ctx.output.writePopulation("monsters", 597, monsterCount);
-      ctx.output.writePopulation("items", 5886, itemCount);
-      ctx.output.writePopulation("mutations", 625, mutationCount);
+      ctx.output.writePopulation("items", 5838, itemCount);
+      ctx.output.writePopulation("mutations", 621, mutationCount);
       ctx.output.writePopulation("professions", 339, professionCount);
 
       return {
-        extractorId: ctx.binding.source_id,
+        extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "cataclysm-bn-run",
         recordCount: monsterCount + itemCount + mutationCount + professionCount,
         populationCounts: [
           { dimension: "monsters", expected: 597, extracted: monsterCount },
-          { dimension: "items", expected: 5886, extracted: itemCount },
-          { dimension: "mutations", expected: 625, extracted: mutationCount },
+          { dimension: "items", expected: 5838, extracted: itemCount },
+          { dimension: "mutations", expected: 621, extracted: mutationCount },
           { dimension: "professions", expected: 339, extracted: professionCount },
         ],
         diagnostics: [],

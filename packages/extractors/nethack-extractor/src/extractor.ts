@@ -38,14 +38,14 @@ const manifest: ExtractorManifest = {
     {
       dimension: "creatures",
       denominatorKind: "extractor_population",
-      expected: 379,
-      description: "All monsters in monsters.h (MON() entries, excluding NUMMONS terminator)",
+      expected: 376,
+      description: "All monsters in monsters.h (MON() entries, excluding NUMMONS terminator and duplicates)",
     },
     {
       dimension: "items",
       denominatorKind: "extractor_population",
-      expected: 430,
-      description: "All items in objects.h (WEAPON, ARMOR, RING, POTION, SCROLL, SPELL, WAND, FOOD, AMULET, TOOL, GEM entries)",
+      expected: 454,
+      description: "All items in objects.h (WEAPON, ARMOR, RING, POTION, SCROLL, SPELL, WAND, FOOD, AMULET, TOOL, GEM entries, excluding #if 0 blocks)",
     },
   ],
 };
@@ -204,17 +204,17 @@ export function createNetHackExtractor(): Extractor {
         itemCount++;
       }
 
-      ctx.output.writePopulation("creatures", 379, creatureCount);
-      ctx.output.writePopulation("items", 430, itemCount);
+      ctx.output.writePopulation("creatures", 376, creatureCount);
+      ctx.output.writePopulation("items", 454, itemCount);
 
       return {
-        extractorId: ctx.binding.source_id,
+        extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "nethack-run",
         recordCount: creatureCount + itemCount,
         populationCounts: [
-          { dimension: "creatures", expected: 379, extracted: creatureCount },
-          { dimension: "items", expected: 430, extracted: itemCount },
+          { dimension: "creatures", expected: 376, extracted: creatureCount },
+          { dimension: "items", expected: 454, extracted: itemCount },
         ],
         diagnostics: [],
       };
