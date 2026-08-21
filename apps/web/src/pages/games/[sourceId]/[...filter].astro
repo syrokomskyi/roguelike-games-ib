@@ -70,9 +70,9 @@ function gameUrl(sourceId: string, type: string, page: number): string {
     {source && <SourceBindingPanel binding={source} />}
 
     <div class="flex flex-wrap gap-2">
-      <a href={gameUrl(sourceId, "all", 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All ({totalCount})</a>
+      <a href={gameUrl(sourceId, "all", 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All ({totalCount})</a>
       {byType.map(([type, count]) => (
-        <a href={gameUrl(sourceId, type, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === type ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{type} ({count})</a>
+        <a href={gameUrl(sourceId, type, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === type ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{type} ({count})</a>
       ))}
     </div>
 

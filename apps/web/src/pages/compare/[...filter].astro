@@ -68,18 +68,18 @@ function compareUrl(type: string, source: string, page: number): string {
     <p class="text-ib-muted">{filteredCount} of {totalCount} records</p>
 
     <div class="flex flex-wrap gap-2">
-      <a href={compareUrl("all", activeSource, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All</a>
+      <a href={compareUrl("all", activeSource, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All</a>
       {types.map((t) => (
-        <a href={compareUrl(t, activeSource, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === t ? "bg-ib-accent text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{t}</a>
+        <a href={compareUrl(t, activeSource, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === t ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{t}</a>
       ))}
     </div>
 
     {sources.length > 1 && (
       <div class="flex flex-wrap gap-2">
         <span class="text-sm text-ib-muted py-1.5">Source:</span>
-        <a href={compareUrl(activeType, "all", 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === "all" ? "bg-ib-accent2 text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>all</a>
+        <a href={compareUrl(activeType, "all", 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === "all" ? "border border-ib-accent2 bg-ib-accent2/15 text-ib-accent2" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>all</a>
         {sources.map((s) => (
-          <a href={compareUrl(activeType, s, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === s ? "bg-ib-accent2 text-white" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{s}</a>
+          <a href={compareUrl(activeType, s, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === s ? "border border-ib-accent2 bg-ib-accent2/15 text-ib-accent2" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{s}</a>
         ))}
       </div>
     )}
