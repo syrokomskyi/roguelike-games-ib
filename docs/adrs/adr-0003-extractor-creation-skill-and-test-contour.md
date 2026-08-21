@@ -1,7 +1,7 @@
 ---
 id: ADR-0003
 title: Extractor creation skill and quality test contour
-status: accepted
+status: implemented
 scope: project-wide
 decider: architecture
 reviewers:
@@ -10,7 +10,7 @@ related:
   - ADR-0001
 created: 2026-08-21
 accepted: 2026-08-21
-implementedAt: null
+implementedAt: 2026-08-21
 closedAt: null
 ---
 
