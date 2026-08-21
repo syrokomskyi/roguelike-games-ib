@@ -105,6 +105,26 @@ function renderClaims(
   return lines.join("\n");
 }
 
+function renderEvidence(
+  store: ProjectionStore,
+  record: CanonicalRecord,
+): string {
+  const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
+  const claimEvidenceRefs = claimsForRecord(store.claims, record.id).flatMap((c) => c.evidence_refs);
+  const allRefs = [...recordEvidenceRefs, ...claimEvidenceRefs];
+  if (allRefs.length === 0) return "";
+
+  const ev = evidenceForClaim(store.evidence, allRefs);
+  if (ev.length === 0) return "";
+
+  const lines: string[] = ["## Evidence"];
+  for (const e of ev) {
+    const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
+    lines.push(`- [${e.id}]${excerpt}`);
+  }
+  return lines.join("\n");
+}
+
 export function renderRecordNote(
   store: ProjectionStore,
   resolver: PathResolver,
@@ -133,6 +153,11 @@ export function renderRecordNote(
   const claims = renderClaims(store, resolver, aliasMap, record.id);
   if (claims) {
     sections.push(claims, "");
+  }
+
+  const evidence = renderEvidence(store, record);
+  if (evidence) {
+    sections.push(evidence, "");
   }
 
   return sections.join("\n");
