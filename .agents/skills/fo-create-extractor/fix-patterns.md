@@ -54,3 +54,16 @@ status: active
 **Situation:** The `ExtractorRunResult.extractorId` is set to `ctx.binding.source_id` instead of the manifest's `extractorId`, causing hash mismatches in determinism checks.
 
 **Action:** Use the manifest's `extractorId` in the run result, not the source binding's `source_id`. The source_id goes into record envelopes, not the run result.
+
+### K-0005: Population denominator lower than extracted count (undercount)
+
+```knowledge-entry
+id: K-0005
+layer: L1
+created: 2026-08-21
+status: active
+```
+
+**Situation:** The quality contour Q-002 reports `extracted > expected` — the extractor produces more records than the manifest declares. This was found in the nethack extractor (expected 430, extracted 458).
+
+**Action:** Investigate whether the parser is extracting extra entries (e.g., sentinel entries not filtered, duplicate parsing across files, or entries from a different array being counted). Alternatively, the `expected` denominator may be outdated if the source repository was updated. Re-count the source entries manually and update `exhaustivePopulations` in the manifest. Run the quality test to confirm `extracted == expected`.
