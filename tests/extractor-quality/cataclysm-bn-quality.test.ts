@@ -52,7 +52,7 @@ function createContext() {
 describe("cataclysm-bn extractor quality", () => {
   runQualityChecks(extractor, createContext, {
     sourceId: "cataclysm-bn",
-    sourceRoot: SOURCE_ROOT,
+    sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 30000,
   });
 });

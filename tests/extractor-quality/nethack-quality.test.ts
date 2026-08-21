@@ -52,7 +52,7 @@ function createContext() {
 describe("nethack extractor quality", () => {
   runQualityChecks(extractor, createContext, {
     sourceId: "nethack",
-    sourceRoot: SOURCE_ROOT,
+    sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 10000,
   });
 });

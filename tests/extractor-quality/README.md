@@ -4,18 +4,21 @@ Universal quality checks for game-specific extractors. Governed by ADR-0003.
 
 ## Purpose
 
-This directory contains a reusable test harness (`harness.ts`) that validates any extractor against six quality dimensions. Agents creating new extractors import the harness and create a `<game>-quality.test.ts` file that plugs in their extractor.
+This directory contains a reusable test harness (`harness.ts`) that validates any extractor against nine quality dimensions. Agents creating new extractors import the harness and create a `<game>-quality.test.ts` file that plugs in their extractor.
 
 ## Quality dimensions
 
 | ID | Dimension | What it checks |
 | --- | --- | --- |
 | Q-001 | Determinism | Two runs produce identical normalized hashes |
-| Q-002 | Population completeness | `extracted == expected` for every declared population dimension |
-| Q-003 | Evidence coverage | Every staged record has at least one evidence anchor |
+| Q-002 | Population completeness | `extracted == expected` for every declared population dimension, with file-level breakdown on mismatch |
+| Q-003 | Evidence coverage and integrity | Every staged record has evidence; all anchors have valid artifact sha256 and paths |
 | Q-004 | Schema validation | All records pass schema facade validation (or diagnostics emitted) |
 | Q-005 | Record loss | No unexpected record loss vs previous run (threshold-based) |
 | Q-006 | Performance | Extractor completes within a configurable time budget |
+| Q-007 | Record uniqueness | No duplicate record keys or native_ids |
+| Q-010 | Record key stability | Record key sets are identical across two runs |
+| Report | Quality report | Prints a markdown summary with populations, file breakdown, duplicates, evidence issues, and field coverage |
 
 ## Usage
 
@@ -51,7 +54,7 @@ function createContext() {
 describe("<game> extractor quality", () => {
   runQualityChecks(createGameExtractor(), createContext, {
     sourceId: "<game>",
-    sourceRoot: SOURCE_ROOT,
+    sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 10000,
   });
 });

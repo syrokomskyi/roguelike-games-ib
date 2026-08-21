@@ -146,7 +146,7 @@ describe("harness validation with synthetic extractor", () => {
 
   runQualityChecks(extractor, createContext, {
     sourceId: "quality-harness-test",
-    sourceRoot,
+    sourceRoot: () => sourceRoot,
     timeBudgetMs: 5000,
   });
 });

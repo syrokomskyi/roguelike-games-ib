@@ -14,7 +14,7 @@ import {
 
 export interface QualityCheckOptions {
   sourceId: string;
-  sourceRoot: string;
+  sourceRoot: () => string;
   timeBudgetMs?: number;
   recordLossThreshold?: number;
 }
@@ -216,7 +216,7 @@ export function runQualityChecks(
         records,
         evidence,
         result.populationCounts,
-        options.sourceRoot,
+        options.sourceRoot(),
         options.sourceId,
       );
 
@@ -273,7 +273,7 @@ export function runQualityChecks(
       const invalid: Array<{ recordId: string; errors: string[] }> = [];
       for (const ev of evidence) {
         const anchor = ev.anchor as EvidenceAnchor;
-        const validation = validateEvidenceAnchor(anchor, options.sourceRoot);
+        const validation = validateEvidenceAnchor(anchor, options.sourceRoot());
         if (!validation.valid) {
           invalid.push({ recordId: ev.record_id, errors: validation.errors });
         }
@@ -416,7 +416,7 @@ export function runQualityChecks(
         records,
         evidence,
         result.populationCounts,
-        options.sourceRoot,
+        options.sourceRoot(),
         options.sourceId,
       );
 

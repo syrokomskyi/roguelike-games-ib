@@ -52,7 +52,7 @@ function createContext() {
 describe("broguece extractor quality", () => {
   runQualityChecks(extractor, createContext, {
     sourceId: "broguece",
-    sourceRoot: SOURCE_ROOT,
+    sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 10000,
   });
 });

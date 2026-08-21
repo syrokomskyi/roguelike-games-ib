@@ -67,3 +67,29 @@ status: active
 **Situation:** The quality contour Q-002 reports `extracted > expected` — the extractor produces more records than the manifest declares. This was found in the nethack extractor (expected 430, extracted 458).
 
 **Action:** Investigate whether the parser is extracting extra entries (e.g., sentinel entries not filtered, duplicate parsing across files, or entries from a different array being counted). Alternatively, the `expected` denominator may be outdated if the source repository was updated. Re-count the source entries manually and update `exhaustivePopulations` in the manifest. Run the quality test to confirm `extracted == expected`.
+
+### K-0006: Duplicate records from multi-file source data
+
+```knowledge-entry
+id: K-0006
+layer: L1
+created: 2026-08-21
+status: active
+```
+
+**Situation:** The quality contour Q-007 reports duplicate record keys and native_ids. This was found in the cataclysm-bn extractor: 52 items (battery, money, thread, soap, rock, etc.) appear in multiple JSON files with the same `id` field, causing duplicate records.
+
+**Action:** When parsing JSON data from multiple files, items may be defined in more than one file (e.g., `items/tools.json` and `items/items.json` both define `battery`). Deduplicate by `native_id` before writing records — keep the first occurrence or merge fields. Alternatively, namespace the `native_id` with the source file path (e.g., `items/tools.json:battery`) if the duplicates are genuinely different items.
+
+### K-0007: Category names used as native_ids for individual items
+
+```knowledge-entry
+id: K-0007
+layer: L1
+created: 2026-08-21
+status: active
+```
+
+**Situation:** The quality contour Q-007 reports massive duplication (×71, ×86, ×28) of category-level keys like `weapon:`, `armor:`, `ring:`. This was found in the nethack extractor: the C parser uses enum category labels (e.g., `WEAPON`, `ARMOR`) as `native_id` for all items in that category, instead of using the individual item's identifier.
+
+**Action:** Each record must have a unique `native_id` that identifies the specific item, not its category. For C enum-based parsers, use the enum member name (e.g., `elven_dagger`, `dwarvish_mithril_coat`) as the `native_id`, not the enum type name. If individual names are not available in the source, derive them from the description or display name field.
