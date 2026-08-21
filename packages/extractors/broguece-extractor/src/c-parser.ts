@@ -302,32 +302,62 @@ export function parseItemTable(
   return entries;
 }
 
+function parseEntryFields(text: string): string[] {
+  const fields: string[] = [];
+  let depth = 0;
+  let current = "";
+  let inString = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"' && (i === 0 || text[i - 1] !== '\\')) {
+      inString = !inString;
+      current += ch;
+    } else if (ch === '{' && !inString) {
+      depth++;
+      current += ch;
+    } else if (ch === '}' && !inString) {
+      depth--;
+      current += ch;
+    } else if (ch === ',' && depth === 0 && !inString) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) fields.push(current.trim());
+  return fields;
+}
+
 function finalizeItemEntry(
   partial: Partial<ItemTableEntry> & { lineStart: number },
   entryLines: string[],
   tableName: string,
 ): ItemTableEntry | null {
   const fullText = entryLines.join(" ");
-  const nameMatch = fullText.match(/\{\s*"([^"]+)"/);
+  const startIdx = fullText.indexOf("{");
+  const endIdx = fullText.lastIndexOf("}");
+  if (startIdx < 0 || endIdx < 0) return null;
+
+  const content = fullText.substring(startIdx + 1, endIdx);
+  const fields = parseEntryFields(content);
+  if (fields.length < 1) return null;
+
+  const nameMatch = fields[0].match(/^"([^"]+)"$/);
   if (!nameMatch) return null;
 
   const name = nameMatch[1];
   const nativeId = name.replace(/\s+/g, "_").toLowerCase();
 
-  const freqMatch = fullText.match(/\{\s*"[^"]+",\s*"[^"]*",\s*"[^"]*",\s*(\d+)/);
-  const frequency = freqMatch ? parseInt(freqMatch[1], 10) : 0;
+  const numOrZero = (s: string | undefined): number =>
+    s ? parseInt(s, 10) || 0 : 0;
 
-  const marketMatch = fullText.match(/\{\s*"[^"]+",\s*"[^"]*",\s*"[^"]*",\s*\d+,\s*(\d+)/);
-  const marketValue = marketMatch ? parseInt(marketMatch[1], 10) : 0;
-
-  const strengthMatch = fullText.match(/\{\s*"[^"]+",\s*"[^"]*",\s*"[^"]*",\s*\d+,\s*\d+,\s*(\d+)/);
-  const strengthRequired = strengthMatch ? parseInt(strengthMatch[1], 10) : 0;
-
-  const powerMatch = fullText.match(/\{\s*"[^"]+",\s*"[^"]*",\s*"[^"]*",\s*\d+,\s*\d+,\s*\d+,\s*(\d+)/);
-  const power = powerMatch ? parseInt(powerMatch[1], 10) : 0;
-
-  const rangeMatch = fullText.match(/\{(\d+,\s*\d+,\s*\d+)\}/);
-  const damageRange = rangeMatch ? `{${rangeMatch[1]}}` : "{0,0,0}";
+  const frequency = numOrZero(fields[3]);
+  const marketValue = numOrZero(fields[4]);
+  const strengthRequired = numOrZero(fields[5]);
+  const power = numOrZero(fields[6]);
+  const damageRange = fields[7] ?? "{0,0,0}";
 
   const allQuoted = [...fullText.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
   const description = allQuoted.filter((s) => s.length > 20).pop() ?? "";

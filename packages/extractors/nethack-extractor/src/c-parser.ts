@@ -188,10 +188,13 @@ const OBJECT_MACROS: ObjectMacro[] = [
   { name: "FOOD", class: "food" },
   { name: "POTION", class: "potion" },
   { name: "SCROLL", class: "scroll" },
+  { name: "XTRA_SCROLL_LABEL", class: "scroll" },
   { name: "SPELL", class: "spellbook" },
   { name: "WAND", class: "wand" },
+  { name: "COIN", class: "coin" },
   { name: "GEM", class: "gem" },
   { name: "ROCK", class: "rock" },
+  { name: "OBJECT", class: "object" },
 ];
 
 export function parseObjects(source: string): ObjectEntry[] {
@@ -200,9 +203,33 @@ export function parseObjects(source: string): ObjectEntry[] {
   const macroNames = OBJECT_MACROS.map((m) => m.name);
   const macroPattern = new RegExp(`^\\s*(${macroNames.join("|")})\\(`);
 
+  let skipDepth = 0;
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed.match(/^#if\\s+0\\b/) || (trimmed.match(/^#if\\b/) && skipDepth > 0) ||
+        (trimmed.match(/^#ifdef\\b/) && skipDepth > 0) ||
+        (trimmed.match(/^#ifndef\\b/) && skipDepth > 0)) {
+      skipDepth++;
+      i++;
+      continue;
+    }
+    if (trimmed.match(/^#endif\\b/)) {
+      if (skipDepth > 0) skipDepth--;
+      i++;
+      continue;
+    }
+    if (trimmed.match(/^#else\\b/) || trimmed.match(/^#elif\\b/)) {
+      i++;
+      continue;
+    }
+    if (skipDepth > 0) {
+      i++;
+      continue;
+    }
+
     const match = line.match(macroPattern);
     if (!match) {
       i++;
@@ -243,19 +270,47 @@ function finalizeObjectEntry(
   lineStart: number,
   lineEnd: number,
 ): ObjectEntry | null {
-  const macroStart = fullText.indexOf(macroName + "(");
-  if (macroStart < 0) return null;
-  const afterMacro = fullText.substring(macroStart + macroName.length + 1);
-
-  const nameMatch = afterMacro.match(/^\s*"([^"]+)"/);
-  if (!nameMatch) return null;
-
-  const name = nameMatch[1];
-  const descMatch = afterMacro.match(/^\s*"[^"]+"\s*,\s*"([^"]*)"/);
-  const rawDesc = descMatch ? descMatch[1] : "";
-
   const lastTokenMatch = fullText.match(/,\s*([A-Z_][A-Z0-9_]*)\s*\)\s*$/);
-  const nativeId = lastTokenMatch ? lastTokenMatch[1].toLowerCase() : name.replace(/\s+/g, "_").toLowerCase();
+  const nativeId = lastTokenMatch ? lastTokenMatch[1].toLowerCase() : "";
+
+  let name = "";
+  let rawDesc = "";
+  let resolvedClass = objClass;
+
+  if (macroName === "OBJECT") {
+    const objMatch = fullText.match(/OBJ\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\)/);
+    if (!objMatch) return null;
+    name = objMatch[1];
+    rawDesc = objMatch[2];
+    if (!name) return null;
+    const classMatch = fullText.match(/,\s*([A-Z_]+_CLASS)\s*,/);
+    if (classMatch) {
+      resolvedClass = classMatch[1].replace("_CLASS", "").toLowerCase();
+      if (resolvedClass === "spbook") resolvedClass = "spellbook";
+    }
+  } else if (macroName === "XTRA_SCROLL_LABEL") {
+    const textMatch = fullText.match(/XTRA_SCROLL_LABEL\(\s*"([^"]*)"/);
+    name = textMatch ? textMatch[1] : nativeId;
+    rawDesc = name;
+  } else {
+    const macroStart = fullText.indexOf(macroName + "(");
+    if (macroStart < 0) return null;
+    const afterMacro = fullText.substring(macroStart + macroName.length + 1);
+
+    const nameMatch = afterMacro.match(/^\s*"([^"]+)"/);
+    if (nameMatch) {
+      name = nameMatch[1];
+      const descMatch = afterMacro.match(/^\s*"[^"]+"\s*,\s*"([^"]*)"/);
+      rawDesc = descMatch ? descMatch[1] : "";
+    } else if (afterMacro.match(/^\s*NoDes\b/)) {
+      name = nativeId;
+      const descMatch = afterMacro.match(/^\s*NoDes\s*,\s*"([^"]*)"/);
+      rawDesc = descMatch ? descMatch[1] : "";
+      if (!name) return null;
+    } else {
+      return null;
+    }
+  }
 
   const probMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,/);
   const probability = probMatch ? parseInt(probMatch[1], 10) : 0;
@@ -263,7 +318,7 @@ function finalizeObjectEntry(
   const costMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/);
   const cost = costMatch ? parseInt(costMatch[1], 10) : 0;
 
-  const materialMatch = fullText.match(/\b(IRON|WOOD|LEATHER|COPPER|SILVER|GOLD|MITHRIL|PLASTIC|GLASS|BONE|PAPER|MINERAL|GEMSTONE|METAL|CLOTH|DRAGON_HIDE)\b/);
+  const materialMatch = fullText.match(/\b(IRON|WOOD|LEATHER|COPPER|SILVER|GOLD|MITHRIL|PLASTIC|GLASS|BONE|PAPER|MINERAL|GEMSTONE|METAL|CLOTH|DRAGON_HIDE|PLATINUM|WAX|FLESH|VEGGY|LIQUID)\b/);
   const material = materialMatch ? materialMatch[1] : "UNKNOWN";
 
   const colorMatch = fullText.match(/\b(CLR_[A-Z_]+|HI_[A-Z_]+|DRAGON_[A-Z_]+)\b/g);
@@ -276,7 +331,7 @@ function finalizeObjectEntry(
     nativeId,
     name,
     description: rawDesc === "NoDes" ? "" : rawDesc,
-    objClass,
+    objClass: resolvedClass,
     probability,
     weight,
     cost,
