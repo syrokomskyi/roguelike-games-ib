@@ -1,140 +1,191 @@
 ---
-export const prerender = false;
+export const prerender = true;
 
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
-import { createWebContext } from "../lib/context";
-import { getPageMetadata } from "../lib/metadata";
-import type { SearchHit, SearchFilters } from "@roguelike-games-ib/search";
 
-const distDir = Astro.locals.distDir ?? "";
 const q = Astro.url.searchParams.get("q") ?? "";
 const activeSource = Astro.url.searchParams.get("source") ?? "all";
 const activeType = Astro.url.searchParams.get("type") ?? "all";
-const PAGE_SIZE = 25;
-const page = Number(Astro.url.searchParams.get("page") ?? "1");
-
-let hits: SearchHit[] = [];
-let total = 0;
-let ctx = null;
-let meta = null;
-let sources: string[] = [];
-let types: string[] = [];
-
-try {
-  ctx = await createWebContext(distDir);
-  meta = getPageMetadata(ctx);
-  sources = [...new Set(ctx.store.records.map((r) => {
-    const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-    const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-    return (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined);
-  }).filter((s): s is string => Boolean(s)))].sort();
-  types = [...new Set(ctx.store.records.map((r) => r.record_type))].sort();
-
-  if (q.trim()) {
-    const filters: SearchFilters = {};
-    if (activeSource !== "all") filters.source_id = activeSource;
-    if (activeType !== "all") filters.record_type = activeType;
-
-    const result = await ctx.searchIndex.search({
-      text: q,
-      filters: Object.keys(filters).length > 0 ? filters : undefined,
-      limit: 1000,
-    });
-    hits = result.hits;
-    total = result.total;
-  }
-} catch {}
-
-const totalPages = Math.ceil(total / PAGE_SIZE);
-const currentPage = Math.min(Math.max(1, page), totalPages || 1);
-const pageHits = hits.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-function filterUrl(params: Record<string, string | undefined>): string {
-  const sp = new URLSearchParams();
-  if (q) sp.set("q", q);
-  if (params.source !== undefined) { if (params.source !== "all") sp.set("source", params.source); }
-  else if (activeSource !== "all") sp.set("source", activeSource);
-  if (params.type !== undefined) { if (params.type !== "all") sp.set("type", params.type); }
-  else if (activeType !== "all") sp.set("type", activeType);
-  if (params.page !== undefined) { if (params.page !== "1") sp.set("page", params.page); }
-  return `/search?${sp.toString()}`;
-}
 ---
 
-<Base title="Search" metadata={meta ?? undefined} activeNav="search">
+<Base title="Search" activeNav="search">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Search</h1>
 
     <SearchBox placeholder={q || "Search records..."} source={activeSource !== "all" ? activeSource : undefined} recordType={activeType !== "all" ? activeType : undefined} />
 
-    {q.trim() && (
-      <>
+    <div id="search-results" data-query={q} data-source={activeSource} data-type={activeType}>
+      <div id="search-status" class="text-sm text-ib-muted">Enter a search query to find records.</div>
+    </div>
+  </div>
+
+  <script>
+    const SEARCH_API = import.meta.env.PUBLIC_SEARCH_API_URL ?? "";
+
+    interface ApiHit {
+      key: string;
+      record_type: string;
+      source_id: string;
+      title: string;
+      summary: string;
+      score: number;
+      concept_type?: string;
+      source_games?: string[];
+      mutation_dimensions?: string[];
+    }
+
+    interface ApiResponse {
+      hits: ApiHit[];
+      total: number;
+      query: string;
+      mode: string;
+    }
+
+    function initSearch() {
+      const container = document.getElementById("search-results");
+      if (!container) return;
+
+      const query = container.dataset.query ?? "";
+      const source = container.dataset.source ?? "all";
+      const type = container.dataset.type ?? "all";
+      const status = document.getElementById("search-status");
+
+      if (!query.trim()) {
+        if (status) status.textContent = "Enter a search query to find records by title, summary, or key.";
+        return;
+      }
+
+      if (status) status.textContent = "Searching...";
+
+      const params = new URLSearchParams({ q: query });
+      if (source !== "all") params.set("source", source);
+      if (type !== "all") params.set("type", type);
+
+      const apiUrl = SEARCH_API
+        ? `${SEARCH_API}/api/search?${params.toString()}`
+        : `/api/search?${params.toString()}`;
+
+      fetch(apiUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json() as Promise<ApiResponse>;
+        })
+        .then((data) => {
+          renderResults(container, data, query, source, type);
+        })
+        .catch((err) => {
+          if (status) {
+            status.innerHTML = `<p class="text-sm text-ib-muted">Search temporarily unavailable. ${err.message}</p>`;
+          }
+        });
+    }
+
+    function renderResults(
+      container: HTMLElement,
+      data: ApiResponse,
+      query: string,
+      activeSource: string,
+      activeType: string,
+    ) {
+      const { hits, total } = data;
+
+      if (total === 0) {
+        container.innerHTML = `
+          <p class="text-sm text-ib-muted">
+            0 results for <span class="font-medium text-ib-text">"${escapeHtml(query)}"</span>
+          </p>
+          <p class="mt-4 text-sm text-ib-muted">No records found. Try a different query or adjust filters.</p>
+        `;
+        return;
+      }
+
+      const sourceSet = new Set<string>();
+      const typeSet = new Set<string>();
+      for (const h of hits) {
+        if (h.source_id) sourceSet.add(h.source_id);
+        if (h.record_type) typeSet.add(h.record_type);
+      }
+      const sources = [...sourceSet].sort();
+      const types = [...typeSet].sort();
+
+      let html = `
         <p class="text-sm text-ib-muted">
-          {total} result{total !== 1 ? "s" : ""} for <span class="font-medium text-ib-text">"{q}"</span>
+          ${total} result${total !== 1 ? "s" : ""} for <span class="font-medium text-ib-text">"${escapeHtml(query)}"</span>
+          <span class="ml-2 rounded-full bg-ib-accent/15 px-2 py-0.5 text-xs text-ib-accent">semantic</span>
         </p>
+      `;
 
-        {sources.length > 1 && (
-          <div class="flex flex-wrap gap-2">
-            <span class="text-sm text-ib-muted py-1.5">Source:</span>
-            <a href={filterUrl({ source: "all", page: "1" })} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === "all" ? "border border-ib-accent2 bg-ib-accent2/15 text-ib-accent2" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>all</a>
-            {sources.map((s) => (
-              <a href={filterUrl({ source: s, page: "1" })} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === s ? "border border-ib-accent2 bg-ib-accent2/15 text-ib-accent2" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{s}</a>
-            ))}
-          </div>
-        )}
+      if (sources.length > 1) {
+        html += `<div class="flex flex-wrap gap-2"><span class="text-sm text-ib-muted py-1.5">Source:</span>`;
+        html += filterLink("source", "all", activeSource === "all");
+        for (const s of sources) {
+          html += filterLink("source", s, activeSource === s);
+        }
+        html += `</div>`;
+      }
 
-        {types.length > 1 && (
-          <div class="flex flex-wrap gap-2">
-            <span class="text-sm text-ib-muted py-1.5">Type:</span>
-            <a href={filterUrl({ type: "all", page: "1" })} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>all</a>
-            {types.map((t) => (
-              <a href={filterUrl({ type: t, page: "1" })} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === t ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{t}</a>
-            ))}
-          </div>
-        )}
-      </>
-    )}
+      if (types.length > 1) {
+        html += `<div class="flex flex-wrap gap-2"><span class="text-sm text-ib-muted py-1.5">Type:</span>`;
+        html += filterLink("type", "all", activeType === "all");
+        for (const t of types) {
+          html += filterLink("type", t, activeType === t);
+        }
+        html += `</div>`;
+      }
 
-    {q.trim() && pageHits.length > 0 && (
-      <div class="space-y-3">
-        {pageHits.map((hit) => (
-          <a href={`/records/${hit.record.key}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
+      html += `<div class="space-y-3">`;
+      for (const hit of hits.slice(0, 25)) {
+        html += `
+          <a href="/records/${encodeURIComponent(hit.key)}/" class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="flex items-center gap-2">
-              <span class="font-mono text-xs text-ib-accent">{hit.record.key}</span>
-              <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{hit.record.record_type}</span>
-              {hit.record.source_id && <span class="text-xs text-ib-muted">{hit.record.source_id}</span>}
+              <span class="font-mono text-xs text-ib-accent">${escapeHtml(hit.key)}</span>
+              <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">${escapeHtml(hit.record_type)}</span>
+              ${hit.source_id ? `<span class="text-xs text-ib-muted">${escapeHtml(hit.source_id)}</span>` : ""}
             </div>
-            {hit.record.title && <h3 class="mt-1 font-semibold text-ib-text">{hit.record.title}</h3>}
-            {hit.record.summary && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{hit.record.summary}</p>}
+            ${hit.title ? `<h3 class="mt-1 font-semibold text-ib-text">${escapeHtml(hit.title)}</h3>` : ""}
+            ${hit.summary ? `<p class="mt-1 text-sm text-ib-muted line-clamp-2">${escapeHtml(hit.summary)}</p>` : ""}
             <div class="mt-2 flex items-center gap-3 text-xs text-ib-muted">
-              <span>Score: {hit.scores.final_score.toFixed(3)}</span>
-              <span>FTS: {hit.scores.lexical_score.toFixed(3)}</span>
-              <span>Graph: {hit.scores.graph_boost.toFixed(3)}</span>
+              <span>Score: ${hit.score.toFixed(3)}</span>
+              ${hit.source_games?.length ? `<span>Games: ${hit.source_games.map(escapeHtml).join(", ")}</span>` : ""}
             </div>
           </a>
-        ))}
-      </div>
-    )}
+        `;
+      }
+      html += `</div>`;
 
-    {q.trim() && total > PAGE_SIZE && (
-      <div class="flex items-center justify-center gap-2">
-        {currentPage > 1 && (
-          <a href={filterUrl({ page: String(currentPage - 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">← Prev</a>
-        )}
-        <span class="text-sm text-ib-muted">Page {currentPage} of {totalPages}</span>
-        {currentPage < totalPages && (
-          <a href={filterUrl({ page: String(currentPage + 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">Next →</a>
-        )}
-      </div>
-    )}
+      if (total > 25) {
+        html += `<p class="text-center text-sm text-ib-muted">Showing 25 of ${total} results. Refine your query for more specific results.</p>`;
+      }
 
-    {q.trim() && total === 0 && (
-      <p class="text-sm text-ib-muted">No records found. Try a different query or adjust filters.</p>
-    )}
+      container.innerHTML = html;
+    }
 
-    {!q.trim() && (
-      <p class="text-sm text-ib-muted">Enter a search query to find records by title, summary, or key.</p>
-    )}
-  </div>
+    function filterLink(param: string, value: string, active: boolean): string {
+      const url = new URL(window.location.href);
+      if (value === "all") {
+        url.searchParams.delete(param);
+      } else {
+        url.searchParams.set(param, value);
+      }
+      url.searchParams.delete("page");
+      const cls = active
+        ? "border border-ib-accent bg-ib-accent/15 text-ib-accent"
+        : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text";
+      return `<a href="${url.pathname}?${url.searchParams.toString()}" class="rounded-lg px-3 py-1.5 text-sm ${cls}">${escapeHtml(value)}</a>`;
+    }
+
+    function escapeHtml(s: string): string {
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    initSearch();
+
+    document.addEventListener("astro:after-swap", initSearch);
+  </script>
 </Base>
