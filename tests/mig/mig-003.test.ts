@@ -101,7 +101,8 @@ describe("C9: BrogueCE vertical slice", () => {
       "semver",
       "package_json",
       computeSourceFingerprint(SOURCE_ROOT),
-      { repository: "https://github.com/tmewett/BrogueCE", commit: null, clean: null },
+      { repository: "https://github.com/tmewett/BrogueCE", commit: null, clean: null, default_branch: "master" },
+      "source",
     );
     const extractor = createBrogueCEExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c9-test");

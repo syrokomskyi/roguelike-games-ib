@@ -74,7 +74,7 @@ export function setupReleaseWorkspace(options?: {
         "semver",
         "package_json",
         fingerprint,
-        { repository: null, commit: null, clean: null },
+        { repository: null, commit: null, clean: null, default_branch: null },
       );
       bindingsYaml.push(`  - source_id: ${b.source_id}`);
       bindingsYaml.push(`    source_unit_path: ${b.source_unit_path}`);

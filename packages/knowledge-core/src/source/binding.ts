@@ -26,6 +26,7 @@ export interface SourceBinding {
     repository: string | null;
     commit: string | null;
     clean: boolean | null;
+    default_branch: string | null;
   } | null;
   binding_digest: string;
 }
@@ -38,6 +39,7 @@ export function createSourceBinding(
   metadataOrigin: string,
   fingerprintValue: string,
   vcs: SourceBinding["vcs"],
+  payloadPath = "source",
 ): SourceBinding {
   const bindingDigest = computeBindingDigest(
     fingerprintValue,
@@ -51,7 +53,7 @@ export function createSourceBinding(
     declared_version: declaredVersion,
     version_scheme: versionScheme,
     metadata_origin: metadataOrigin,
-    payload_path: "source",
+    payload_path: payloadPath,
     fingerprint: {
       algorithm: "sha256-tree-v1",
       value: fingerprintValue,

@@ -35,11 +35,15 @@ export function buildEvidenceUrl(
   if (!source?.vcs?.repository) return null;
 
   const repo = source.vcs.repository.replace(/\/+$/, "");
-  const ref = source.vcs.commit ?? "HEAD";
-  const path = evidence.artifact_path;
-  if (!path) return null;
+  const ref = source.vcs.commit ?? source.vcs.default_branch ?? "HEAD";
+  const artifactPath = evidence.artifact_path;
+  if (!artifactPath) return null;
 
-  let url = `${repo}/blob/${ref}/${path}`;
+  const fullPath = source.payload_path && source.payload_path !== "source"
+    ? `${source.payload_path}/${artifactPath}`
+    : artifactPath;
+
+  let url = `${repo}/blob/${ref}/${fullPath}`;
 
   const loc = evidence.locator;
   if (loc?.line_start != null) {

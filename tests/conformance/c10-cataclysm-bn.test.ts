@@ -98,7 +98,8 @@ describe("C10: Cataclysm-BN scale trial", () => {
       "semver",
       "package_json",
       computeSourceFingerprint(SOURCE_ROOT),
-      { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null },
+      { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null, default_branch: "main" },
+      "data/json",
     );
     const extractor = createCataclysmBNExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c10-test");
@@ -221,7 +222,8 @@ describe("C10: Cataclysm-BN scale trial", () => {
       "semver",
       "package_json",
       computeSourceFingerprint(SOURCE_ROOT),
-      { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null },
+      { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null, default_branch: "main" },
+      "data/json",
     );
     const extractor = createCataclysmBNExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c10-bench");

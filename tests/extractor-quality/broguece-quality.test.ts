@@ -29,7 +29,8 @@ const binding = createSourceBinding(
   "semver",
   "package_json",
   computeSourceFingerprint(SOURCE_ROOT),
-  { repository: "https://github.com/tmewett/BrogueCE", commit: null, clean: null },
+  { repository: "https://github.com/tmewett/BrogueCE", commit: null, clean: null, default_branch: "master" },
+  "source",
 );
 
 const extractor = createBrogueCEExtractor();

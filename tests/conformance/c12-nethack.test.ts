@@ -96,7 +96,8 @@ describe("C12: NetHack scale trial", () => {
       "semver",
       "package_json",
       computeSourceFingerprint(SOURCE_ROOT),
-      { repository: "https://github.com/NetHack/NetHack", commit: null, clean: null },
+      { repository: "https://github.com/NetHack/NetHack", commit: null, clean: null, default_branch: "NetHack-5.0" },
+      "include",
     );
     const extractor = createNetHackExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c12-test");
@@ -168,7 +169,8 @@ describe("C12: NetHack scale trial", () => {
       "semver",
       "package_json",
       computeSourceFingerprint(SOURCE_ROOT),
-      { repository: "https://github.com/NetHack/NetHack", commit: null, clean: null },
+      { repository: "https://github.com/NetHack/NetHack", commit: null, clean: null, default_branch: "NetHack-5.0" },
+      "include",
     );
     const extractor = createNetHackExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c12-bench");

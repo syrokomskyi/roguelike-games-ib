@@ -13,6 +13,7 @@ bindings:
       repository: "https://github.com/tmewett/BrogueCE"
       commit: null
       clean: null
+      default_branch: "master"
     binding_digest: 5fb1793f11b3fda3bee098aa6af7dda7166111cc06cffcaeeceae4fa7d1fb5b2
   - source_id: cataclysm-bn
     source_unit_path: Cataclysm-BN
@@ -27,6 +28,7 @@ bindings:
       repository: "https://github.com/cataclysmbnteam/Cataclysm-BN"
       commit: null
       clean: null
+      default_branch: "main"
     binding_digest: a8b27380f9ca96a859a50604569e6993c3da98bd1c8507f9a8421f5f5d979cbd
   - source_id: nethack
     source_unit_path: NetHack
@@ -41,4 +43,5 @@ bindings:
       repository: "https://github.com/NetHack/NetHack"
       commit: null
       clean: null
+      default_branch: "NetHack-5.0"
     binding_digest: bb2d375f5feea0baa2e24b7848786a6100b7504febb2419ba24b42df701b2b7f

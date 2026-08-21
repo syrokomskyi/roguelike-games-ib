@@ -29,7 +29,8 @@ const binding = createSourceBinding(
   "semver",
   "package_json",
   computeSourceFingerprint(SOURCE_ROOT),
-  { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null },
+  { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null, default_branch: "main" },
+  "data/json",
 );
 
 const extractor = createCataclysmBNExtractor();

@@ -36,7 +36,8 @@ properties:
         metadata_origin:
           enum: [readme, package_json, both]
         payload_path:
-          const: source
+          type: string
+          minLength: 1
         fingerprint:
           type: object
           additionalProperties: false
@@ -57,6 +58,8 @@ properties:
               type: [string, 'null']
             clean:
               type: [boolean, 'null']
+            default_branch:
+              type: [string, 'null']
         binding_digest:
           type: string
           pattern: '^[a-f0-9]{64}$'
