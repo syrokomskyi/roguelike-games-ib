@@ -1,0 +1,40 @@
+schema: forge/config@1
+project:
+  name: roguelike-games-ib
+  stack: [typescript]
+  packageManager: pnpm
+paths:
+  rfcsDir: docs/rfcs
+  adrsDir: docs/adrs
+  plansDir: docs/plans
+  auditsDir: docs/audits
+  specsDir: docs/specs
+  skillsDir: .agents/skills
+  sessionsDir: docs/sessions
+bindings:
+  schema: forge/bindings@1
+  commands:
+    validateRfc: pnpm exec forge rfc.validate --id {id} --json
+    validateAdr: pnpm exec forge adr.validate --id {id} --json
+    implementStamp: pnpm exec forge rfc.implement.stamp --id {id}
+      --implementation-commit {commit}
+    typecheck: pnpm exec tsc --noEmit
+    test: pnpm exec vitest
+    scopedBuild: pnpm exec turbo run build
+    specValidate: pnpm exec forge spec.validate --spec={id} --json
+    sessionSave: pnpm exec forge session.save --json
+    validate: null
+    produce: null
+    verify: null
+    preview: null
+    lint: null
+  paths:
+    invariantsFile: null
+    compassDocs: []
+    reviewsDir: docs/reviews
+    handoffsDir: docs/handoffs
+    sessionsDir: docs/sessions
+  terminology: {}
+  compass: {}
+forge:
+  syncedVersion: 2.9.4

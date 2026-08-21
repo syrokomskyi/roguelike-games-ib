@@ -1,0 +1,9 @@
+# Knowledge operational configuration
+source:
+  rootPattern: "../<kb-id>-source"
+extractors: []
+projections:
+  - name: web
+    path: apps/web
+  - name: mcp
+    path: apps/mcp

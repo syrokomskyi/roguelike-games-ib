@@ -1,0 +1,6 @@
+# Knowledge manifest — canonical dataset identity
+id: "roguelike-games-ib"
+name: "Roguelike Games Inspiration Base"
+modelVersion: "1.0.0"
+description: "Knowledge (Inspiration) Base by roguelike games for great Artists — a curated knowledge system that draws creative inspiration from roguelike games and channels it toward artists."
+license: "TBD"

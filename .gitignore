@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.generated/
+.turbo/
+.cache/
+operator-profile.md
+
+# forge-agent-memory
+.agents/memory/daily/
+# /forge-agent-memory
