@@ -1,0 +1,149 @@
+import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
+import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+
+export interface CompareRow {
+  record_id: string;
+  record_key: string;
+  record_type: string;
+  title: string | null;
+  summary: string | null;
+  claim_count: number;
+  outgoing_relation_count: number;
+  incoming_relation_count: number;
+  source_id: string;
+}
+
+export function buildCompareRows(store: ProjectionStore): CompareRow[] {
+  return store.records.map((r) => {
+    const claims = claimsForRecord(store.claims, r.id);
+    const { outgoing, incoming } = relationsForRecord(store.relations, r.id);
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const scope = ra["scope"] as Record<string, unknown> | undefined;
+    const source_id = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "all";
+    return {
+      record_id: r.id,
+      record_key: r.key,
+      record_type: r.record_type,
+      title: (ra["title"] as string | null) ?? null,
+      summary: (ra["summary"] as string | null) ?? null,
+      claim_count: claims.length,
+      outgoing_relation_count: outgoing.length,
+      incoming_relation_count: incoming.length,
+      source_id,
+    };
+  });
+}
+
+export interface GameRecord {
+  id: string;
+  key: string;
+  record_type: string;
+  source_id: string;
+}
+
+export function recordsForSource(store: ProjectionStore, sourceId: string): GameRecord[] {
+  return store.records.filter((r) => {
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const scope = ra["scope"] as Record<string, unknown> | undefined;
+    const sid = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined);
+    return sid === sourceId;
+  }).map((r) => {
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const scope = ra["scope"] as Record<string, unknown> | undefined;
+    return {
+      id: r.id,
+      key: r.key,
+      record_type: r.record_type,
+      source_id: (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "",
+    };
+  });
+}
+
+export interface SimpleRecord {
+  key: string;
+  title: string | undefined;
+  summary: string | undefined;
+}
+
+export function mechanicsForSource(store: ProjectionStore, sourceId: string): SimpleRecord[] {
+  return store.records.filter((r) => {
+    const ra = r as Record<string, unknown>;
+    const isMechanic = r.record_type === "mechanic" || (r.record_type === "semantic_record" && ra["semantic_type"] === "mechanic");
+    if (!isMechanic) return false;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const scope = ra["scope"] as Record<string, unknown> | undefined;
+    return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+  }).map((r) => {
+    const ra = r as Record<string, unknown>;
+    return {
+      key: r.key,
+      title: ra["title"] as string | undefined,
+      summary: ra["summary"] as string | undefined,
+    };
+  });
+}
+
+export function systemsForSource(store: ProjectionStore, sourceId: string): SimpleRecord[] {
+  return store.records.filter((r) => {
+    const ra = r as Record<string, unknown>;
+    const isSystem = r.record_type === "system" || (r.record_type === "semantic_record" && ra["semantic_type"] === "system");
+    if (!isSystem) return false;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const scope = ra["scope"] as Record<string, unknown> | undefined;
+    return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+  }).map((r) => {
+    const ra = r as Record<string, unknown>;
+    return {
+      key: r.key,
+      title: ra["title"] as string | undefined,
+      summary: ra["summary"] as string | undefined,
+    };
+  });
+}
+
+export function defRecordsForSourceKind(store: ProjectionStore, sourceId: string, kind: string): { key: string }[] {
+  return store.records.filter((r) => {
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    return si?.["source_id"] === sourceId && r.record_type === kind;
+  }).map((r) => ({ key: r.key }));
+}
+
+export function kindsForSource(store: ProjectionStore, sourceId: string): string[] {
+  const sourceRecords = store.records.filter((r) => {
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    return si?.["source_id"] === sourceId;
+  });
+  return [...new Set(sourceRecords.map((r) => r.record_type))].sort();
+}
+
+export interface AncestryNode {
+  record_id: string;
+  record_key: string;
+  record_type: string;
+  title: string | null;
+  depth: number;
+}
+
+export function getStats(store: ProjectionStore) {
+  const records = store.records;
+  return {
+    records: records.length,
+    sources: store.sources.length,
+    claims: store.claims.length,
+    relations: store.relations.length,
+    concepts: records.filter((r) => r.record_type === "concept").length,
+    mechanics: records.filter((r) => {
+      const ra = r as Record<string, unknown>;
+      return r.record_type === "semantic_record" && ra["semantic_type"] === "mechanic";
+    }).length,
+    systems: records.filter((r) => {
+      const ra = r as Record<string, unknown>;
+      return r.record_type === "semantic_record" && ra["semantic_type"] === "system";
+    }).length,
+  };
+}

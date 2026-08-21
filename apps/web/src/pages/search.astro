@@ -1,21 +1,10 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a server-rendered search page with query input, source/type filters, paginated results, and score display.</purpose>
-<non-goals>
-  <item>Does not build the search index — uses pre-built SearchIndex from context.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: search page with query, filters, pagination, hit cards, and score breakdown.</item>
-</CHANGE_SUMMARY>
--->
 ---
 export const prerender = false;
 
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
-import { createWebContext } from "../lib/context.ts";
-import { getPageMetadata } from "../lib/metadata.ts";
+import { createWebContext } from "../lib/context";
+import { getPageMetadata } from "../lib/metadata";
 import type { SearchHit, SearchFilters } from "@roguelike-games-ib/search";
 
 const distDir = Astro.locals.distDir ?? "";

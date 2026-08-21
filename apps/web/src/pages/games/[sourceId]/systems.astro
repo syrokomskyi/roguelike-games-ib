@@ -1,25 +1,9 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Generates static systems pages per source, listing all system and semantic_record/system records with links.</purpose>
-<non-goals>
-  <item>Does not render system details — listing with links only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: systems page with getStaticPaths per source and system record cards.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../../../layouts/Base.astro";
-import { createWebContext } from "../../../lib/context.ts";
-import { getPageMetadata } from "../../../lib/metadata.ts";
+import { createWebContext } from "../../../lib/context";
+import { getPageMetadata } from "../../../lib/metadata";
+import { systemsForSource } from "../../../lib/page-data";
 import { resolve } from "node:path";
-
-interface SystemRecord {
-  key: string;
-  title: string | undefined;
-  summary: string | undefined;
-}
 
 export async function getStaticPaths() {
   const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
@@ -28,17 +12,7 @@ export async function getStaticPaths() {
 
   return ctx.store.sources.map((source) => {
     const sourceId = source.source_id;
-    const records: SystemRecord[] = ctx.store.records.filter((r) => {
-      const isSystem = r.record_type === "system" || (r.record_type === "semantic_record" && (r as Record<string, unknown>)["semantic_type"] === "system");
-      if (!isSystem) return false;
-      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-      return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
-    }).map((r) => ({
-      key: r.key,
-      title: (r as Record<string, unknown>)["title"] as string | undefined,
-      summary: (r as Record<string, unknown>)["summary"] as string | undefined,
-    }));
+    const records = systemsForSource(ctx.store, sourceId);
 
     return {
       params: { sourceId },

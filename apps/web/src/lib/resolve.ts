@@ -10,7 +10,6 @@
 </CHANGE_SUMMARY>
 */
 import {
-  resolveRecord,
   resolveRecordById,
   resolveRecordByKey,
   resolveRecordByAlias,

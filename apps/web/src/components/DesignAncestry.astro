@@ -1,22 +1,5 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a hierarchical ancestry tree of design concept records with depth-based indentation and wiki links.</purpose>
-<non-goals>
-  <item>Does not compute ancestry — rendering of provided ancestry nodes only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: DesignAncestry component with depth-indented tree layout.</item>
-</CHANGE_SUMMARY>
--->
 ---
-interface AncestryNode {
-  record_id: string;
-  record_key: string;
-  record_type: string;
-  title: string | null;
-  depth: number;
-}
+import type { AncestryNode } from "../lib/page-data";
 
 interface Props {
   ancestry: AncestryNode[];

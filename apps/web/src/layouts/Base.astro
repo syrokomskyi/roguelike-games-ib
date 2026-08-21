@@ -1,18 +1,6 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Base HTML layout for all web pages — renders head metadata, navigation bar, main content slot, and footer with license notice.</purpose>
-<non-goals>
-  <item>Does not provide page-specific content — layout shell only.</item>
-  <item>Does not enforce authority — metadata injection is opt-in.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: Base layout with nav, footer, metadata meta tags, and content slot.</item>
-</CHANGE_SUMMARY>
-@ai-invariant The nav links and footer license text must remain consistent across all pages — changes here affect every page.
--->
 ---
-import { metadataToHtmlMeta, type PageMetadata } from "../lib/metadata.ts";
+import { metadataToHtmlMeta } from "../lib/metadata";
+import type { PageMetadata } from "../lib/metadata";
 import "../styles/global.css";
 
 interface Props {

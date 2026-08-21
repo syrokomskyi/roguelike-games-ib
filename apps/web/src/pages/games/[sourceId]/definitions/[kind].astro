@@ -1,47 +1,23 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Generates static definition pages per source and record kind, listing all records of that kind with links to individual record pages.</purpose>
-<non-goals>
-  <item>Does not render record details — definition listing with links only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: definitions page with getStaticPaths per source/kind and record link grid.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../../../../layouts/Base.astro";
-import { createWebContext } from "../../../../lib/context.ts";
-import { getPageMetadata } from "../../../../lib/metadata.ts";
+import { createWebContext } from "../../../../lib/context";
+import { getPageMetadata } from "../../../../lib/metadata";
+import { defRecordsForSourceKind, kindsForSource } from "../../../../lib/page-data";
 import { resolve } from "node:path";
-
-interface DefRecord {
-  key: string;
-}
 
 export async function getStaticPaths() {
   const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
   const ctx = await createWebContext(distDir);
   const meta = getPageMetadata(ctx);
 
-  const paths: {
-    params: { sourceId: string; kind: string };
-    props: { sourceId: string; kind: string; records: DefRecord[]; meta: typeof meta };
-  }[] = [];
+  const paths = [];
 
   for (const source of ctx.store.sources) {
     const sourceId = source.source_id;
-    const sourceRecords = ctx.store.records.filter((r) => {
-      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      return si?.["source_id"] === sourceId;
-    });
-
-    const kinds = [...new Set(sourceRecords.map((r) => r.record_type))].sort();
+    const kinds = kindsForSource(ctx.store, sourceId);
 
     for (const kind of kinds) {
-      const records: DefRecord[] = sourceRecords
-        .filter((r) => r.record_type === kind)
-        .map((r) => ({ key: r.key }));
+      const records = defRecordsForSourceKind(ctx.store, sourceId, kind);
 
       paths.push({
         params: { sourceId, kind },

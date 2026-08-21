@@ -1,25 +1,5 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a comparison table of canonical records showing key, type, title, claim count, and relation counts.</purpose>
-<non-goals>
-  <item>Does not compute comparison data — rendering of provided rows only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: CompareTable component with sortable columns and record links.</item>
-</CHANGE_SUMMARY>
--->
 ---
-interface CompareRow {
-  record_id: string;
-  record_key: string;
-  record_type: string;
-  title: string | null;
-  summary: string | null;
-  claim_count: number;
-  outgoing_relation_count: number;
-  incoming_relation_count: number;
-}
+import type { CompareRow } from "../lib/page-data";
 
 interface Props {
   rows: CompareRow[];

@@ -1,28 +1,11 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Generates static per-game pages with record listings, type filters, pagination, source binding panel, and coverage panel.</purpose>
-<non-goals>
-  <item>Does not compute coverage — rendering of projection store data only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: game listing page with getStaticPaths, type filters, pagination, binding and coverage panels.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../../../layouts/Base.astro";
-import { createWebContext } from "../../../lib/context.ts";
-import { getPageMetadata } from "../../../lib/metadata.ts";
+import { createWebContext } from "../../../lib/context";
+import { getPageMetadata } from "../../../lib/metadata";
 import SourceBindingPanel from "../../../components/SourceBindingPanel.astro";
 import CoveragePanel from "../../../components/CoveragePanel.astro";
+import { recordsForSource } from "../../../lib/page-data";
 import { resolve } from "node:path";
-
-interface GameRecord {
-  id: string;
-  key: string;
-  record_type: string;
-  source_id: string;
-}
 
 export async function getStaticPaths() {
   const PAGE_SIZE = 50;
@@ -30,40 +13,11 @@ export async function getStaticPaths() {
   const ctx = await createWebContext(distDir);
   const meta = getPageMetadata(ctx);
 
-  const paths: {
-    params: { sourceId: string; filter: string | undefined };
-    props: {
-      sourceId: string;
-      pageRecords: GameRecord[];
-      filteredCount: number;
-      totalCount: number;
-      byType: [string, number][];
-      activeType: string;
-      currentPage: number;
-      totalPages: number;
-      source: typeof ctx.store.sources[number] | undefined;
-      coverage: typeof ctx.store.coverage;
-      meta: typeof meta;
-    };
-  }[] = [];
+  const paths = [];
 
   for (const source of ctx.store.sources) {
     const sourceId = source.source_id;
-    const records: GameRecord[] = ctx.store.records.filter((r) => {
-      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-      const sid = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined);
-      return sid === sourceId;
-    }).map((r) => {
-      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-      return {
-        id: r.id,
-        key: r.key,
-        record_type: r.record_type,
-        source_id: (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "",
-      };
-    });
+    const records = recordsForSource(ctx.store, sourceId);
 
     const byTypeMap = new Map<string, number>();
     for (const r of records) {

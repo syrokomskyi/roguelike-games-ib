@@ -1,25 +1,9 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Generates static mechanics pages per source, listing all mechanic and semantic_record/mechanic records with links.</purpose>
-<non-goals>
-  <item>Does not render mechanic details — listing with links only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: mechanics page with getStaticPaths per source and mechanic record cards.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../../../layouts/Base.astro";
-import { createWebContext } from "../../../lib/context.ts";
-import { getPageMetadata } from "../../../lib/metadata.ts";
+import { createWebContext } from "../../../lib/context";
+import { getPageMetadata } from "../../../lib/metadata";
+import { mechanicsForSource } from "../../../lib/page-data";
 import { resolve } from "node:path";
-
-interface MechanicRecord {
-  key: string;
-  title: string | undefined;
-  summary: string | undefined;
-}
 
 export async function getStaticPaths() {
   const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
@@ -28,17 +12,7 @@ export async function getStaticPaths() {
 
   return ctx.store.sources.map((source) => {
     const sourceId = source.source_id;
-    const records: MechanicRecord[] = ctx.store.records.filter((r) => {
-      const isMechanic = r.record_type === "mechanic" || (r.record_type === "semantic_record" && (r as Record<string, unknown>)["semantic_type"] === "mechanic");
-      if (!isMechanic) return false;
-      const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-      return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
-    }).map((r) => ({
-      key: r.key,
-      title: (r as Record<string, unknown>)["title"] as string | undefined,
-      summary: (r as Record<string, unknown>)["summary"] as string | undefined,
-    }));
+    const records = mechanicsForSource(ctx.store, sourceId);
 
     return {
       params: { sourceId },

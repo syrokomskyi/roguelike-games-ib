@@ -1,16 +1,5 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a list of evidence items with excerpts, locators, GitHub links, and restricted evidence indicators for the web UI.</purpose>
-<non-goals>
-  <item>Does not filter or redact evidence — rendering of pre-rendered evidence only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: EvidenceList component with excerpt, locator, and restriction display.</item>
-</CHANGE_SUMMARY>
--->
 ---
-import type { RenderedEvidence } from "../lib/evidence.ts";
+import type { RenderedEvidence } from "../lib/evidence";
 
 interface Props {
   evidence: RenderedEvidence[];

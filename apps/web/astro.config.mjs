@@ -8,5 +8,8 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      noExternal: ["@roguelike-games-ib/projection-sdk", "@roguelike-games-ib/search", "@roguelike-games-ib/materializer", "@roguelike-games-ib/knowledge-core"],
+    },
   },
 });

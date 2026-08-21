@@ -1,58 +1,17 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Generates static comparison pages for all records with type and source filters, pagination, and a comparison table.</purpose>
-<non-goals>
-  <item>Does not compute comparison metrics — assembles rows from projection store data.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: compare page with getStaticPaths, type/source filters, pagination, and CompareTable.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../../layouts/Base.astro";
-import { createWebContext } from "../../lib/context.ts";
-import { getPageMetadata } from "../../lib/metadata.ts";
+import { createWebContext } from "../../lib/context";
+import { getPageMetadata } from "../../lib/metadata";
 import CompareTable from "../../components/CompareTable.astro";
-import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+import { buildCompareRows } from "../../lib/page-data";
 import { resolve } from "node:path";
-
-interface CompareRow {
-  record_id: string;
-  record_key: string;
-  record_type: string;
-  title: string | null;
-  summary: string | null;
-  claim_count: number;
-  outgoing_relation_count: number;
-  incoming_relation_count: number;
-  source_id: string;
-}
 
 export async function getStaticPaths() {
   const PAGE_SIZE = 25;
   const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
   const ctx = await createWebContext(distDir);
-  const records = ctx.store.records;
 
-  const allRows: CompareRow[] = records.map((r) => {
-    const claims = claimsForRecord(ctx.store.claims, r.id);
-    const { outgoing, incoming } = relationsForRecord(ctx.store.relations, r.id);
-    const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-    const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
-    const source_id = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "all";
-    return {
-      record_id: r.id,
-      record_key: r.key,
-      record_type: r.record_type,
-      title: (r as Record<string, unknown>)["title"] as string | null ?? null,
-      summary: (r as Record<string, unknown>)["summary"] as string | null ?? null,
-      claim_count: claims.length,
-      outgoing_relation_count: outgoing.length,
-      incoming_relation_count: incoming.length,
-      source_id,
-    };
-  });
+  const allRows = buildCompareRows(ctx.store);
 
   const types = [...new Set(allRows.map((r) => r.record_type))].sort();
   const sources = [...new Set(allRows.map((r) => r.source_id).filter((s) => s !== "all"))].sort();
@@ -60,21 +19,7 @@ export async function getStaticPaths() {
   const allSources = ["all", ...sources];
   const meta = getPageMetadata(ctx);
 
-  const paths: {
-    params: { filter: string | undefined };
-    props: {
-      pageRows: CompareRow[];
-      filteredCount: number;
-      totalCount: number;
-      types: string[];
-      sources: string[];
-      activeType: string;
-      activeSource: string;
-      currentPage: number;
-      totalPages: number;
-      meta: typeof meta;
-    };
-  }[] = [];
+  const paths = [];
 
   for (const type of allTypes) {
     for (const source of allSources) {

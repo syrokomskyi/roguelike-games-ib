@@ -1,21 +1,10 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a server-rendered evidence page for a specific record, showing public and restricted evidence items with locators.</purpose>
-<non-goals>
-  <item>Does not filter evidence by claim — direct evidence lookup by record ID only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: evidence detail page with rendered evidence and restriction display.</item>
-</CHANGE_SUMMARY>
--->
 ---
 export const prerender = false;
 
 import Base from "../../layouts/Base.astro";
-import { createWebContext } from "../../lib/context.ts";
-import { getPageMetadata } from "../../lib/metadata.ts";
-import { renderEvidence } from "../../lib/evidence.ts";
+import { createWebContext } from "../../lib/context";
+import { getPageMetadata } from "../../lib/metadata";
+import { renderEvidence } from "../../lib/evidence";
 
 const { recordId } = Astro.params;
 const distDir = Astro.locals.distDir ?? "";

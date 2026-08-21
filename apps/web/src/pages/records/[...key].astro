@@ -1,22 +1,11 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders a server-rendered record detail page with header, attributes, claims, evidence, and relations from the projection store.</purpose>
-<non-goals>
-  <item>Does not materialize records — reads from projection store only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: record detail page with header, attributes, claims, evidence, and relation graph.</item>
-</CHANGE_SUMMARY>
--->
 ---
 export const prerender = false;
 
 import Base from "../../layouts/Base.astro";
-import { createWebContext } from "../../lib/context.ts";
-import { getPageMetadata } from "../../lib/metadata.ts";
-import { resolveRecordRoute } from "../../lib/resolve.ts";
-import { evidenceForRecord } from "../../lib/evidence.ts";
+import { createWebContext } from "../../lib/context";
+import { getPageMetadata } from "../../lib/metadata";
+import { resolveRecordRoute } from "../../lib/resolve";
+import { evidenceForRecord } from "../../lib/evidence";
 import { claimsForRecord, claimsReferencingRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 import RecordHeader from "../../components/RecordHeader.astro";
 import RecordAttributes from "../../components/RecordAttributes.astro";

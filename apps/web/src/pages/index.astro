@@ -1,37 +1,16 @@
-<!--
-<MODULE_CONTRACT>
-<purpose>Renders the home page with dataset statistics, search box, game listing, and navigation links to key sections.</purpose>
-<non-goals>
-  <item>Does not execute searches — landing page with stats and links only.</item>
-</non-goals>
-</MODULE_CONTRACT>
-<CHANGE_SUMMARY>
-  <item>Initial creation: home page with stats cards, SearchBox, game listing, and section links.</item>
-</CHANGE_SUMMARY>
--->
 ---
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
-import { createWebContext } from "../lib/context.ts";
+import { createWebContext } from "../lib/context";
+import { getStats } from "../lib/page-data";
 
 const distDir = Astro.locals.distDir ?? "";
-let stats: { records: number; sources: number; claims: number; relations: number; concepts: number; mechanics: number; systems: number } | null = null;
-let games: { source_id: string; declared_version: string }[] = [];
+let stats = null;
+let games = [];
 
-try {
-  const ctx = await createWebContext(distDir);
-  const records = ctx.store.records;
-  stats = {
-    records: records.length,
-    sources: ctx.store.sources.length,
-    claims: ctx.store.claims.length,
-    relations: ctx.store.relations.length,
-    concepts: records.filter((r) => r.record_type === "concept").length,
-    mechanics: records.filter((r) => r.record_type === "semantic_record" && (r as any).semantic_type === "mechanic").length,
-    systems: records.filter((r) => r.record_type === "semantic_record" && (r as any).semantic_type === "system").length,
-  };
-  games = ctx.store.sources;
-} catch {}
+const ctx = await createWebContext(distDir);
+stats = getStats(ctx.store);
+games = ctx.store.sources;
 ---
 
 <Base title="Home">
