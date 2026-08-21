@@ -1,3 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Derived data helpers for web pages — compare rows, source-filtered record lists, stats, and record counts by source.</purpose>
+<non-goals>
+  <item>Does not fetch or mutate data — pure projection over ProjectionStore.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: compare rows, source record lists, mechanics/systems helpers, stats.</item>
+  <item>Added countRecordsBySource helper to deduplicate recordsBySource logic across pages.</item>
+</CHANGE_SUMMARY>
+*/
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 
