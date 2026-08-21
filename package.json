@@ -31,6 +31,8 @@
     "@roguelike-games-ib/extractor-sdk": "workspace:*",
     "@roguelike-games-ib/materializer": "workspace:*",
     "@roguelike-games-ib/search": "workspace:*",
+    "@roguelike-games-ib/projection-sdk": "workspace:*",
+    "@roguelike-games-ib/obsidian-builder": "workspace:*",
     "@roguelike-games-ib/test-fixtures": "workspace:*",
     "prettier": "^3.9.6",
     "vitest": "^3.2.4",

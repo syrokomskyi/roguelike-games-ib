@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0, 1, 2, 3 & 4 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–5 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 implementation
-**Status**: All 153 tests pass (35 test files)
+**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 implementation
+**Status**: All 163 tests pass (41 test files)
 
 ## What was done
 
@@ -75,6 +75,36 @@
   - MAT-006: alias map resolves old keys to current keys, key map resolves keys to IDs
   - MAT-007: two builds from same canonical hash produce identical JSONL, same logical dump hash
 
+### Stage 5 — Obsidian
+- **`packages/projection-sdk`** — Shared projection reader SDK for Web/MCP/Obsidian:
+  - `open.ts` — `openProjection()` reads materialized dist, refuses unsupported manifest schema, exposes `canonicalHash`
+  - `manifest.ts` — `readManifest()`, `isManifestSupported()` for schema `rgkb/materialization-manifest@2`
+  - `records.ts` — `readRecords()`, `readKeyMap()`, `readAliasMap()`, resolve by id/key/alias
+  - `sources.ts` — `readSources()`, `findSourceById()`
+  - `graph.ts` — `readRelations()`, `relationsForRecord()`, `groupRelationsByType()`
+  - `claims.ts` — `readClaims()`, `claimsForRecord()`, `claimsReferencingRecord()`
+  - `evidence.ts` — `readPublicEvidence()`, `evidenceForClaim()`, `isRestricted()`
+  - `coverage.ts` — `readCoverage()`, `coverageForSource()`
+  - `authority.ts` — `Authority` type (`canonical` | `laboratory`), context helpers
+  - `index.ts` — Public exports
+- **`packages/obsidian-builder`** — Deterministic Obsidian vault generator:
+  - `paths.ts` — `buildPathResolver()` maps record id/key → note path (`games/<source>/<type>/<slug>.md`), fails on path collision
+  - `frontmatter.ts` — `createFrontmatter()` + `serializeFrontmatter()` + `parseFrontmatter()` with `record_id`, `record_key`, `record_type`, `canonical_hash`, `generated: true`
+  - `links.ts` — `resolveLink()` resolves id→key→alias to path, `makeWikiLink()`, `validateAllLinks()` fails on unresolved
+  - `render-record.ts` — `renderRecordNote()` with summary, properties, relations (grouped by type), claims + evidence
+  - `render-source.ts` — `renderSourceNote()` with binding digest, fingerprint, version, coverage dimensions
+  - `moc.ts` — `renderMoc()` generates Map of Content with links grouped by record type
+  - `build-manifest.ts` — `createBuildManifest()` with schema `rgkb/obsidian-build-manifest@1`, deterministic `builtAt`
+  - `build.ts` — `buildObsidianVault()` orchestrates: materialize if needed → open projection → build path resolver → render all notes → validate links → render sources → render MOC → write README + _meta → write build manifest
+  - `index.ts` — Public exports
+- OBS-001..006 (10 tests across 6 files) — all pass
+  - OBS-001: every note carries id/key/hash/generated frontmatter, hash matches current build
+  - OBS-002: every wiki-link resolves uniquely to a generated note file
+  - OBS-003: duplicate path collision fails build
+  - OBS-004: vault build never changes canonical files, output under generated root
+  - OBS-005: generated warning present in README.md and _meta/generated.txt
+  - OBS-006: localized projection preserves canonical record_id and record_key
+
 ## Key technical decisions
 - `tsconfig.base.json` uses `allowImportingTsExtensions: true` + `noEmit: true` (bundler mode)
 - Root `package.json` lists workspace packages as `workspace:*` devDeps for test resolution
@@ -108,7 +138,7 @@
 
 ## What the next agent should do
 
-### Then: Obsidian, MCP, Web, Laboratory, Release gates, Migration
+### Then: MCP, Web, Laboratory, Release gates, Migration
 
 ## Important paths
 - Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
@@ -118,10 +148,12 @@
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (153 tests, 35 files)
+pnpm exec vitest run                    # all tests (163 tests, 41 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
 pnpm exec tsc --noEmit -p packages/materializer/tsconfig.json      # typecheck materializer
 pnpm exec tsc --noEmit -p packages/search/tsconfig.json            # typecheck search
+pnpm exec tsc --noEmit -p packages/projection-sdk/tsconfig.json    # typecheck projection-sdk
+pnpm exec tsc --noEmit -p packages/obsidian-builder/tsconfig.json  # typecheck obsidian-builder
 ```

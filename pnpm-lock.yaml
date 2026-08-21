@@ -20,6 +20,12 @@ importers:
       '@roguelike-games-ib/materializer':
         specifier: workspace:*
         version: link:packages/materializer
+      '@roguelike-games-ib/obsidian-builder':
+        specifier: workspace:*
+        version: link:packages/obsidian-builder
+      '@roguelike-games-ib/projection-sdk':
+        specifier: workspace:*
+        version: link:packages/projection-sdk
       '@roguelike-games-ib/search':
         specifier: workspace:*
         version: link:packages/search
@@ -120,6 +126,41 @@ importers:
       better-sqlite3:
         specifier: ^12.2.0
         version: 12.11.1
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/obsidian-builder:
+    dependencies:
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../knowledge-core
+      '@roguelike-games-ib/materializer':
+        specifier: workspace:*
+        version: link:../materializer
+      '@roguelike-games-ib/projection-sdk':
+        specifier: workspace:*
+        version: link:../projection-sdk
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/projection-sdk:
+    dependencies:
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../knowledge-core
+      '@roguelike-games-ib/materializer':
+        specifier: workspace:*
+        version: link:../materializer
+    devDependencies:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
