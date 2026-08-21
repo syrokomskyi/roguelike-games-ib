@@ -1,0 +1,31 @@
+---
+interface AncestryNode {
+  record_id: string;
+  record_key: string;
+  record_type: string;
+  title: string | null;
+  depth: number;
+}
+
+interface Props {
+  ancestry: AncestryNode[];
+}
+
+const { ancestry } = Astro.props;
+---
+
+<div class="design-ancestry">
+  <h3>Ancestry</h3>
+  <ul class="ancestry-tree">
+    {ancestry.map((node: AncestryNode) => (
+      <li style={`margin-left: ${node.depth * 1.5}rem`}>
+        <a href={`/records/${node.record_key}/`}>{node.record_key}</a>
+        {node.title ? ` — ${node.title}` : ""}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+.ancestry-tree { list-style: none; padding: 0; }
+</style>

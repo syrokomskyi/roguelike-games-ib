@@ -1,0 +1,42 @@
+---
+import { metadataToHtmlMeta, type PageMetadata } from "../lib/metadata.ts";
+
+interface Props {
+  title: string;
+  metadata?: PageMetadata;
+}
+
+const { title, metadata } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title} — Roguelike Inspiration Base</title>
+  {metadata && <Fragment set:html={metadataToHtmlMeta(metadata)} />}
+</head>
+<body>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/games/">Games</a>
+    <a href="/compare/">Compare</a>
+    <a href="/design/">Design</a>
+    <a href="/dataset/">Dataset</a>
+    <a href="/about/method/">Method</a>
+  </nav>
+  <main>
+    <slot />
+  </main>
+  <footer>
+    <p>Roguelike Inspiration Base — CC-BY-4.0</p>
+  </footer>
+</body>
+</html>
+
+<style>
+nav { display: flex; gap: 1rem; padding: 1rem; background: #f5f5f5; }
+main { max-width: 960px; margin: 0 auto; padding: 1rem; }
+footer { padding: 1rem; text-align: center; color: #999; }
+</style>

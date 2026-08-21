@@ -1,0 +1,29 @@
+---
+import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";
+
+interface Props {
+  binding: SourceBinding;
+}
+
+const { binding } = Astro.props;
+---
+
+<div class="source-binding-panel">
+  <h3>Source Binding</h3>
+  <dl>
+    <dt>Source ID</dt><dd>{binding.source_id}</dd>
+    <dt>Version</dt><dd>{binding.declared_version}</dd>
+    <dt>Fingerprint</dt><dd>{binding.fingerprint.algorithm}: {binding.fingerprint.value}</dd>
+    <dt>Binding Digest</dt><dd>{binding.binding_digest}</dd>
+    {binding.vcs && binding.vcs.repository && (
+      <>
+        <dt>VCS Repository</dt><dd>{binding.vcs.repository}</dd>
+      </>
+    )}
+  </dl>
+</div>
+
+<style>
+.source-binding-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 1rem; }
+.source-binding-panel dt { font-weight: 600; }
+</style>

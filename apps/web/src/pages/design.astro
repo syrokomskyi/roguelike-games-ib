@@ -1,0 +1,41 @@
+---
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context.ts";
+import { getPageMetadata } from "../lib/metadata.ts";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+const primitives = ctx.store.records.filter((r) => r.record_type === "design_primitive");
+const designRelations = ctx.store.relations.filter((r) => r.relation_scope === "design");
+---
+
+<Base title="Design Explorer" metadata={meta}>
+  <h1>Design Space Explorer</h1>
+  <section>
+    <h2>Cross-Game Concepts</h2>
+    <ul>
+      {concepts.map((r) => (
+        <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
+      ))}
+    </ul>
+  </section>
+  <section>
+    <h2>Design Primitives</h2>
+    <ul>
+      {primitives.map((r) => (
+        <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
+      ))}
+    </ul>
+  </section>
+  <section>
+    <h2>Design Relations ({designRelations.length})</h2>
+    <ul>
+      {designRelations.map((rel) => (
+        <li>{rel.relation_type}: {rel.source_record_id} → {rel.target_record_id}</li>
+      ))}
+    </ul>
+  </section>
+</Base>

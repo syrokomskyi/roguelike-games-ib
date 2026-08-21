@@ -1,0 +1,52 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { readManifest, isManifestSupported } from "@roguelike-games-ib/projection-sdk";
+
+export interface VerificationResult {
+  ok: boolean;
+  error?: string;
+}
+
+export function verifyMaterialization(distDir: string): VerificationResult {
+  const manifestPath = join(distDir, "manifest.json");
+  if (!existsSync(manifestPath)) {
+    return {
+      ok: false,
+      error: `Materialization manifest not found at ${manifestPath}. Run materialize first.`,
+    };
+  }
+
+  let manifest;
+  try {
+    manifest = readManifest(distDir);
+  } catch (e) {
+    return {
+      ok: false,
+      error: `Failed to read materialization manifest: ${(e as Error).message}`,
+    };
+  }
+
+  if (!isManifestSupported(manifest)) {
+    return {
+      ok: false,
+      error: `Unsupported manifest schema: ${manifest.schema}`,
+    };
+  }
+
+  const recordsPath = join(distDir, "records.jsonl");
+  if (!existsSync(recordsPath)) {
+    return {
+      ok: false,
+      error: `Materialized records not found at ${recordsPath}.`,
+    };
+  }
+
+  return { ok: true };
+}
+
+export function assertMaterialization(distDir: string): void {
+  const result = verifyMaterialization(distDir);
+  if (!result.ok) {
+    throw new Error(`Web build refused: ${result.error}`);
+  }
+}

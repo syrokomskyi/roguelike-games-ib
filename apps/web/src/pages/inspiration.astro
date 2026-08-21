@@ -1,0 +1,21 @@
+---
+import Base from "../layouts/Base.astro";
+import { getPageMetadata } from "../lib/metadata.ts";
+import AuthorityBadge from "../components/AuthorityBadge.astro";
+
+const distDir = Astro.locals.distDir ?? "";
+const meta: import("../lib/metadata.ts").PageMetadata = {
+  canonicalHash: "laboratory",
+  datasetId: "",
+  datasetVersion: "",
+  modelVersion: "",
+  license: "CC-BY-4.0",
+  authority: "laboratory",
+};
+---
+
+<Base title="Inspiration" metadata={meta}>
+  <h1>Inspiration Lab</h1>
+  <AuthorityBadge authority="laboratory" />
+  <p>Laboratory content is non-authoritative. It may not be presented as "what the game does".</p>
+</Base>

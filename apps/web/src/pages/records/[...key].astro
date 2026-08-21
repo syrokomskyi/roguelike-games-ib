@@ -1,0 +1,55 @@
+---
+import Base from "../../layouts/Base.astro";
+import { createWebContext } from "../../lib/context.ts";
+import { getPageMetadata } from "../../lib/metadata.ts";
+import { resolveRecordRoute } from "../../lib/resolve.ts";
+import { evidenceForRecord } from "../../lib/evidence.ts";
+import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+import RecordHeader from "../../components/RecordHeader.astro";
+import EvidenceList from "../../components/EvidenceList.astro";
+import RelationGraph from "../../components/RelationGraph.astro";
+
+const key = Astro.params.key as string;
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const resolved = resolveRecordRoute(ctx.store, key);
+if (!resolved) {
+  return Astro.redirect("/404");
+}
+
+const { record, resolvedFrom, currentKey } = resolved;
+const claims = claimsForRecord(ctx.store.claims, record.id);
+const { outgoing, incoming } = relationsForRecord(ctx.store.relations, record.id);
+const allRelations = [...outgoing, ...incoming];
+const evidenceRefs = claims.flatMap((c) => c.evidence_refs);
+const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs);
+const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined;
+---
+
+<Base title={record.key} metadata={meta}>
+  <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
+  {resolvedFrom === "alias" && <p class="alias-notice">Redirected from alias to current key: {currentKey}</p>}
+  <section>
+    <h2>Claims</h2>
+    <ul>
+      {claims.map((c) => (
+        <li>
+          <strong>{c.predicate}</strong>
+          {c.object_ref && <span> → {c.object_ref}</span>}
+          {c.value !== undefined && <span> = {JSON.stringify(c.value)}</span>}
+          <em>({c.assertion_state})</em>
+        </li>
+      ))}
+    </ul>
+  </section>
+  <section>
+    <h2>Evidence</h2>
+    <EvidenceList evidence={evidence} />
+  </section>
+  <section>
+    <h2>Relations</h2>
+    <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => ({ id: r.id, key: r.key, record_type: r.record_type }))} />
+  </section>
+</Base>

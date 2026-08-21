@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–6 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–7 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 0 + Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 + Stage 6 implementation
-**Status**: All 203 tests pass (51 test files)
+**Session**: Stage 7 — Web implementation (previous sessions: Stages 0–6)
+**Status**: All 234 tests pass (57 test files)
 
 ## What was done
 
@@ -168,9 +168,82 @@
   - MCP-009: CC-BY-4.0 license in dataset info and response envelope
   - MCP-010: no canonical write tool registered, no lab_write/lab_generate, all tools read-only
 
+### Stage 7 — Web
+- **`apps/web`** — Creator-facing Astro static site over materialized dataset:
+  - `lib/context.ts` — `createWebContext()` opens projection + builds search index, exposes dataset metadata
+  - `lib/verify.ts` — `verifyMaterialization()` checks manifest exists + schema supported + records present; `assertMaterialization()` throws on failure
+  - `lib/resolve.ts` — `resolveRecordRoute()` resolves by id → key → alias, returns `ResolvedRecord` with `resolvedFrom` and `currentKey`
+  - `lib/evidence.ts` — `renderEvidence()` maps `PublicEvidence` to `RenderedEvidence` with excerpt truncation; `evidenceForRecord()` filters by evidence refs
+  - `lib/metadata.ts` — `getPageMetadata()` returns canonical hash, dataset info, license, authority; `metadataToHtmlMeta()` generates `<meta>` tags
+  - `lib/authority.ts` — `authorityBadge()` returns badge data for canonical/laboratory; `isNonAuthoritative()` check
+  - `lib/build.ts` — `prepareWebBuild()` asserts materialization then creates context
+  - `index.ts` — Public exports
+  - 10 Astro components: `AuthorityBadge`, `EpistemicBadge`, `EvidenceList`, `RelationGraph`, `CoveragePanel`, `RecordHeader`, `SourceBindingPanel`, `CompareTable`, `DesignAncestry`, `SearchBox`
+  - 12 Astro pages: `/`, `/games/`, `/games/[sourceId]/`, `/games/[sourceId]/definitions/[kind]/`, `/games/[sourceId]/mechanics/`, `/games/[sourceId]/systems/`, `/records/[...key]/`, `/compare/`, `/design/`, `/inspiration/`, `/evidence/[recordId]/`, `/dataset/`, `/about/method/`, `/404`
+  - `Base.astro` layout with nav + metadata injection
+- WEB-001..006 (31 tests across 6 files) — all pass
+  - WEB-001: web build refuses stale/missing materialization
+  - WEB-002: record route resolves alias to current record, emits canonical current key
+  - WEB-003: evidence short excerpt obeys limit (default 200, custom limit works)
+  - WEB-004: restricted evidence text is not rendered (excluded from projection entirely)
+  - WEB-005: Laboratory content has non-authoritative badge (canonical vs laboratory class/label)
+  - WEB-006: page metadata reports canonical hash (in PageMetadata + HTML meta tags)
+
 ## What the next agent should do
 
-### Then: Web, Laboratory, Release gates, Migration
+### Stage 8 — Laboratory runtime (next priority)
+
+Implement `packages/laboratory-runtime` per spec `03-packages/LABORATORY-RUNTIME.md` and `05-laboratory/INSPIRATION-ENGINE.md`.
+
+Required files: `src/index.ts`, `schema.ts`, `sessions.ts`, `seeds.ts`, `constraints.ts`, `mutation.ts`, `ancestry.ts`, `generator.ts`, `boundary.ts`.
+
+Key rules:
+- Laboratory records use `authority: laboratory`, own schema/id namespace
+- May reference canonical record ids as ancestry/input
+- May never be referenced by canonical `evidence_refs`
+- Seed promotion = new canonical candidate via transaction, not direct canonical mutation
+- `IdeaGenerator` interface is model-agnostic; deterministic pipeline works without provider
+- Provider failure must never write/alter canonical knowledge
+- Anti-copy ranking penalizes cosmetic-only mutation
+
+Tests: LAB-001..007 (see `07-tests/TEST-CATALOG.md`):
+- LAB-001: seed may reference canonical ancestry
+- LAB-002: canonical evidence cannot reference seed
+- LAB-003: seed carries authority=laboratory
+- LAB-004: promotion from seed creates new candidate, not direct canonical mutation
+- LAB-005: anti-copy ranking penalizes cosmetic-only mutation
+- LAB-006: generator/provider failure cannot mutate canonical state
+- LAB-007: persisted generated seed records provider/model/template and ancestry
+
+Gate: LAB-001..007 and C8 (authority boundary).
+
+### Stage 9 — BrogueCE real vertical slice
+
+Register current BrogueCE source unit. Build deterministic factual extractors. Reconstruct representative evidence-backed semantic slice. Build all projections.
+
+Required demonstration: exhaustive factual dimensions for creatures/items/terrain; ≥10 semantic records across mechanic/system/interaction/algorithm/generator/invariant/emergence; claim-level evidence; one cross-game-ready concept candidate; one Creator design primitive derived with ancestry.
+
+Gate: C9 plus zero release-blocking diagnostics for BrogueCE binding.
+
+### Stage 10 — Cataclysm-BN scale trial
+
+Static data-driven adapters for actual current source. Target high-cardinality families with exact denominator counts. Record benchmarks (extraction runtime, peak memory, canonical record count, materialization runtime, SQLite/index size, top-20 query latency cold/warm).
+
+Gate: C10 and deterministic replay.
+
+### Stage 11 — Freeze v1 implementation contract
+
+Review ontology pressure points; accept RFC/ADR changes; freeze schema/plugin/project contract `1.0`; begin remaining-game migration.
+
+### Stage 12 — Remaining sources
+
+One source at a time: register → discover → extractor → factual promotion → semantic reconstruction → coverage → projections → release gate.
+
+### Also pending: Release gates (REL-001..009) and Forge FORGE-006
+
+Release tests (REL-001..009) and FORGE-006 can be implemented after Stage 8 or in parallel. See `09-release/OPEN-DATASET.md` for release requirements and `07-tests/TEST-CATALOG.md` for test definitions.
+
+Migration tests (MIG-001..005) are gated on Stages 9–10. See `08-migration/V1-TO-V2.md` and `08-migration/SOURCE-BUNDLE-PREPARATION.md`.
 
 ## Important paths
 - Spec source: `/home/syrokomskyi/projects/obsidian/GamesObsidian/Cave Traveller/research/2026-08-20 Roguelike Inspiration Base/output/Roguelike-Games-KB-Implementation-Spec-v1.0.0/`
@@ -180,7 +253,7 @@
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (203 tests, 51 files)
+pnpm exec vitest run                    # all tests (234 tests, 57 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk
@@ -189,4 +262,5 @@ pnpm exec tsc --noEmit -p packages/search/tsconfig.json            # typecheck s
 pnpm exec tsc --noEmit -p packages/projection-sdk/tsconfig.json    # typecheck projection-sdk
 pnpm exec tsc --noEmit -p packages/obsidian-builder/tsconfig.json  # typecheck obsidian-builder
 pnpm exec tsc --noEmit -p apps/mcp/tsconfig.json                   # typecheck mcp
+pnpm exec tsc --noEmit -p apps/web/tsconfig.json                   # typecheck web
 ```

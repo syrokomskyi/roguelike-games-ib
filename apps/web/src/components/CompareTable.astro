@@ -1,0 +1,43 @@
+---
+interface CompareRow {
+  record_id: string;
+  record_key: string;
+  record_type: string;
+  title: string | null;
+  summary: string | null;
+  claim_count: number;
+  outgoing_relation_count: number;
+  incoming_relation_count: number;
+}
+
+interface Props {
+  rows: CompareRow[];
+}
+
+const { rows } = Astro.props;
+---
+
+<table class="compare-table">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Title</th><th>Claims</th><th>Out</th><th>In</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((row: CompareRow) => (
+      <tr>
+        <td><a href={`/records/${row.record_key}/`}>{row.record_key}</a></td>
+        <td>{row.record_type}</td>
+        <td>{row.title ?? "—"}</td>
+        <td>{row.claim_count}</td>
+        <td>{row.outgoing_relation_count}</td>
+        <td>{row.incoming_relation_count}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style>
+.compare-table { width: 100%; border-collapse: collapse; }
+.compare-table th, .compare-table td { padding: 4px 8px; border: 1px solid #ddd; text-align: left; }
+</style>

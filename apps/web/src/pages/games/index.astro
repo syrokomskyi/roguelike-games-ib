@@ -1,0 +1,23 @@
+---
+import Base from "../../layouts/Base.astro";
+import { createWebContext } from "../../lib/context.ts";
+import { getPageMetadata } from "../../lib/metadata.ts";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const sources = ctx.store.sources;
+---
+
+<Base title="Games" metadata={meta}>
+  <h1>All Games</h1>
+  <ul>
+    {sources.map((s) => (
+      <li>
+        <a href={`/games/${s.source_id}/`}>{s.source_id}</a>
+        <span> v{s.declared_version}</span>
+      </li>
+    ))}
+  </ul>
+</Base>

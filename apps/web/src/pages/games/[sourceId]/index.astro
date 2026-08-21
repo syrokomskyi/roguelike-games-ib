@@ -1,0 +1,35 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { createWebContext } from "../../../lib/context.ts";
+import { getPageMetadata } from "../../../lib/metadata.ts";
+import SourceBindingPanel from "../../../components/SourceBindingPanel.astro";
+import CoveragePanel from "../../../components/CoveragePanel.astro";
+
+const { sourceId } = Astro.params;
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const source = ctx.store.sources.find((s) => s.source_id === sourceId);
+const records = ctx.store.records.filter((r) => {
+  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+  return si?.["source_id"] === sourceId;
+});
+const coverage = ctx.store.coverage.filter((c) => c.source_id === sourceId);
+---
+
+<Base title={sourceId ?? "Game"} metadata={meta}>
+  {source && <SourceBindingPanel binding={source} />}
+  <h2>Records ({records.length})</h2>
+  <ul>
+    {records.map((r) => (
+      <li><a href={`/records/${r.key}/`}>{r.key}</a> — {r.record_type}</li>
+    ))}
+  </ul>
+  <h2>Coverage</h2>
+  <CoveragePanel coverage={coverage} />
+  <p>
+    <a href={`/games/${sourceId}/mechanics/`}>Mechanics</a> |
+    <a href={`/games/${sourceId}/systems/`}>Systems</a>
+  </p>
+</Base>

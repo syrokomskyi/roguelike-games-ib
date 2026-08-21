@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context.ts";
+import { getPageMetadata } from "../lib/metadata.ts";
+import CompareTable from "../components/CompareTable.astro";
+import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const records = ctx.store.records;
+const rows = records.map((r) => {
+  const claims = claimsForRecord(ctx.store.claims, r.id);
+  const { outgoing, incoming } = relationsForRecord(ctx.store.relations, r.id);
+  return {
+    record_id: r.id,
+    record_key: r.key,
+    record_type: r.record_type,
+    title: (r as Record<string, unknown>)["title"] as string | null ?? null,
+    summary: (r as Record<string, unknown>)["summary"] as string | null ?? null,
+    claim_count: claims.length,
+    outgoing_relation_count: outgoing.length,
+    incoming_relation_count: incoming.length,
+  };
+});
+---
+
+<Base title="Compare" metadata={meta}>
+  <h1>Compare Records</h1>
+  <CompareTable rows={rows} />
+</Base>

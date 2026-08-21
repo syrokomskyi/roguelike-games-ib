@@ -1,0 +1,25 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { createWebContext } from "../../../lib/context.ts";
+import { getPageMetadata } from "../../../lib/metadata.ts";
+
+const { sourceId } = Astro.params;
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const records = ctx.store.records.filter((r) => {
+  if (r.record_type !== "system") return false;
+  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+  return si?.["source_id"] === sourceId;
+});
+---
+
+<Base title={`Systems — ${sourceId}`} metadata={meta}>
+  <h1>Systems</h1>
+  <ul>
+    {records.map((r) => (
+      <li><a href={`/records/${r.key}/`}>{r.key}</a></li>
+    ))}
+  </ul>
+</Base>

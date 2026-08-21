@@ -1,0 +1,34 @@
+---
+import type { CoverageRecord } from "@roguelike-games-ib/knowledge-core";
+
+interface Props {
+  coverage: CoverageRecord[];
+}
+
+const { coverage } = Astro.props;
+const dimensions = coverage.flatMap((c) => c.dimensions);
+---
+
+<div class="coverage-panel">
+  <table>
+    <thead>
+      <tr><th>Dimension</th><th>State</th><th>Expected</th><th>Extracted</th><th>Validated</th></tr>
+    </thead>
+    <tbody>
+      {dimensions.map((d) => (
+        <tr>
+          <td>{d.id}</td>
+          <td>{d.state}</td>
+          <td>{d.expected ?? "—"}</td>
+          <td>{d.extracted ?? "—"}</td>
+          <td>{d.validated ?? "—"}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+.coverage-panel table { width: 100%; border-collapse: collapse; }
+.coverage-panel th, .coverage-panel td { padding: 4px 8px; border: 1px solid #ddd; text-align: left; }
+</style>

@@ -1,0 +1,32 @@
+---
+import { authorityBadge, type Authority } from "../lib/authority.ts";
+
+interface Props {
+  authority: Authority;
+}
+
+const { authority } = Astro.props;
+const badge = authorityBadge(authority);
+---
+
+<span class={`authority-badge ${badge.className}`} data-authority={authority}>
+  {badge.label}
+</span>
+
+<style>
+.authority-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-canonical {
+  background: #d4edda;
+  color: #155724;
+}
+.badge-laboratory {
+  background: #fff3cd;
+  color: #856404;
+}
+</style>

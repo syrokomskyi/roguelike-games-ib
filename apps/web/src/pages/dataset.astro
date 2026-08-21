@@ -1,0 +1,28 @@
+---
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context.ts";
+import { getPageMetadata } from "../lib/metadata.ts";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+const manifest = ctx.manifest;
+---
+
+<Base title="Dataset" metadata={meta}>
+  <h1>Dataset</h1>
+  <dl>
+    <dt>Dataset ID</dt><dd>{manifest.datasetId}</dd>
+    <dt>Dataset Version</dt><dd>{manifest.datasetVersion}</dd>
+    <dt>Model Version</dt><dd>{manifest.modelVersion}</dd>
+    <dt>Canonical Hash</dt><dd>{manifest.canonicalHash}</dd>
+    <dt>License</dt><dd>{manifest.license}</dd>
+    <dt>Logical Dump Hash</dt><dd>{manifest.logicalDumpHash}</dd>
+  </dl>
+  <h2>Record Counts</h2>
+  <ul>
+    {Object.entries(manifest.recordCounts).map(([type, count]) => (
+      <li>{type}: {count}</li>
+    ))}
+  </ul>
+</Base>

@@ -1,0 +1,32 @@
+---
+import Base from "../../layouts/Base.astro";
+import { createWebContext } from "../../lib/context.ts";
+import { getPageMetadata } from "../../lib/metadata.ts";
+import { renderEvidence } from "../../lib/evidence.ts";
+
+const { recordId } = Astro.params;
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const evidence = ctx.store.evidence.filter((e) => e.source_id === recordId || e.id === recordId);
+const rendered = renderEvidence(evidence);
+---
+
+<Base title={`Evidence — ${recordId}`} metadata={meta}>
+  <h1>Evidence</h1>
+  <ul>
+    {rendered.map((ev) => (
+      <li data-evidence-id={ev.id} data-restricted={ev.restricted}>
+        {ev.restricted ? (
+          <p>Restricted — not publicly accessible.</p>
+        ) : (
+          <div>
+            {ev.excerpt && <p class="excerpt">{ev.excerpt}</p>}
+            {ev.locator && <p>Locator: {JSON.stringify(ev.locator)}</p>}
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</Base>

@@ -1,0 +1,39 @@
+---
+import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";
+import { groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
+
+interface Props {
+  relations: RelationRecord[];
+  records: { id: string; key: string; record_type: string }[];
+}
+
+const { relations, records } = Astro.props;
+const byType = groupRelationsByType(relations);
+const recordMap = new Map(records.map((r) => [r.id, r]));
+---
+
+<div class="relation-graph">
+  {[...byType.entries()].map(([type, rels]) => (
+    <div class="relation-group">
+      <h4>{type}</h4>
+      <ul>
+        {rels.map((rel) => {
+          const source = recordMap.get(rel.source_record_id);
+          const target = recordMap.get(rel.target_record_id);
+          return (
+            <li>
+              <a href={`/records/${source?.key ?? rel.source_record_id}/`}>{source?.key ?? rel.source_record_id}</a>
+              →
+              <a href={`/records/${target?.key ?? rel.target_record_id}/`}>{target?.key ?? rel.target_record_id}</a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  ))}
+</div>
+
+<style>
+.relation-group { margin-bottom: 1rem; }
+.relation-group h4 { font-size: 0.9rem; text-transform: capitalize; }
+</style>
