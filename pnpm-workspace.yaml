@@ -4,8 +4,9 @@ packages:
   - "packages/extractors/*"
 allowBuilds:
   better-sqlite3: true
-  esbuild: set this to true or false
+  esbuild: true
   sharp: set this to true or false
+  workerd: true
 minimumReleaseAgeExclude:
   - '@warpgogol/forge@2.9.1 || 2.9.4'
   - "@warpgogol/werkstatt-knowledge@0.2.0"
