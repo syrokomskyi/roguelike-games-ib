@@ -1,3 +1,4 @@
+// Implements ADR-0003: Extractor creation skill and quality test contour
 import { describe, it, expect } from "vitest";
 import {
   runExtractorDeterministic,
