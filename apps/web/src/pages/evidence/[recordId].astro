@@ -1,17 +1,10 @@
 ---
+export const prerender = false;
+
 import Base from "../../layouts/Base.astro";
 import { createWebContext } from "../../lib/context.ts";
 import { getPageMetadata } from "../../lib/metadata.ts";
 import { renderEvidence } from "../../lib/evidence.ts";
-import { readRecords } from "@roguelike-games-ib/projection-sdk";
-import { resolve } from "node:path";
-
-export function getStaticPaths() {
-  const distDir = resolve(process.cwd(), "../../.generated/knowledge/dist");
-  let records: { id: string }[] = [];
-  try { records = readRecords(distDir); } catch {}
-  return records.map((r) => ({ params: { recordId: r.id } }));
-}
 
 const { recordId } = Astro.params;
 const distDir = Astro.locals.distDir ?? "";

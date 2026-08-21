@@ -1,31 +1,9 @@
 ---
+export const prerender = false;
+
 import Base from "../../../../layouts/Base.astro";
 import { createWebContext } from "../../../../lib/context.ts";
 import { getPageMetadata } from "../../../../lib/metadata.ts";
-import { readRecords, readSources } from "@roguelike-games-ib/projection-sdk";
-import { resolve } from "node:path";
-
-export function getStaticPaths() {
-  const distDir = resolve(process.cwd(), "../../.generated/knowledge/dist");
-  let sources: { source_id: string }[] = [];
-  let records: { record_type: string; source_identity?: Record<string, unknown> }[] = [];
-  try {
-    sources = readSources(distDir);
-    records = readRecords(distDir) as typeof records;
-  } catch {}
-  const kinds = new Set<string>();
-  for (const r of records) {
-    const si = r.source_identity as Record<string, unknown> | undefined;
-    if (si?.source_id) kinds.add(r.record_type);
-  }
-  const paths: { params: { sourceId: string; kind: string } }[] = [];
-  for (const s of sources) {
-    for (const k of kinds) {
-      paths.push({ params: { sourceId: s.source_id, kind: k } });
-    }
-  }
-  return paths;
-}
 
 const { sourceId, kind } = Astro.params;
 const distDir = Astro.locals.distDir ?? "";
