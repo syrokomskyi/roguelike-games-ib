@@ -63,6 +63,27 @@ const manifest: ExtractorManifest = {
   ],
 };
 
+function namespaceDuplicateId(
+  id: string,
+  file: string,
+  prefix: string,
+  seenIds: Map<string, number>,
+): { slug: string; nativeId: string } {
+  const seenCount = seenIds.get(id) ?? 0;
+  let slug = id.replace(/-/g, "_");
+  let nativeId = id;
+  if (seenCount > 0) {
+    const fileSuffix = file
+      .replace(new RegExp(`^${prefix}/`), "")
+      .replace(/\.json$/, "")
+      .replace(/[/]/g, "_");
+    slug = `${slug}__${fileSuffix}`;
+    nativeId = `${id}__${fileSuffix}`;
+  }
+  seenIds.set(id, seenCount + 1);
+  return { slug, nativeId };
+}
+
 function makeRecordEnvelope(
   sourceId: string,
   key: string,
@@ -199,18 +220,7 @@ export function createCataclysmBNExtractor(): Extractor {
             continue;
           }
           for (const item of items) {
-            const seenCount = seenItemIds.get(item.id) ?? 0;
-            let slug = item.id.replace(/-/g, "_");
-            let nativeId = item.id;
-            if (seenCount > 0) {
-              const fileSuffix = file
-                .replace(/^items\//, "")
-                .replace(/\.json$/, "")
-                .replace(/[/]/g, "_");
-              slug = `${slug}__${fileSuffix}`;
-              nativeId = `${item.id}__${fileSuffix}`;
-            }
-            seenItemIds.set(item.id, seenCount + 1);
+            const { slug, nativeId } = namespaceDuplicateId(item.id, file, "items", seenItemIds);
             const resolved = ctx.ids.resolveOrCreate("item", slug, nativeId);
             const envelope = makeRecordEnvelope(
               ctx.binding.source_id,
@@ -275,18 +285,7 @@ export function createCataclysmBNExtractor(): Extractor {
             continue;
           }
           for (const mut of mutations) {
-            const seenCount = seenMutationIds.get(mut.id) ?? 0;
-            let slug = mut.id.replace(/-/g, "_");
-            let nativeId = mut.id;
-            if (seenCount > 0) {
-              const fileSuffix = file
-                .replace(/^mutations\//, "")
-                .replace(/\.json$/, "")
-                .replace(/[/]/g, "_");
-              slug = `${slug}__${fileSuffix}`;
-              nativeId = `${mut.id}__${fileSuffix}`;
-            }
-            seenMutationIds.set(mut.id, seenCount + 1);
+            const { slug, nativeId } = namespaceDuplicateId(mut.id, file, "mutations", seenMutationIds);
             const resolved = ctx.ids.resolveOrCreate("mutation", slug, nativeId);
             const envelope = makeRecordEnvelope(
               ctx.binding.source_id,
