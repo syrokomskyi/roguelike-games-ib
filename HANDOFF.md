@@ -474,3 +474,22 @@ pnpm exec tsx scripts/run-stage-coverage.ts   # re-run coverage dimension comput
 pnpm exec tsx scripts/run-materialize.ts      # re-materialize knowledge base to .generated/knowledge/dist
 cd apps/web && npx astro dev --host 0.0.0.0 --port 4321  # start dev server
 ```
+
+### Session 2026-08-21 — Web filter/404 debugging
+
+**Problem 1: Non-functional filters on `/compare` and `/games/[sourceId]`**
+- Root cause: Astro `output: "static"` pages with `getStaticPaths()` don't process query params dynamically. Pages were prerendered at build time with stale paths.
+- Fix: Added `export const prerender = false;` to `compare.astro` and `games/[sourceId]/index.astro`, removed `getStaticPaths()` from the latter.
+- These changes were already committed in HEAD; the issue was a stale dev server.
+
+**Problem 2: 404 on all record links from `/games/nethack/`**
+- Root cause: Same `getStaticPaths()` pattern in 5 more pages: `records/[...key]`, `evidence/[recordId]`, `games/[sourceId]/mechanics`, `systems`, `definitions/[kind]`.
+- Fix (commit `14b8b6c5`): Removed `getStaticPaths()` and added `prerender = false` to all 5 pages.
+
+**Problem 3: Materialization failure (CANONICAL_STATE_INVALID)**
+- Root cause: Two nethack claims (`dragon-fire-resistance`, `grid-bug-difficulty`) had stale `subject_id`s referencing record IDs from a previous extraction run. Re-running `run-stage12-nethack.ts` gave records new IDs via `createRecordId()`, but claims weren't regenerated.
+- Fix: Deleted stale claim files, re-ran `run-stage-semantic.ts` to regenerate claims with current record IDs. Materialization now succeeds (8572 records, 6 claims, 3 relations).
+
+**Known issue**: When re-running extraction stages, semantic claims/relations must also be re-run. The `run-stage-semantic.ts` script uses `type: "create"` in promotion transactions, so stale records must be deleted before re-running. A future improvement would be to use `type: "upsert"` or add an idempotent refresh mechanism.
+
+**Dev server note**: The Astro dev server caches aggressively. After code or data changes, always kill and restart the server process.
