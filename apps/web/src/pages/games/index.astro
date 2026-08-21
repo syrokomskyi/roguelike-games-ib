@@ -9,28 +9,49 @@ const meta = getPageMetadata(ctx);
 
 const sources = ctx.store.sources;
 const recordsBySource = new Map<string, number>();
+const typesBySource = new Map<string, Map<string, number>>();
 for (const r of ctx.store.records) {
   const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
   const sid = si?.["source_id"] as string | undefined;
-  if (sid) recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
+  if (!sid) continue;
+  recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
+  if (!typesBySource.has(sid)) typesBySource.set(sid, new Map());
+  const typeMap = typesBySource.get(sid)!;
+  typeMap.set(r.record_type, (typeMap.get(r.record_type) ?? 0) + 1);
 }
+
+const sortedSources = [...sources].sort((a, b) =>
+  (recordsBySource.get(b.source_id) ?? 0) - (recordsBySource.get(a.source_id) ?? 0),
+);
 ---
 
 <Base title="Games" metadata={meta}>
   <h1 class="text-2xl font-bold text-ib-text">All Games</h1>
   <p class="mt-2 text-ib-muted">{sources.length} registered sources</p>
   <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {sources.map((s) => (
-      <a href={`/games/${s.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-ib-text">{s.source_id}</h2>
-          <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{s.declared_version}</span>
-        </div>
-        <div class="mt-3 flex items-center gap-3 text-sm text-ib-muted">
-          <span>{recordsBySource.get(s.source_id) ?? 0} records</span>
-          {s.vcs?.repository && <a href={s.vcs.repository} class="text-xs text-ib-accent hover:text-ib-accent2">repo →</a>}
-        </div>
-      </a>
-    ))}
+    {sortedSources.map((s) => {
+      const total = recordsBySource.get(s.source_id) ?? 0;
+      const typeMap = typesBySource.get(s.source_id);
+      const types = typeMap ? [...typeMap.entries()].sort(([a], [b]) => a.localeCompare(b)) : [];
+      return (
+        <a href={`/games/${s.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-ib-text">{s.source_id}</h2>
+            <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{s.declared_version}</span>
+          </div>
+          <div class="mt-3 flex items-center gap-3 text-sm text-ib-muted">
+            <span>{total} records</span>
+            {s.vcs?.repository && <a href={s.vcs.repository} class="text-xs text-ib-accent hover:text-ib-accent2">repo →</a>}
+          </div>
+          {types.length > 0 && (
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              {types.map(([type, count]) => (
+                <span class="rounded bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{type} · {count}</span>
+              ))}
+            </div>
+          )}
+        </a>
+      );
+    })}
   </div>
 </Base>
