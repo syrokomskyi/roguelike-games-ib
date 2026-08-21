@@ -7,9 +7,10 @@ interface Props {
   title: string;
   metadata?: PageMetadata;
   activeNav?: string;
+  fullWidth?: boolean;
 }
 
-const { title, metadata, activeNav } = Astro.props;
+const { title, metadata, activeNav, fullWidth = false } = Astro.props;
 const navItems = [
   { href: "/search", label: "Search", key: "search" },
   { href: "/games/", label: "Games", key: "games" },
@@ -41,7 +42,7 @@ const navItems = [
       </div>
     </div>
   </nav>
-  <main class="mx-auto max-w-7xl px-4 py-8">
+  <main class={fullWidth ? "" : "mx-auto max-w-7xl px-4 py-8"}>
     <slot />
   </main>
   <footer class="border-t border-ib-border py-6">

@@ -17,65 +17,421 @@ for (const r of ctx.store.records) {
   const sid = si?.["source_id"] as string | undefined;
   if (sid) recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
 }
+
+const exampleQuestions = [
+  "How do games create fear without sanity?",
+  "What turns information into a resource?",
+  "Which mechanics change space instead of HP?",
+  "How do you create pressure without a timer?",
+  "What makes exploration dangerous without hunger or durability?",
+];
+
+const pipelineSteps = [
+  { label: "Source Code", icon: "{}", color: "text-ib-blue" },
+  { label: "Facts", icon: "◆", color: "text-ib-green" },
+  { label: "Mechanics & Systems", icon: "⚙", color: "text-ib-accent" },
+  { label: "Connections", icon: "⇄", color: "text-ib-accent2" },
+  { label: "Design Structures", icon: "◇", color: "text-ib-amber" },
+  { label: "New Directions", icon: "→", color: "text-ib-accent" },
+];
+
+const features = [
+  {
+    title: "Game Atlas",
+    description:
+      "Not just monsters, items, and spells. Explore systems, mechanics, generation, AI, interactions, unusual constraints — and the behavior that emerges from them.",
+    href: "/games/",
+    cta: "Browse games",
+    icon: "◈",
+    accent: "text-ib-accent",
+    border: "hover:border-ib-accent",
+  },
+  {
+    title: "Mechanic Anatomy",
+    description:
+      "Dissect a mechanic down to its causes. What the player sees. Which rules operate beneath the surface. What triggers the system. What constrains it. What it interacts with. Where it's implemented.",
+    href: "/games/",
+    cta: "Explore mechanics",
+    icon: "⚙",
+    accent: "text-ib-green",
+    border: "hover:border-ib-green",
+  },
+  {
+    title: "Compare Lab",
+    description:
+      "Compare not names — but approaches to a problem. See how different games create uncertainty, risk, exploration, pressure, or freedom through entirely different means.",
+    href: "/compare/",
+    cta: "Compare games",
+    icon: "⇄",
+    accent: "text-ib-blue",
+    border: "hover:border-ib-blue",
+  },
+  {
+    title: "Inspiration Lab",
+    description:
+      "Don't ask \"what should I copy?\" Tell us what effect you want to achieve and what you'd rather avoid. The base will help you find fitting structures, unexpected connections, and directions to transform them.",
+    href: "/inspiration",
+    cta: "Find a direction",
+    icon: "◇",
+    accent: "text-ib-accent2",
+    border: "hover:border-ib-accent2",
+  },
+];
 ---
 
-<Base title="Home">
-  <div class="space-y-8">
-    <section class="rounded-2xl border border-ib-border bg-gradient-to-br from-ib-surface to-ib-surface2 px-8 py-12 text-center">
-      <h1 class="text-4xl font-bold text-ib-text">Roguelike Inspiration Base</h1>
-      <p class="mt-3 text-lg text-ib-muted">Evidence-backed knowledge base of roguelike game mechanics, systems, and design patterns.</p>
+<Base title="Home" fullWidth>
+  <div class="home-page space-y-0">
+
+    {/* ──────────────────────────────── HERO ──────────────────────────────── */}
+    <section class="hero-section relative overflow-hidden border-b border-ib-border">
+      <div class="hero-glow"></div>
+      <div class="relative mx-auto max-w-4xl px-4 py-20 text-center sm:py-28">
+        <p class="mb-6 text-sm font-medium uppercase tracking-[0.3em] text-ib-muted">Roguelike Inspiration Base</p>
+        <h1 class="text-5xl font-bold leading-tight text-ib-text sm:text-6xl">
+          Don't copy the mechanic.
+          <br />
+          <span class="bg-gradient-to-r from-ib-accent via-ib-accent2 to-ib-accent bg-clip-text text-transparent">
+            Understand why it works.
+          </span>
+        </h1>
+        <p class="mx-auto mt-6 max-w-2xl text-lg text-ib-muted sm:text-xl">
+          Explore roguelike games from the inside: their rules, systems, interactions, and design decisions.
+          Not to find a ready-made idea — but to discover <span class="text-ib-text">new directions for your own</span>.
+        </p>
+
+        <div class="mx-auto mt-10 max-w-xl">
+          <SearchBox placeholder="What do you want to understand or invent?" />
+          <p class="mt-3 text-sm text-ib-muted/70">
+            e.g. how to create pressure on the player without a timer?
+          </p>
+        </div>
+
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Games</a>
+          <span class="text-ib-border">·</span>
+          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Mechanics</a>
+          <span class="text-ib-border">·</span>
+          <a href="/compare/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Comparisons</a>
+          <span class="text-ib-border">·</span>
+          <a href="/inspiration" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Inspiration Lab</a>
+        </div>
+      </div>
     </section>
 
-    <section class="max-w-2xl mx-auto">
-      <SearchBox />
+    {/* ──────────────────────── SEARCH BY MEANING ──────────────────────── */}
+    <section class="border-b border-ib-border bg-ib-surface/30 px-4 py-20">
+      <div class="mx-auto max-w-4xl">
+        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
+          Search not by names.
+          <span class="text-ib-muted"> Search by meaning.</span>
+        </h2>
+
+        <div class="mt-10 space-y-3">
+          {exampleQuestions.map((q, i) => (
+            <a
+              href={`/search?q=${encodeURIComponent(q)}`}
+              class="question-card group flex items-center gap-4 rounded-xl border border-ib-border bg-ib-surface px-6 py-4 transition-all hover:border-ib-accent hover:bg-ib-surface2"
+              style={`--delay: ${i * 60}ms`}
+            >
+              <span class="text-lg text-ib-accent transition-transform group-hover:scale-125">?</span>
+              <span class="flex-1 text-base text-ib-text sm:text-lg">{q}</span>
+              <span class="text-ib-muted opacity-0 transition-opacity group-hover:opacity-100">→</span>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-10 text-center">
+          <a
+            href="/search"
+            class="inline-block rounded-xl bg-gradient-to-r from-ib-accent to-ib-accent2 px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Ask your own question →
+          </a>
+        </div>
+      </div>
     </section>
 
-    {stats && (
-      <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-          <div class="text-3xl font-bold text-ib-accent">{stats.records}</div>
-          <div class="mt-1 text-sm text-ib-muted">Records</div>
-        </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-          <div class="text-3xl font-bold text-ib-green">{stats.sources}</div>
-          <div class="mt-1 text-sm text-ib-muted">Games</div>
-        </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-          <div class="text-3xl font-bold text-ib-blue">{stats.mechanics + stats.systems}</div>
-          <div class="mt-1 text-sm text-ib-muted">Mechanics & Systems</div>
-        </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-          <div class="text-3xl font-bold text-ib-accent2">{stats.concepts}</div>
-          <div class="mt-1 text-sm text-ib-muted">Design Concepts</div>
-        </div>
-      </section>
-    )}
+    {/* ──────────────────────── LOOK DEEPER ──────────────────────── */}
+    <section class="px-4 py-20">
+      <div class="mx-auto max-w-6xl">
+        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
+          Look deeper into the game
+        </h2>
+        <p class="mx-auto mt-3 max-w-2xl text-center text-ib-muted">
+          Four ways into the design space — start from whichever angle interests you.
+        </p>
 
-    {games.length > 0 && (
-      <section>
-        <h2 class="mb-4 text-xl font-semibold text-ib-text">Games</h2>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {games.map((g) => (
-            <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition-colors hover:border-ib-accent hover:bg-ib-surface2">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-ib-text">{g.source_id}</h3>
-                <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{g.declared_version}</span>
-              </div>
-              <div class="mt-2 flex items-center gap-3 text-sm text-ib-muted">
-                <span>{recordsBySource.get(g.source_id) ?? 0} records</span>
-                <span>→</span>
+        <div class="mt-12 grid gap-5 sm:grid-cols-2">
+          {features.map((f) => (
+            <a
+              href={f.href}
+              class={`feature-card group rounded-2xl border border-ib-border bg-ib-surface p-7 transition-all hover:bg-ib-surface2 ${f.border}`}
+            >
+              <div class="flex items-start gap-4">
+                <span class={`text-3xl ${f.accent}`}>{f.icon}</span>
+                <div class="flex-1">
+                  <h3 class="text-xl font-semibold text-ib-text">{f.title}</h3>
+                  <p class="mt-2 text-sm leading-relaxed text-ib-muted">{f.description}</p>
+                  <span class={`mt-4 inline-block text-sm font-medium ${f.accent} opacity-70 transition-opacity group-hover:opacity-100`}>
+                    {f.cta} →
+                  </span>
+                </div>
               </div>
             </a>
           ))}
         </div>
+      </div>
+    </section>
+
+    {/* ──────────────────────── STUCK? ──────────────────────── */}
+    <section class="border-y border-ib-border bg-gradient-to-br from-ib-surface/50 to-ib-bg px-4 py-20">
+      <div class="mx-auto max-w-3xl">
+        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">Stuck?</h2>
+
+        <div class="mt-8 rounded-2xl border border-ib-border bg-ib-surface p-8">
+          <p class="text-center text-ib-muted">Say you need:</p>
+          <blockquote class="mt-4 border-l-2 border-ib-accent pl-5 text-lg italic text-ib-text sm:text-xl">
+            A cave-exploration mechanic that creates anxiety —
+            without darkness, sanity, hunger, or durability.
+          </blockquote>
+        </div>
+
+        <div class="mt-8 space-y-4">
+          <p class="text-center text-ib-muted">Don't look for one similar mechanic. Look for:</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
+              <span class="text-ib-accent">→</span>
+              <span class="ml-2 text-ib-text">Which structures create the feeling you need</span>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
+              <span class="text-ib-green">→</span>
+              <span class="ml-2 text-ib-text">How they work across different games</span>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
+              <span class="text-ib-blue">→</span>
+              <span class="ml-2 text-ib-text">What you can change inside them</span>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
+              <span class="text-ib-accent2">→</span>
+              <span class="ml-2 text-ib-text">What can be unexpectedly combined</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 text-center">
+          <a
+            href="/inspiration"
+            class="inline-block rounded-xl border border-ib-accent bg-ib-accent/10 px-6 py-3 font-medium text-ib-accent transition-colors hover:bg-ib-accent/20"
+          >
+            Try Inspiration Lab →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ──────────────────── NOT A LIST OF AI IDEAS ──────────────────── */}
+    <section class="px-4 py-20">
+      <div class="mx-auto max-w-3xl">
+        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
+          Not a list of AI ideas
+        </h2>
+
+        <div class="mt-10 grid gap-5 sm:grid-cols-2">
+          <div class="rounded-2xl border border-ib-green/30 bg-ib-green/5 p-6">
+            <div class="mb-3 flex items-center gap-2">
+              <span class="text-xl text-ib-green">✓</span>
+              <h3 class="font-semibold text-ib-text">Verified knowledge</h3>
+            </div>
+            <p class="text-sm leading-relaxed text-ib-muted">
+              What a game <span class="text-ib-text">actually does</span> — extracted from source code, traceable to evidence.
+              These are facts.
+            </p>
+          </div>
+          <div class="rounded-2xl border border-ib-accent2/30 bg-ib-accent2/5 p-6">
+            <div class="mb-3 flex items-center gap-2">
+              <span class="text-xl text-ib-accent2">✦</span>
+              <h3 class="font-semibold text-ib-text">Creative hypotheses</h3>
+            </div>
+            <p class="text-sm leading-relaxed text-ib-muted">
+              New combinations based on what you've studied. These are <span class="text-ib-text">possibilities</span> —
+              and you can always trace the path between the two.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ──────────────────────── PIPELINE ──────────────────────── */}
+    <section class="border-y border-ib-border bg-ib-surface/30 px-4 py-20">
+      <div class="mx-auto max-w-4xl">
+        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
+          From source to idea
+        </h2>
+
+        <div class="mt-12 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-0">
+          {pipelineSteps.map((step, i) => (
+            <>
+              <div class="pipeline-step flex flex-col items-center gap-2 rounded-xl border border-ib-border bg-ib-surface px-4 py-3 sm:px-5">
+                <span class={`text-xl ${step.color}`}>{step.icon}</span>
+                <span class="text-xs font-medium text-ib-text sm:text-sm">{step.label}</span>
+              </div>
+              {i < pipelineSteps.length - 1 && (
+                <span class="hidden text-ib-muted sm:mx-1 sm:inline">→</span>
+              )}
+            </>
+          ))}
+        </div>
+
+        <p class="mt-8 text-center text-ib-muted">
+          You can trace any conclusion back down — all the way to the source it's built on.
+        </p>
+
+        <div class="mt-8 text-center">
+          <a
+            href="/about/method/"
+            class="inline-block rounded-xl border border-ib-border bg-ib-surface px-6 py-3 text-sm font-medium text-ib-text transition-colors hover:border-ib-accent"
+          >
+            How the base works →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ──────────────────────── STATS ──────────────────────── */}
+    {stats && (
+      <section class="px-4 py-16">
+        <div class="mx-auto max-w-4xl">
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
+              <div class="text-3xl font-bold text-ib-accent">{stats.records}</div>
+              <div class="mt-1 text-sm text-ib-muted">Records</div>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
+              <div class="text-3xl font-bold text-ib-green">{stats.sources}</div>
+              <div class="mt-1 text-sm text-ib-muted">Games</div>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
+              <div class="text-3xl font-bold text-ib-blue">{stats.mechanics + stats.systems}</div>
+              <div class="mt-1 text-sm text-ib-muted">Mechanics & Systems</div>
+            </div>
+            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
+              <div class="text-3xl font-bold text-ib-accent2">{stats.concepts}</div>
+              <div class="mt-1 text-sm text-ib-muted">Design Concepts</div>
+            </div>
+          </div>
+        </div>
       </section>
     )}
 
-    <section class="flex flex-wrap gap-3 justify-center">
-      <a href="/compare/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Compare Records</a>
-      <a href="/design/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Design Explorer</a>
-      <a href="/dataset/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Dataset Info</a>
-      <a href="/about/method/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Methodology</a>
+    {/* ──────────────────────── GAMES ──────────────────────── */}
+    {games.length > 0 && (
+      <section class="px-4 pb-16">
+        <div class="mx-auto max-w-4xl">
+          <h2 class="mb-4 text-xl font-semibold text-ib-text">Games in the base</h2>
+          <div class="grid gap-4 sm:grid-cols-3">
+            {games.map((g) => (
+              <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition-colors hover:border-ib-accent hover:bg-ib-surface2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-semibold text-ib-text">{g.source_id}</h3>
+                  <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{g.declared_version}</span>
+                </div>
+                <div class="mt-2 flex items-center gap-3 text-sm text-ib-muted">
+                  <span>{recordsBySource.get(g.source_id) ?? 0} records</span>
+                  <span>→</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {/* ──────────────────────── FINAL CTA ──────────────────────── */}
+    <section class="hero-section relative overflow-hidden border-t border-ib-border">
+      <div class="hero-glow"></div>
+      <div class="relative mx-auto max-w-3xl px-4 py-20 text-center sm:py-24">
+        <h2 class="text-3xl font-bold text-ib-text sm:text-4xl">
+          Explore the roguelike design space
+        </h2>
+        <p class="mx-auto mt-4 max-w-xl text-lg text-ib-muted">
+          Start from a game. From a mechanic. From a feeling you want to create.
+          Or simply from a question.
+        </p>
+
+        <div class="mx-auto mt-8 max-w-xl">
+          <SearchBox placeholder="What are you looking for?" />
+        </div>
+
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">All games</a>
+          <span class="text-ib-border">·</span>
+          <a href="/design/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Design Space</a>
+          <span class="text-ib-border">·</span>
+          <a href="/dataset/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Dataset</a>
+          <span class="text-ib-border">·</span>
+          <a href="/about/method/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Method</a>
+        </div>
+      </div>
     </section>
+
   </div>
 </Base>
+
+<style>
+  .hero-section {
+    background: linear-gradient(180deg, var(--color-ib-surface) 0%, var(--color-ib-bg) 100%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124, 92, 252, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .question-card {
+    animation: fade-in-up 0.5s ease-out backwards;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  .feature-card {
+    animation: fade-in-up 0.5s ease-out backwards;
+  }
+  .feature-card:nth-child(1) { animation-delay: 0ms; }
+  .feature-card:nth-child(2) { animation-delay: 80ms; }
+  .feature-card:nth-child(3) { animation-delay: 160ms; }
+  .feature-card:nth-child(4) { animation-delay: 240ms; }
+
+  .pipeline-step {
+    animation: fade-in-up 0.4s ease-out backwards;
+  }
+  .pipeline-step:nth-child(1) { animation-delay: 0ms; }
+  .pipeline-step:nth-child(3) { animation-delay: 100ms; }
+  .pipeline-step:nth-child(5) { animation-delay: 200ms; }
+  .pipeline-step:nth-child(7) { animation-delay: 300ms; }
+  .pipeline-step:nth-child(9) { animation-delay: 400ms; }
+  .pipeline-step:nth-child(11) { animation-delay: 500ms; }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .question-card,
+    .feature-card,
+    .pipeline-step {
+      animation: none;
+    }
+  }
+</style>
