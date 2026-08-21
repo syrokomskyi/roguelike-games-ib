@@ -10,14 +10,14 @@ importers:
     dependencies:
       '@roguelike-games-ib/nethack-extractor':
         specifier: workspace:*
-        version: link:packages/nethack-extractor
+        version: link:packages/extractors/nethack-extractor
     devDependencies:
       '@roguelike-games-ib/broguece-extractor':
         specifier: workspace:*
-        version: link:packages/broguece-extractor
+        version: link:packages/extractors/broguece-extractor
       '@roguelike-games-ib/cataclysm-bn-extractor':
         specifier: workspace:*
-        version: link:packages/cataclysm-bn-extractor
+        version: link:packages/extractors/cataclysm-bn-extractor
       '@roguelike-games-ib/extractor-sdk':
         specifier: workspace:*
         version: link:packages/extractor-sdk
@@ -147,38 +147,6 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
 
-  packages/broguece-extractor:
-    dependencies:
-      '@roguelike-games-ib/extractor-sdk':
-        specifier: workspace:*
-        version: link:../extractor-sdk
-      '@roguelike-games-ib/knowledge-core':
-        specifier: workspace:*
-        version: link:../knowledge-core
-    devDependencies:
-      typescript:
-        specifier: ^5.8.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
-
-  packages/cataclysm-bn-extractor:
-    dependencies:
-      '@roguelike-games-ib/extractor-sdk':
-        specifier: workspace:*
-        version: link:../extractor-sdk
-      '@roguelike-games-ib/knowledge-core':
-        specifier: workspace:*
-        version: link:../knowledge-core
-    devDependencies:
-      typescript:
-        specifier: ^5.8.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
-
   packages/extractor-sdk:
     dependencies:
       '@roguelike-games-ib/knowledge-core':
@@ -187,6 +155,54 @@ importers:
       yaml:
         specifier: ^2.7.0
         version: 2.9.0
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/extractors/broguece-extractor:
+    dependencies:
+      '@roguelike-games-ib/extractor-sdk':
+        specifier: workspace:*
+        version: link:../../extractor-sdk
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../../knowledge-core
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/extractors/cataclysm-bn-extractor:
+    dependencies:
+      '@roguelike-games-ib/extractor-sdk':
+        specifier: workspace:*
+        version: link:../../extractor-sdk
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../../knowledge-core
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+
+  packages/extractors/nethack-extractor:
+    dependencies:
+      '@roguelike-games-ib/extractor-sdk':
+        specifier: workspace:*
+        version: link:../../extractor-sdk
+      '@roguelike-games-ib/knowledge-core':
+        specifier: workspace:*
+        version: link:../../knowledge-core
     devDependencies:
       typescript:
         specifier: ^5.8.0
@@ -252,22 +268,6 @@ importers:
       better-sqlite3:
         specifier: ^12.2.0
         version: 12.11.1
-      typescript:
-        specifier: ^5.8.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@26.2.0)(lightningcss@1.33.0)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
-
-  packages/nethack-extractor:
-    dependencies:
-      '@roguelike-games-ib/extractor-sdk':
-        specifier: workspace:*
-        version: link:../extractor-sdk
-      '@roguelike-games-ib/knowledge-core':
-        specifier: workspace:*
-        version: link:../knowledge-core
-    devDependencies:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3

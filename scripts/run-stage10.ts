@@ -1,4 +1,4 @@
-import { createCataclysmBNExtractor } from "../packages/cataclysm-bn-extractor/src/index.ts";
+import { createCataclysmBNExtractor } from "../packages/extractors/cataclysm-bn-extractor/src/index.ts";
 import {
   ReadonlySourceReader,
   EvidenceFactory,

@@ -1,4 +1,4 @@
-import { createBrogueCEExtractor } from "../packages/broguece-extractor/src/index.ts";
+import { createBrogueCEExtractor } from "../packages/extractors/broguece-extractor/src/index.ts";
 import {
   ReadonlySourceReader,
   EvidenceFactory,

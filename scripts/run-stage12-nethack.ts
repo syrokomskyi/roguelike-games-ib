@@ -1,4 +1,4 @@
-import { createNetHackExtractor } from "../packages/nethack-extractor/src/index.ts";
+import { createNetHackExtractor } from "../packages/extractors/nethack-extractor/src/index.ts";
 import {
   ReadonlySourceReader,
   EvidenceFactory,

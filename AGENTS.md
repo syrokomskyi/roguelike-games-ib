@@ -6,4 +6,8 @@
   Regenerate:   forge forge.agents.generate
 -->
 
+## Extractor Package Location
+
+All game-specific extractor packages MUST live under `packages/extractors/`. Do not create extractor packages directly in `packages/`. The `packages/extractors/` directory is registered in `pnpm-workspace.yaml` as a workspace glob.
+
 
