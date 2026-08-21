@@ -63,6 +63,7 @@ const manifest: ExtractorManifest = {
   ],
 };
 
+// Implements ADR-0004: namespace duplicate native_ids with file suffix instead of skipping
 function namespaceDuplicateId(
   id: string,
   file: string,
