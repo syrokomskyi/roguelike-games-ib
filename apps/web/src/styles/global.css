@@ -43,6 +43,9 @@ a {
   text-decoration: none;
 }
 a:hover {
+  text-decoration: underline;
+}
+a[class*="rounded"]:hover {
   text-decoration: none;
 }
 
