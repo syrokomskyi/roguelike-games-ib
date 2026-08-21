@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–10 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–11 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 10 — Cataclysm-BN scale trial + COV/FORGE/REL/MIG tests (previous sessions: Stages 0–9)
-**Status**: All 352 tests pass (66 test files)
+**Session**: Stage 11 — Freeze v1 implementation contract (previous sessions: Stages 0–10)
+**Status**: All 366 tests pass (67 test files)
 
 ## What was done
 
@@ -287,7 +287,30 @@ Gate: C10 conformance (14 tests) and deterministic replay — all pass.
 - **MIG-001,002,005**: 12 migration tests (`tests/mig/mig-{001,002,005}.test.ts`)
 - **Release builder package**: `packages/release-builder` with `checkRelease`, `generateReleaseEvidence`, `createDatasetManifest`, `buildRelease`
 
-**Total: 66 test files, 352 tests, 0 failures.**
+### Stage 11 — Freeze v1 implementation contract
+
+Reviewed ontology pressure points from Stages 9–10. Froze v1 schema/plugin/project contract.
+
+**Ontology fixes**:
+- Added `HAS_ABILITY` (directed) and `INTERACTS_WITH` (symmetric) to `relation-types.yaml` — were used in BrogueCE semantic records but not registered
+- Updated canonical relation JSONL files: lowercase `has_ability`/`interacts_with` → uppercase `HAS_ABILITY`/`INTERACTS_WITH` to match ontology ID convention
+- Updated `scripts/run-stage9.ts` and `staging/transactions/broguece-stage9-tx.json` accordingly
+
+**Schema pressure point fix**:
+- `game-definition.schema.yaml`: `evidence_refs.minItems` relaxed from `1` → `0` — data-driven extractors (Cataclysm-BN JSON, BrogueCE C) have implicit evidence (source file IS the evidence); individual evidence records are created for semantic records/claims/relations only
+- 14K+ game_definition records had empty `evidence_refs`, which violated the previous schema constraint
+
+**V1 contract freeze verified**:
+- `rgkb/relation-ontology@2`, `rgkb/schema-registry@2`, `rgkb/knowledge-manifest@2` — frozen
+- `werkstatt/knowledge-config@1`, `werkstatt/knowledge-extractor@1` — frozen
+- `record-types.yaml` — all 7 required types present
+- All canonical game_definition records have required envelope fields
+
+**Test**: `tests/conformance/c11-ontology-freeze.test.ts` — 14 C11 conformance tests, all pass
+
+Gate: C11 conformance (14 tests) — all pass.
+
+**Total: 67 test files, 366 tests, 0 failures.**
 
 ## What the next agent should do
 
@@ -303,15 +326,18 @@ Stage 10 (Cataclysm-BN scale trial) is complete. All 14 C10 conformance tests pa
 
 **Note**: The runner script `scripts/run-stage10.ts` is re-runnable.
 
-### Stage 11 — Freeze v1 implementation contract
+### Stage 11 — ✅ Complete
 
-Review ontology pressure points; accept RFC/ADR changes; freeze schema/plugin/project contract `1.0`; begin remaining-game migration.
+Stage 11 (Freeze v1 implementation contract) is complete. All 14 C11 conformance tests pass. See Stage 11 section above for details.
 
-**Context**: Now that two sources (BrogueCE + Cataclysm-BN) are extracted, review:
-- Ontology relation types — `interacts_with` and `has_ability` are NOT in `relation-types.yaml` but appear in BrogueCE semantic records. Either add them or remap.
-- Schema pressure points from 14K+ records (field coverage, missing optional fields)
-- Extractor SDK patterns — JSON-based extractors (Cataclysm-BN) vs C-source parsers (BrogueCE) both work
-- v1 human curation migration — MIG tests cover candidate staging; actual v1 notes migration still needed
+**What was frozen**:
+- Ontology: 2 new relation types added (`HAS_ABILITY`, `INTERACTS_WITH`), all canonical relations now conform
+- Schema: `game-definition@2` evidence_refs relaxed to `minItems: 0` for data-driven extractors
+- Contract versions: `rgkb/*@2`, `werkstatt/*@1` — frozen
+
+**What remains for future stages**:
+- Extractor SDK patterns — JSON-based extractors (Cataclysm-BN) vs C-source parsers (BrogueCE) both work, no changes needed
+- v1 human curation migration — MIG tests cover candidate staging; actual v1 notes migration still needed (Stage 12)
 
 ### Stage 12 — Remaining sources
 
@@ -335,7 +361,7 @@ One source at a time: register → discover → extractor → factual promotion 
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (352 tests, 66 files)
+pnpm exec vitest run                    # all tests (366 tests, 67 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk

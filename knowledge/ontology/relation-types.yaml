@@ -278,3 +278,23 @@ relations:
   - game_definition
   - semantic_record
   - concept
+- id: HAS_ABILITY
+  semantics: Source definition possesses target capability/ability as an intrinsic property.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: INTERACTS_WITH
+  semantics: Source and target game elements/systems interact in a non-trivial way that is not purely causal triggering or synergy.
+  direction: symmetric
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record

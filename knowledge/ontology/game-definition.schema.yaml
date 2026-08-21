@@ -50,7 +50,7 @@ allOf:
         additionalProperties: true
       evidence_refs:
         type: array
-        minItems: 1
+        minItems: 0
         uniqueItems: true
         items:
           type: string

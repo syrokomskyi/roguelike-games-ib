@@ -419,7 +419,7 @@ function createSemanticRecords(
   const rel1Ev = ev(GLOBALS_C, "monsterCatalog", 1127, 1128, "goblin_warlord");
   relations.push({
     ...makeEnvelope("relation", "broguece/relation/goblin-warlord-summons", rel1Id),
-    relation_type: "has_ability",
+    relation_type: "HAS_ABILITY",
     source_record_id: factualRecords.find((r: any) => r.key === "broguece/creature/goblin_warlord")?.id ?? "",
     target_record_id: sr7Id,
     relation_scope: "source",
@@ -431,7 +431,7 @@ function createSemanticRecords(
   const rel2Ev = ev(GLOBALS_C, "tileCatalog", 491, 499, "fire-tiles");
   relations.push({
     ...makeEnvelope("relation", "broguece/relation/fire-spreads-to-flammable", rel2Id),
-    relation_type: "interacts_with",
+    relation_type: "INTERACTS_WITH",
     source_record_id: sr4Id,
     target_record_id: sr9Id,
     relation_scope: "source",
