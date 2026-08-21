@@ -16,30 +16,38 @@ export interface WebContext {
   modelVersion: string;
 }
 
+let _cachedDistDir: string | null = null;
+let _cachedPromise: Promise<WebContext> | null = null;
+
 export async function createWebContext(distDir: string): Promise<WebContext> {
-  const manifest = readManifest(distDir);
-  if (!isManifestSupported(manifest)) {
-    throw new Error(
-      `Unsupported materialization manifest schema: ${manifest.schema}. Expected ${SUPPORTED_MANIFEST_SCHEMA}.`,
-    );
-  }
+  if (_cachedDistDir === distDir && _cachedPromise) return _cachedPromise;
+  _cachedDistDir = distDir;
+  _cachedPromise = (async () => {
+    const manifest = readManifest(distDir);
+    if (!isManifestSupported(manifest)) {
+      throw new Error(
+        `Unsupported materialization manifest schema: ${manifest.schema}. Expected ${SUPPORTED_MANIFEST_SCHEMA}.`,
+      );
+    }
 
-  const store = openProjection(distDir);
-  const dbPath = join(distDir, "knowledge.sqlite");
-  const searchIndex = await buildSearchIndex({
-    dbPath,
-    canonicalHash: manifest.canonicalHash,
-  });
+    const store = openProjection(distDir);
+    const dbPath = join(distDir, "knowledge.sqlite");
+    const searchIndex = await buildSearchIndex({
+      dbPath,
+      canonicalHash: manifest.canonicalHash,
+    });
 
-  return {
-    distDir,
-    manifest,
-    store,
-    searchIndex,
-    canonicalHash: manifest.canonicalHash,
-    license: manifest.license,
-    datasetId: manifest.datasetId,
-    datasetVersion: manifest.datasetVersion,
-    modelVersion: manifest.modelVersion,
-  };
+    return {
+      distDir,
+      manifest,
+      store,
+      searchIndex,
+      canonicalHash: manifest.canonicalHash,
+      license: manifest.license,
+      datasetId: manifest.datasetId,
+      datasetVersion: manifest.datasetVersion,
+      modelVersion: manifest.modelVersion,
+    };
+  })();
+  return _cachedPromise;
 }

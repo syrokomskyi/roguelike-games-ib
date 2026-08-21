@@ -41,14 +41,16 @@ export function buildPathResolver(records: CanonicalRecord[]): PathResolver {
     const notePath = `${scope}/${typeSlug}/${keySlug}.md`;
 
     if (pathToId.has(notePath)) {
-      throw new Error(
-        `Path collision: "${notePath}" already mapped to record ${pathToId.get(notePath)}, cannot map ${record.id}`,
-      );
+      const shortId = record.id.split(":").pop()?.slice(0, 8) ?? "dup";
+      const disambiguated = `${scope}/${typeSlug}/${keySlug}-${shortId}.md`;
+      idToPath.set(record.id, disambiguated);
+      keyToPath.set(record.key, disambiguated);
+      pathToId.set(disambiguated, record.id);
+    } else {
+      idToPath.set(record.id, notePath);
+      keyToPath.set(record.key, notePath);
+      pathToId.set(notePath, record.id);
     }
-
-    idToPath.set(record.id, notePath);
-    keyToPath.set(record.key, notePath);
-    pathToId.set(notePath, record.id);
   }
 
   return { idToPath, keyToPath, pathToId };

@@ -4,10 +4,18 @@ import { createWebContext } from "../../lib/context.ts";
 import { getPageMetadata } from "../../lib/metadata.ts";
 import { resolveRecordRoute } from "../../lib/resolve.ts";
 import { evidenceForRecord } from "../../lib/evidence.ts";
-import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+import { claimsForRecord, relationsForRecord, readRecords } from "@roguelike-games-ib/projection-sdk";
 import RecordHeader from "../../components/RecordHeader.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
 import RelationGraph from "../../components/RelationGraph.astro";
+import { resolve } from "node:path";
+
+export function getStaticPaths() {
+  const distDir = resolve(process.cwd(), "../../.generated/knowledge/dist");
+  let records: { key: string }[] = [];
+  try { records = readRecords(distDir); } catch {}
+  return records.map((r) => ({ params: { key: r.key } }));
+}
 
 const key = Astro.params.key as string;
 const distDir = Astro.locals.distDir ?? "";

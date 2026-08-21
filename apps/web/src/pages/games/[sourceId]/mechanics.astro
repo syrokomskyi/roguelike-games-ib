@@ -2,6 +2,15 @@
 import Base from "../../../layouts/Base.astro";
 import { createWebContext } from "../../../lib/context.ts";
 import { getPageMetadata } from "../../../lib/metadata.ts";
+import { readSources } from "@roguelike-games-ib/projection-sdk";
+import { resolve } from "node:path";
+
+export function getStaticPaths() {
+  const distDir = resolve(process.cwd(), "../../.generated/knowledge/dist");
+  let sources: { source_id: string }[] = [];
+  try { sources = readSources(distDir); } catch {}
+  return sources.map((s) => ({ params: { sourceId: s.source_id } }));
+}
 
 const { sourceId } = Astro.params;
 const distDir = Astro.locals.distDir ?? "";

@@ -4,6 +4,15 @@ import { createWebContext } from "../../../lib/context.ts";
 import { getPageMetadata } from "../../../lib/metadata.ts";
 import SourceBindingPanel from "../../../components/SourceBindingPanel.astro";
 import CoveragePanel from "../../../components/CoveragePanel.astro";
+import { readSources } from "@roguelike-games-ib/projection-sdk";
+import { resolve } from "node:path";
+
+export function getStaticPaths() {
+  const distDir = resolve(process.cwd(), "../../.generated/knowledge/dist");
+  let sources: { source_id: string }[] = [];
+  try { sources = readSources(distDir); } catch {}
+  return sources.map((s) => ({ params: { sourceId: s.source_id } }));
+}
 
 const { sourceId } = Astro.params;
 const distDir = Astro.locals.distDir ?? "";
