@@ -6,6 +6,7 @@ import { resolveRecordRoute } from "../../lib/resolve.ts";
 import { evidenceForRecord } from "../../lib/evidence.ts";
 import { claimsForRecord, relationsForRecord, readRecords } from "@roguelike-games-ib/projection-sdk";
 import RecordHeader from "../../components/RecordHeader.astro";
+import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
 import RelationGraph from "../../components/RelationGraph.astro";
 import { resolve } from "node:path";
@@ -32,7 +33,7 @@ const claims = claimsForRecord(ctx.store.claims, record.id);
 const { outgoing, incoming } = relationsForRecord(ctx.store.relations, record.id);
 const allRelations = [...outgoing, ...incoming];
 const evidenceRefs = claims.flatMap((c) => c.evidence_refs);
-const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs);
+const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs, record.id);
 const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined;
 ---
 
@@ -40,6 +41,8 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
   <div class="space-y-6">
     <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
     {resolvedFrom === "alias" && <p class="rounded-lg border border-ib-amber/30 bg-ib-amber/10 px-4 py-2 text-sm text-ib-amber">Redirected from alias to current key: {currentKey}</p>}
+
+    <RecordAttributes record={record} />
 
     <section>
       <h2 class="mb-3 text-lg font-semibold text-ib-text">Claims <span class="text-sm font-normal text-ib-muted">({claims.length})</span></h2>

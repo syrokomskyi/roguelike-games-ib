@@ -55,9 +55,18 @@ export function renderEvidence(
 export function evidenceForRecord(
   evidence: PublicEvidence[],
   evidenceRefs: string[],
+  recordId?: string,
   excerptLimit: number = DEFAULT_EXCERPT_LIMIT,
 ): RenderedEvidence[] {
   const refSet = new Set(evidenceRefs);
-  const filtered = evidence.filter((e) => refSet.has(e.id));
+  const seen = new Set<string>();
+  const filtered = evidence.filter((e) => {
+    const match = refSet.has(e.id) || (recordId && e.record_id === recordId);
+    if (match && !seen.has(e.id)) {
+      seen.add(e.id);
+      return true;
+    }
+    return false;
+  });
   return renderEvidence(filtered, excerptLimit);
 }

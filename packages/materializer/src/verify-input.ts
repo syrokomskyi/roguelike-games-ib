@@ -40,9 +40,14 @@ function classifyAndStore(
     case "contradiction":
       contradictions.push(record as unknown as ContradictionRecord);
       break;
-    case "evidence":
-      evidence.push(record as unknown as EvidenceAnchor);
+    case "evidence": {
+      const evRecord = record as Record<string, unknown>;
+      const anchor = evRecord["anchor"] as Record<string, unknown> | undefined;
+      if (anchor) {
+        evidence.push({ ...anchor, id: evRecord["id"], record_id: evRecord["record_id"] } as unknown as EvidenceAnchor);
+      }
       break;
+    }
     case "coverage":
       break;
     default:

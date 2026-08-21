@@ -7,6 +7,7 @@ import { EvidenceAnchor } from "@roguelike-games-ib/knowledge-core";
  */
 export interface PublicEvidence {
   id: string;
+  record_id: string | null;
   source_id: string;
   artifact_path: string;
   artifact_sha256: string;
@@ -59,8 +60,11 @@ export function redactPublicEvidence(
         }
       }
 
+      const recordId = (ev as unknown as Record<string, unknown>)["record_id"] as string | undefined;
+
       return {
         id: evId ?? "",
+        record_id: recordId ?? null,
         source_id: ev.source_id,
         artifact_path: ev.artifact.path,
         artifact_sha256: ev.artifact.sha256,
