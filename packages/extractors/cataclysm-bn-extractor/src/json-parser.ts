@@ -163,7 +163,7 @@ export function parseItemJson(text: string, path: string): ItemEntry[] {
       price: (o.price as string) ?? "",
       volume: (o.volume as string) ?? "",
       weight: (o.weight as string) ?? "",
-      material: (o.material as string[]) ?? [],
+      material: typeof o.material === "string" ? [o.material] : (o.material as string[]) ?? [],
       flags: (o.flags as string[]) ?? [],
       path,
       lineStart,
