@@ -435,12 +435,12 @@ Gate: C11 conformance (14 tests) — all pass.
 - Mechanic matrix comparing 20 games
 - These should be migrated as candidates/hints (not canonical facts) per MIG-001 pattern
 
-**4. Compare page filtering** ✅ resolved
-- Replaced `compare.astro` (prerender=false, query params) with `compare/[...filter].astro` using `getStaticPaths()`
-- Pre-generates all type×source×page combinations as static pages
-- URL structure: `/compare/` (default) and `/compare/{type}/{source}/{page}/`
-- Commit `bfa01de`
-- **Still applies to `/games/[sourceId]/`**: uses `prerender=false` + query params (works in dev, not in static build)
+**4. Compare & games page filtering** ✅ resolved
+- `/compare/`: Replaced `compare.astro` with `compare/[...filter].astro` using `getStaticPaths()` (commit `bfa01de`)
+- `/games/[sourceId]/`: Replaced `index.astro` with `[...filter].astro` using `getStaticPaths()` for type×page combos (commit `5502f5b`)
+- `/games/[sourceId]/mechanics/`, `systems/`, `definitions/[kind]/`: Converted from `prerender=false` to `getStaticPaths()` (commit `5502f5b`)
+- All pages now fully static — no query params, no SSR adapter needed
+- URL structure: `/compare/{type}/{source}/{page}/` and `/games/{sourceId}/{type}/{page}/`
 
 **5. Design Explorer enrichment**
 - Currently shows 6 cross-game concepts and 0 design primitives/relations
