@@ -2,7 +2,7 @@
 
 **Date**: 2026-08-21
 **Session**: Stage 12 (NetHack extractor) + UI/UX redesign + Semantic records for Cataclysm-BN & NetHack + Coverage dimensions + Extractor coverage improvements
-**Status**: 365 of 378 tests pass (67 test files; 13 pre-existing failures in web/mcp/mat/obs suites unrelated to extractors). Dev server running at `localhost:4321`.
+**Status**: 365 of 378 tests pass (67 test files; 13 pre-existing failures in web/mcp/mat/obs suites unrelated to extractors). Canonical knowledge base re-materialized. Dev server at `localhost:4321`.
 
 ## What was done
 
@@ -371,14 +371,10 @@ Complete visual overhaul of the Astro web app using TailwindCSS with a dark them
 
 ### Current dataset totals
 
-- **9004** records (7395 Cataclysm-BN game_definition + 597 BrogueCE game_definition + 834 NetHack game_definition + 12 BrogueCE semantic + 6 Cataclysm-BN semantic + 6 NetHack semantic + 2 BrogueCE concept + 2 Cataclysm-BN concept + 2 NetHack concept + 150 evidence)
-- **Note**: NetHack item count increased from 12 to 458 after parser fix; canonical knowledge base needs re-materialization to reflect updated counts
-- **6** claims
-- **3** relations
-- **6** concepts
-- **3** coverage records
-- **20861** evidence entries
+- **8572** materialized records (7395 Cataclysm-BN game_definition + 597 BrogueCE game_definition + 834 NetHack game_definition + 12 BrogueCE semantic + 6 Cataclysm-BN semantic + 6 NetHack semantic + 2 BrogueCE concept + 2 Cataclysm-BN concept + 2 NetHack concept + 6 claims + 3 relations + 3 coverage)
+- **22044** evidence entries
 - **3** sources (broguece, cataclysm-bn, nethack)
+- Canonical hash: `7234f83f...`, logical dump hash: `88584e0f...`
 
 - **COV-001..005**: 20 coverage engine tests (`tests/cover/cover-001-005.test.ts`)
 - **FORGE-006**: 7 release evidence tests (`tests/forge/forge-006.test.ts`)
@@ -424,37 +420,27 @@ Gate: C11 conformance (14 tests) — all pass.
 
 ### Remaining work
 
-**1. Re-materialize canonical knowledge base** (high priority)
-- NetHack and BrogueCE extractors now produce significantly more items (NetHack: 458 vs 12; BrogueCE: 46 vs 6)
-- Need to re-run extractor scripts and re-materialize to update canonical records and coverage dimensions:
-  ```bash
-  pnpm exec tsx scripts/run-stage9.ts          # re-run BrogueCE extraction
-  pnpm exec tsx scripts/run-stage12-nethack.ts  # re-run NetHack extraction
-  pnpm exec tsx scripts/run-stage-coverage.ts   # re-compute coverage
-  pnpm exec tsx scripts/run-materialize.ts      # re-materialize
-  ```
-
-**2. Cataclysm-BN JSON parser improvement** (medium priority)
+**1. Cataclysm-BN JSON parser improvement** (medium priority)
 - Handle non-array JSON, missing fields, boulder/statue/venom items
-- Currently 5886/5886 items extracted but some edge cases may exist
+- Currently 5838/5886 items extracted (48 missing)
 
-**3. Remaining game sources** (17 of 20)
+**2. Remaining game sources** (17 of 20)
 - Next candidates: Crawl, Angband, DRL (all have source bundles in `../roguelike-games-ib-source/`)
 - Pattern: register source → build extractor → run extractor → create semantic records → coverage → materialize
 - All extractors MUST live under `packages/extractors/` per AGENTS.md convention
 
-**4. v1 human curation migration** (Stage 13)
+**3. v1 human curation migration** (Stage 13)
 - `notes/` directory in `/home/syrokomskyi/projects/roguelike-games` contains 22 cross-game analysis files
 - Per-game TAKEAWAYS, GAME_CARD.yaml, COVERAGE.md
 - Mechanic matrix comparing 20 games
 - These should be migrated as candidates/hints (not canonical facts) per MIG-001 pattern
 
-**5. Compare page query param filtering** (known limitation)
+**4. Compare page query param filtering** (known limitation)
 - Astro static mode doesn't process URL query params at build time
 - Type/source filter links on `/compare/` and `/games/[sourceId]/` don't filter in dev mode
 - Fix options: (a) add client-side JS filtering, (b) switch to hybrid mode with SSR adapter (e.g. `@astrojs/node`), (c) generate pre-built pages per type/source combination
 
-**6. Design Explorer enrichment**
+**5. Design Explorer enrichment**
 - Currently shows 6 cross-game concepts and 0 design primitives/relations
 - Could add design primitives from BrogueCE semantic records (e.g. fire spread algorithm, gas propagation)
 - Could add cross-game relations between concepts (e.g. BrogueCE runic ↔ NetHack artifact)
