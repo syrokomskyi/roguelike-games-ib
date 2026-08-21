@@ -4,18 +4,15 @@ export const prerender = true;
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
 
-const q = Astro.url.searchParams.get("q") ?? "";
-const activeSource = Astro.url.searchParams.get("source") ?? "all";
-const activeType = Astro.url.searchParams.get("type") ?? "all";
 ---
 
 <Base title="Search" activeNav="search">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Search</h1>
 
-    <SearchBox placeholder={q || "Search records..."} source={activeSource !== "all" ? activeSource : undefined} recordType={activeType !== "all" ? activeType : undefined} />
+    <SearchBox />
 
-    <div id="search-results" data-query={q} data-source={activeSource} data-type={activeType}>
+    <div id="search-results">
       <div id="search-status" class="text-sm text-ib-muted">Enter a search query to find records.</div>
     </div>
   </div>
@@ -42,14 +39,19 @@ const activeType = Astro.url.searchParams.get("type") ?? "all";
       mode: string;
     }
 
+    const DISPLAY_LIMIT = 25;
+
     function initSearch() {
       const container = document.getElementById("search-results");
       if (!container) return;
 
-      const query = container.dataset.query ?? "";
-      const source = container.dataset.source ?? "all";
-      const type = container.dataset.type ?? "all";
+      const pageParams = new URLSearchParams(window.location.search);
+      const query = pageParams.get("q") ?? "";
+      const source = pageParams.get("source") ?? "all";
+      const type = pageParams.get("type") ?? "all";
       const status = document.getElementById("search-status");
+      const searchInput = document.querySelector<HTMLInputElement>('input[name="q"]');
+      if (searchInput) searchInput.value = query;
 
       if (!query.trim()) {
         if (status) status.textContent = "Enter a search query to find records by title, summary, or key.";
@@ -74,9 +76,9 @@ const activeType = Astro.url.searchParams.get("type") ?? "all";
         .then((data) => {
           renderResults(container, data, query, source, type);
         })
-        .catch((err) => {
+        .catch(() => {
           if (status) {
-            status.innerHTML = `<p class="text-sm text-ib-muted">Search temporarily unavailable. ${err.message}</p>`;
+            status.textContent = "Search temporarily unavailable. Please try again shortly.";
           }
         });
     }
@@ -135,7 +137,7 @@ const activeType = Astro.url.searchParams.get("type") ?? "all";
       }
 
       html += `<div class="space-y-3">`;
-      for (const hit of hits.slice(0, 25)) {
+      for (const hit of hits.slice(0, DISPLAY_LIMIT)) {
         html += `
           <a href="/records/${encodeURIComponent(hit.key)}/" class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="flex items-center gap-2">
@@ -154,8 +156,8 @@ const activeType = Astro.url.searchParams.get("type") ?? "all";
       }
       html += `</div>`;
 
-      if (total > 25) {
-        html += `<p class="text-center text-sm text-ib-muted">Showing 25 of ${total} results. Refine your query for more specific results.</p>`;
+      if (total > DISPLAY_LIMIT) {
+        html += `<p class="text-center text-sm text-ib-muted">Showing ${DISPLAY_LIMIT} of ${total} results. Refine your query for more specific results.</p>`;
       }
 
       container.innerHTML = html;

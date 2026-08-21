@@ -147,3 +147,14 @@ export function getStats(store: ProjectionStore) {
     }).length,
   };
 }
+
+export function countRecordsBySource(store: ProjectionStore): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const r of store.records) {
+    const ra = r as Record<string, unknown>;
+    const si = ra["source_identity"] as Record<string, unknown> | undefined;
+    const sid = si?.["source_id"] as string | undefined;
+    if (sid) map.set(sid, (map.get(sid) ?? 0) + 1);
+  }
+  return map;
+}

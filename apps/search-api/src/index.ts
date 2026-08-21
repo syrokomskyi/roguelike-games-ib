@@ -1,237 +1,341 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Cloudflare Worker entry point — routes requests to search, design-search, index, and health endpoints. Uses Workers AI for embeddings and Vectorize for vector storage.</purpose>
+<non-goals>
+  <item>Does not implement the web UI — only the API.</item>
+  <item>Does not manage Vectorize index lifecycle (creation, deletion).</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: search, design-search, index, and health endpoints with CORS and token auth.</item>
+</CHANGE_SUMMARY>
+*/
 import type {
-  Env,
-  SearchApiResponse,
-  SearchApiHit,
-  DesignSearchApiResponse,
   DesignConceptHit,
+  DesignSearchApiResponse,
+  Env,
+  IndexRecord,
   IndexRequest,
   IndexResponse,
-  IndexRecord,
+  SearchApiHit,
+  SearchApiResponse,
   VectorMetadata,
 } from "./types.ts";
 
-const EMBEDDING_MODEL = "@cf/baai/bge-base-en-v1.5";
 const BATCH_SIZE = 100;
+const MAX_QUERY_LENGTH = 1_000;
+const MAX_RESULTS = 50;
+const MAX_METADATA_TEXT_LENGTH = 2_000;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    const path = url.pathname;
-
-    const corsHeaders = buildCorsHeaders(env);
+    const corsHeaders = buildCorsHeaders(request, env);
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
+      return corsHeaders
+        ? new Response(null, { status: 204, headers: corsHeaders })
+        : new Response("Origin is not allowed", { status: 403 });
     }
 
     try {
-      if (path === "/api/search" && request.method === "GET") {
-        return handleSearch(request, url, env, corsHeaders);
+      if (url.pathname === "/api/search" && request.method === "GET") {
+        return handleSearch(url, env, corsHeaders);
       }
 
-      if (path === "/api/design-search" && request.method === "GET") {
-        return handleDesignSearch(request, url, env, corsHeaders);
+      if (url.pathname === "/api/design-search" && request.method === "GET") {
+        return handleDesignSearch(url, env, corsHeaders);
       }
 
-      if (path === "/api/index" && request.method === "POST") {
+      if (url.pathname === "/api/index" && request.method === "POST") {
         return handleIndex(request, env, corsHeaders);
       }
 
-      if (path === "/api/health" && request.method === "GET") {
-        return jsonResponse({ status: "ok", model: EMBEDDING_MODEL }, corsHeaders);
+      if (url.pathname === "/api/health" && request.method === "GET") {
+        return jsonResponse({ status: "ok", model: env.EMBEDDING_MODEL }, corsHeaders);
       }
 
-      return new Response("Not found", { status: 404, headers: corsHeaders });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return jsonResponse({ error: msg }, corsHeaders, 500);
+      return new Response("Not found", { status: 404, headers: corsHeaders ?? undefined });
+    } catch (error) {
+      console.error("search-api request failed", error);
+      return jsonResponse({ error: "Search service is temporarily unavailable." }, corsHeaders, 500);
     }
   },
 } satisfies ExportedHandler<Env>;
 
 async function handleSearch(
-  _request: Request,
   url: URL,
   env: Env,
-  corsHeaders: HeadersInit,
+  corsHeaders: HeadersInit | undefined,
 ): Promise<Response> {
-  const q = url.searchParams.get("q") ?? "";
-  if (!q.trim()) {
-    return jsonResponse({ hits: [], total: 0, query: q, mode: "semantic" } as SearchApiResponse, corsHeaders);
-  }
+  const q = requireQuery(url, corsHeaders);
+  if (q instanceof Response) return q;
 
-  const sourceFilter = url.searchParams.get("source");
-  const typeFilter = url.searchParams.get("type");
-  const limit = Math.min(Number(url.searchParams.get("limit") ?? "50"), 200);
-
+  const sourceId = normalizeFilter(url.searchParams.get("source"));
+  const recordType = normalizeFilter(url.searchParams.get("type"));
+  const limit = parseLimit(url.searchParams.get("limit"));
   const queryEmbedding = await embedTexts(env, [q]);
+
   if (queryEmbedding.length === 0) {
-    return jsonResponse({ hits: [], total: 0, query: q, mode: "semantic" } as SearchApiResponse, corsHeaders);
+    return jsonResponse(emptySearch(q), corsHeaders);
   }
 
+  const filter: Record<string, string> = {};
+  if (sourceId) filter.source_id = sourceId;
+  if (recordType) filter.record_type = recordType;
   const vectorMatches = await env.VECTOR_INDEX.query(queryEmbedding[0], {
     topK: limit,
     returnMetadata: "all",
+    ...(Object.keys(filter).length > 0 ? { filter } : {}),
   });
+  const hits = (vectorMatches.matches ?? []).map(toSearchHit);
 
-  let hits: SearchApiHit[] = (vectorMatches.matches ?? []).map((match) => {
-    const meta = (match.metadata ?? {}) as VectorMetadata;
-    return {
-      key: meta.key ?? "",
-      record_type: meta.record_type ?? "",
-      source_id: meta.source_id ?? "",
-      title: meta.title ?? "",
-      summary: meta.summary ?? "",
-      score: match.score,
-      concept_type: meta.concept_type,
-      source_games: meta.source_games,
-      mutation_dimensions: meta.mutation_dimensions,
-    };
-  });
-
-  if (sourceFilter && sourceFilter !== "all") {
-    hits = hits.filter((h) => h.source_id === sourceFilter);
-  }
-  if (typeFilter && typeFilter !== "all") {
-    hits = hits.filter((h) => h.record_type === typeFilter);
-  }
-
-  return jsonResponse({
-    hits,
-    total: hits.length,
-    query: q,
-    mode: "semantic",
-  } as SearchApiResponse, corsHeaders);
+  return jsonResponse({ hits, total: hits.length, query: q, mode: "semantic" } satisfies SearchApiResponse, corsHeaders);
 }
 
 async function handleDesignSearch(
-  _request: Request,
   url: URL,
   env: Env,
-  corsHeaders: HeadersInit,
+  corsHeaders: HeadersInit | undefined,
 ): Promise<Response> {
-  const q = url.searchParams.get("q") ?? "";
-  if (!q.trim()) {
-    return jsonResponse({ concepts: [], relations: [], query: q } as DesignSearchApiResponse, corsHeaders);
-  }
+  const q = requireQuery(url, corsHeaders);
+  if (q instanceof Response) return q;
 
   const queryEmbedding = await embedTexts(env, [q]);
   if (queryEmbedding.length === 0) {
-    return jsonResponse({ concepts: [], relations: [], query: q } as DesignSearchApiResponse, corsHeaders);
+    return jsonResponse({ concepts: [], relations: [], query: q } satisfies DesignSearchApiResponse, corsHeaders);
   }
 
   const vectorMatches = await env.VECTOR_INDEX.query(queryEmbedding[0], {
     topK: 20,
     returnMetadata: "all",
+    filter: { record_type: "concept" },
+  });
+  const concepts: DesignConceptHit[] = (vectorMatches.matches ?? []).map((match) => {
+    const metadata = toMetadata(match.metadata);
+    return {
+      key: metadata.key,
+      title: metadata.title || metadata.key,
+      definition: metadata.summary,
+      concept_type: metadata.concept_type ?? "concept",
+      source_games: deserializeList(metadata.source_games),
+      mutation_dimensions: deserializeList(metadata.mutation_dimensions),
+      score: match.score,
+    };
   });
 
-  const conceptHits: DesignConceptHit[] = [];
-
-  for (const match of vectorMatches.matches ?? []) {
-    const meta = (match.metadata ?? {}) as VectorMetadata;
-    if (meta.record_type === "concept") {
-      conceptHits.push({
-        key: meta.key ?? "",
-        title: meta.title ?? meta.key ?? "",
-        definition: meta.summary ?? "",
-        concept_type: meta.concept_type ?? "concept",
-        source_games: meta.source_games ?? [],
-        mutation_dimensions: meta.mutation_dimensions ?? [],
-        score: match.score,
-      });
-    }
-  }
-
-  conceptHits.sort((a, b) => b.score - a.score);
-
-  return jsonResponse({
-    concepts: conceptHits,
-    relations: [],
-    query: q,
-  } as DesignSearchApiResponse, corsHeaders);
+  return jsonResponse({ concepts, relations: [], query: q } satisfies DesignSearchApiResponse, corsHeaders);
 }
 
 async function handleIndex(
   request: Request,
   env: Env,
-  corsHeaders: HeadersInit,
+  corsHeaders: HeadersInit | undefined,
 ): Promise<Response> {
-  const body = (await request.json()) as IndexRequest;
-  if (!body.records || !Array.isArray(body.records)) {
-    return jsonResponse({ error: "records array required" }, corsHeaders, 400);
+  if (!isAuthorized(request, env)) {
+    return jsonResponse({ error: "Unauthorized" }, corsHeaders, 401);
+  }
+
+  let body: IndexRequest;
+  try {
+    body = (await request.json()) as IndexRequest;
+  } catch {
+    return jsonResponse({ error: "JSON body required" }, corsHeaders, 400);
+  }
+  if (!Array.isArray(body.records) || body.records.length === 0 || body.records.length > 1_000) {
+    return jsonResponse({ error: "records must contain 1 to 1000 entries" }, corsHeaders, 400);
+  }
+
+  const records = body.records.map(normalizeIndexRecord);
+  const invalidRecord = records.find((record) => !record);
+  if (invalidRecord) {
+    return jsonResponse({ error: "Each record requires a valid vector_id, canonical_id, key, and record_type" }, corsHeaders, 400);
   }
 
   const errors: string[] = [];
   let indexed = 0;
-
-  for (let i = 0; i < body.records.length; i += BATCH_SIZE) {
-    const batch = body.records.slice(i, i + BATCH_SIZE);
+  for (let offset = 0; offset < records.length; offset += BATCH_SIZE) {
+    const batch = records.slice(offset, offset + BATCH_SIZE) as IndexRecord[];
     try {
-      const texts = batch.map((r) => buildEmbeddingText(r));
-      const embeddings = await embedTexts(env, texts);
-
+      const embeddings = await embedTexts(env, batch.map(buildEmbeddingText));
       if (embeddings.length !== batch.length) {
-        errors.push(`Batch ${i / BATCH_SIZE}: embedding count mismatch (${embeddings.length} vs ${batch.length})`);
+        errors.push(`Batch ${offset / BATCH_SIZE + 1}: embedding count mismatch`);
         continue;
       }
-
-      const vectors = batch.map((record, j) => ({
-        id: record.id,
-        values: embeddings[j],
-        metadata: {
-          key: record.key,
-          record_type: record.record_type,
-          source_id: record.source_id,
-          title: record.title,
-          summary: record.summary,
-          concept_type: record.concept_type ?? null,
-          source_games: record.source_games ?? null,
-          mutation_dimensions: record.mutation_dimensions ?? null,
-        } as VectorMetadata,
-      }));
-
-      await env.VECTOR_INDEX.upsert(vectors);
+      await env.VECTOR_INDEX.upsert(batch.map((record, index) => ({
+        id: record.vector_id,
+        values: embeddings[index],
+        metadata: toVectorMetadata(record),
+      })));
       indexed += batch.length;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`Batch ${i / BATCH_SIZE}: ${msg}`);
+    } catch (error) {
+      console.error("indexing batch failed", error);
+      errors.push(`Batch ${offset / BATCH_SIZE + 1}: could not be indexed`);
     }
   }
 
-  return jsonResponse({ indexed, errors } as IndexResponse, corsHeaders);
+  return jsonResponse({ indexed, errors } satisfies IndexResponse, corsHeaders);
 }
 
 async function embedTexts(env: Env, texts: string[]): Promise<Float32Array[]> {
-  const result = await env.AI.run(EMBEDDING_MODEL as never, { text: texts });
-  const data = result as { data?: number[][]; shape?: number[] };
-  if (data.data && Array.isArray(data.data)) {
-    return data.data.map((arr) => new Float32Array(arr));
+  const result = await env.AI.run(env.EMBEDDING_MODEL as never, { text: texts });
+  const data = result as { data?: number[][] };
+  return Array.isArray(data.data) ? data.data.map((values) => new Float32Array(values)) : [];
+}
+
+function requireQuery(url: URL, corsHeaders: HeadersInit | undefined): string | Response {
+  const query = (url.searchParams.get("q") ?? "").trim();
+  if (!query) return jsonResponse(emptySearch(""), corsHeaders);
+  if (query.length > MAX_QUERY_LENGTH) {
+    return jsonResponse({ error: `q must be at most ${MAX_QUERY_LENGTH} characters` }, corsHeaders, 400);
   }
-  return [];
+  return query;
+}
+
+function emptySearch(query: string): SearchApiResponse {
+  return { hits: [], total: 0, query, mode: "semantic" };
+}
+
+function normalizeFilter(value: string | null): string | undefined {
+  const normalized = value?.trim();
+  return normalized && normalized !== "all" ? normalized.slice(0, 160) : undefined;
+}
+
+function parseLimit(value: string | null): number {
+  const parsed = Number.parseInt(value ?? "20", 10);
+  return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), MAX_RESULTS) : 20;
+}
+
+function toSearchHit(match: { score: number; metadata?: unknown }): SearchApiHit {
+  const metadata = toMetadata(match.metadata);
+  return {
+    key: metadata.key,
+    record_type: metadata.record_type,
+    source_id: metadata.source_id,
+    title: metadata.title,
+    summary: metadata.summary,
+    score: match.score,
+    concept_type: metadata.concept_type,
+    source_games: deserializeList(metadata.source_games),
+    mutation_dimensions: deserializeList(metadata.mutation_dimensions),
+  };
+}
+
+function toMetadata(value: unknown): VectorMetadata {
+  const raw = (value ?? {}) as Partial<VectorMetadata>;
+  return {
+    canonical_id: raw.canonical_id ?? "",
+    key: raw.key ?? "",
+    record_type: raw.record_type ?? "",
+    source_id: raw.source_id ?? "",
+    content_language: raw.content_language ?? "en",
+    title: raw.title ?? "",
+    summary: raw.summary ?? "",
+    concept_type: raw.concept_type ?? "",
+    source_games: raw.source_games ?? "",
+    mutation_dimensions: raw.mutation_dimensions ?? "",
+  };
+}
+
+function normalizeIndexRecord(value: IndexRecord): IndexRecord | undefined {
+  if (!isVectorId(value.vector_id) || !value.canonical_id || !value.key || !value.record_type) return undefined;
+  return {
+    vector_id: value.vector_id,
+    canonical_id: truncate(value.canonical_id, 256),
+    key: truncate(value.key, 512),
+    record_type: truncate(value.record_type, 80),
+    source_id: truncate(value.source_id ?? "", 160),
+    content_language: truncate(value.content_language || "en", 32),
+    title: truncate(value.title ?? "", MAX_METADATA_TEXT_LENGTH),
+    summary: truncate(value.summary ?? "", MAX_METADATA_TEXT_LENGTH),
+    concept_type: value.concept_type ? truncate(value.concept_type, 160) : undefined,
+    source_games: normalizeStringList(value.source_games),
+    mutation_dimensions: normalizeStringList(value.mutation_dimensions),
+  };
+}
+
+function toVectorMetadata(record: IndexRecord): VectorMetadata {
+  return {
+    canonical_id: record.canonical_id,
+    key: record.key,
+    record_type: record.record_type,
+    source_id: record.source_id,
+    content_language: record.content_language,
+    title: record.title,
+    summary: record.summary,
+    concept_type: record.concept_type ?? "",
+    source_games: record.source_games?.length ? serializeList(record.source_games) : "",
+    mutation_dimensions: record.mutation_dimensions?.length ? serializeList(record.mutation_dimensions) : "",
+  };
 }
 
 function buildEmbeddingText(record: IndexRecord): string {
-  const parts = [
-    record.record_type,
-    record.key,
-    record.title,
-    record.summary,
-  ];
-  if (record.concept_type) parts.push(record.concept_type);
-  if (record.source_games?.length) parts.push(record.source_games.join(" "));
-  if (record.mutation_dimensions?.length) parts.push(record.mutation_dimensions.join(" "));
-  return parts.filter(Boolean).join(" ");
+  return [
+    `type: ${record.record_type}`,
+    `key: ${record.key}`,
+    record.title && `title: ${record.title}`,
+    record.summary && `description: ${record.summary}`,
+    record.concept_type && `concept: ${record.concept_type}`,
+    record.source_games?.length && `games: ${record.source_games.join(", ")}`,
+    record.mutation_dimensions?.length && `dimensions: ${record.mutation_dimensions.join(", ")}`,
+  ].filter(Boolean).join("\n");
 }
 
-function buildCorsHeaders(env: Env): HeadersInit {
+function isAuthorized(request: Request, env: Env): boolean {
+  const supplied = request.headers.get("Authorization");
+  const expected = env.INDEXING_TOKEN;
+  if (!expected || !supplied?.startsWith("Bearer ")) return false;
+  const candidate = supplied.slice("Bearer ".length);
+  if (candidate.length !== expected.length) return false;
+  let difference = 0;
+  for (let index = 0; index < expected.length; index += 1) difference |= candidate.charCodeAt(index) ^ expected.charCodeAt(index);
+  return difference === 0;
+}
+
+function buildCorsHeaders(request: Request, env: Env): HeadersInit | undefined {
+  const origin = request.headers.get("Origin");
+  if (!origin) return { "Content-Type": "application/json" };
+  const allowedOrigins = env.ALLOWED_ORIGINS.split(",").map((value) => value.trim()).filter(Boolean);
+  if (!allowedOrigins.includes(origin)) return undefined;
   return {
-    "Access-Control-Allow-Origin": env.CORS_ORIGIN || "*",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Vary": "Origin",
     "Content-Type": "application/json",
   };
 }
 
-function jsonResponse(data: unknown, headers: HeadersInit, status = 200): Response {
-  return new Response(JSON.stringify(data), { status, headers });
+function normalizeStringList(values: string[] | undefined): string[] | undefined {
+  if (!values?.length) return undefined;
+  return values.slice(0, 24).map((value) => truncate(String(value), 160));
+}
+
+function serializeList(values: string[]): string {
+  return JSON.stringify(values);
+}
+
+function deserializeList(value: string | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function isVectorId(value: string): boolean {
+  return /^[A-Za-z0-9_-]{1,64}$/.test(value);
+}
+
+function truncate(value: string, length: number): string {
+  return value.slice(0, length);
+}
+
+function jsonResponse(data: unknown, headers: HeadersInit | undefined, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: headers ?? { "Content-Type": "application/json" },
+  });
 }

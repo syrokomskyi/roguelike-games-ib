@@ -1,12 +1,26 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Type definitions for the search-api Cloudflare Worker — VectorMetadata, API response shapes, request/response interfaces, and Env bindings.</purpose>
+<non-goals>
+  <item>Does not define runtime logic — types only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: all shared types for the search API.</item>
+</CHANGE_SUMMARY>
+*/
 export interface VectorMetadata {
+  canonical_id: string;
   key: string;
   record_type: string;
   source_id: string;
+  content_language: string;
   title: string;
   summary: string;
-  concept_type?: string;
-  source_games?: string[];
-  mutation_dimensions?: string[];
+  concept_type: string;
+  source_games: string;
+  mutation_dimensions: string;
+  [key: string]: string | number | boolean;
 }
 
 export interface SearchApiResponse {
@@ -57,10 +71,12 @@ export interface IndexRequest {
 }
 
 export interface IndexRecord {
-  id: string;
+  vector_id: string;
+  canonical_id: string;
   key: string;
   record_type: string;
   source_id: string;
+  content_language: string;
   title: string;
   summary: string;
   concept_type?: string;
@@ -77,6 +93,6 @@ export interface Env {
   AI: Ai;
   VECTOR_INDEX: VectorizeIndex;
   EMBEDDING_MODEL: string;
-  EMBEDDING_DIMENSIONS: string;
-  CORS_ORIGIN: string;
+  ALLOWED_ORIGINS: string;
+  INDEXING_TOKEN: string;
 }

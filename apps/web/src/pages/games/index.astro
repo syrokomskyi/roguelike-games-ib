@@ -2,19 +2,19 @@
 import Base from "../../layouts/Base.astro";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
+import { countRecordsBySource } from "../../lib/page-data";
 
 const distDir = Astro.locals.distDir ?? "";
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
 const sources = ctx.store.sources;
-const recordsBySource = new Map<string, number>();
+const recordsBySource = countRecordsBySource(ctx.store);
 const typesBySource = new Map<string, Map<string, number>>();
 for (const r of ctx.store.records) {
   const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
   const sid = si?.["source_id"] as string | undefined;
   if (!sid) continue;
-  recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
   if (!typesBySource.has(sid)) typesBySource.set(sid, new Map());
   const typeMap = typesBySource.get(sid)!;
   typeMap.set(r.record_type, (typeMap.get(r.record_type) ?? 0) + 1);

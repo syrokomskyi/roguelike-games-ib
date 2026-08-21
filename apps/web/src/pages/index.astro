@@ -2,21 +2,16 @@
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
 import { createWebContext } from "../lib/context";
-import { getStats } from "../lib/page-data";
+import { getStats, countRecordsBySource } from "../lib/page-data";
 
 const distDir = Astro.locals.distDir ?? "";
 let stats = null;
 let games = [];
-const recordsBySource = new Map<string, number>();
 
 const ctx = await createWebContext(distDir);
 stats = getStats(ctx.store);
 games = ctx.store.sources;
-for (const r of ctx.store.records) {
-  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  const sid = si?.["source_id"] as string | undefined;
-  if (sid) recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
-}
+const recordsBySource = countRecordsBySource(ctx.store);
 
 const exampleQuestions = [
   "How do games create fear without sanity?",
