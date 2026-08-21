@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:materialization-manifest:2
+title: Materialization Manifest v2
+type: object
+additionalProperties: false
+required:
+  - schema
+  - dataset_id
+  - dataset_version
+  - model_version
+  - canonical_hash
+  - builder_id
+  - builder_version
+  - output_hash
+properties:
+  schema:
+    const: rgkb/materialization-manifest@2
+  dataset_id:
+    const: roguelike-games-ib
+  dataset_version:
+    type: string
+  model_version:
+    type: string
+  canonical_hash:
+    type: string
+    pattern: '^[a-f0-9]{64}$'
+  builder_id:
+    type: string
+  builder_version:
+    type: string
+  output_hash:
+    type: string
+    pattern: '^[a-f0-9]{64}$'
+  record_counts:
+    type: object
+    additionalProperties:
+      type: integer
+      minimum: 0

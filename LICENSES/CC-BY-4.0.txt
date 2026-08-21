@@ -1,0 +1,5 @@
+Creative Commons Attribution 4.0 International License
+
+Full text available at: https://creativecommons.org/licenses/by/4.0/legalcode
+
+This is the canonical dataset license for the Roguelike Games Inspiration Base.

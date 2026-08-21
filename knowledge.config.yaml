@@ -1,9 +1,20 @@
-# Knowledge operational configuration
-source:
-  rootPattern: "../<kb-id>-source"
-extractors: []
+schema: werkstatt/knowledge-config@1
+knowledge_base_id: roguelike-games-ib
+canonical_root: knowledge
+staging_root: staging
+laboratory_root: laboratory
+generated_root: .generated/knowledge
+source_root:
+  strategy: sibling_suffix
+  suffix: -source
+publication:
+  dataset_mode: open
+  dataset_license: CC-BY-4.0
 projections:
-  - name: web
-    path: apps/web
-  - name: mcp
-    path: apps/mcp
+  obsidian: true
+  web: true
+  mcp: true
+search:
+  full_text: true
+  graph: true
+  vector: true

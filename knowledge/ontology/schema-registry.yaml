@@ -1,3 +1,33 @@
-# Ontology schema registry
-# Register canonical record schemas here
-schemas: []
+schema: rgkb/schema-registry@2
+model_version: 2.0.0
+schemas:
+  - id: rgkb/knowledge-manifest@2
+    file: knowledge-manifest.schema.yaml
+  - id: rgkb/source-registry@2
+    file: source-registry.schema.yaml
+  - id: rgkb/source-bindings@2
+    file: source-binding.schema.yaml
+  - id: rgkb/source-knowledge-manifest@2
+    file: source-knowledge-manifest.schema.yaml
+  - id: rgkb/record@2
+    file: record-envelope.schema.yaml
+  - id: rgkb/game-definition@2
+    file: game-definition.schema.yaml
+  - id: rgkb/evidence@2
+    file: evidence.schema.yaml
+  - id: rgkb/claim@2
+    file: claim.schema.yaml
+  - id: rgkb/relation@2
+    file: relation.schema.yaml
+  - id: rgkb/semantic-record@2
+    file: semantic-record.schema.yaml
+  - id: rgkb/concept@2
+    file: concept.schema.yaml
+  - id: rgkb/contradiction@2
+    file: contradiction.schema.yaml
+  - id: rgkb/coverage@2
+    file: completeness.schema.yaml
+  - id: rgkb/materialization-manifest@2
+    file: materialization-manifest.schema.yaml
+  - id: werkstatt/knowledge-extractor@1
+    file: extractor-manifest.schema.yaml

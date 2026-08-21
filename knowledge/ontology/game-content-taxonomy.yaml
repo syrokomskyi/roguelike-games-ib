@@ -1,0 +1,32 @@
+schema: rgkb/game-content-taxonomy@2
+model_version: 2.0.0
+record_type: game_definition
+fallback_kind: other_definition
+categories:
+  actors:
+    kinds: [player_archetype, creature, npc, boss, summon, pet]
+  objects:
+    kinds: [item, weapon, armor, consumable, tool, artifact, projectile, resource_item, container]
+  abilities_character:
+    kinds: [spell, ability, skill, feat, trait, mutation, class, species, background]
+  simulation:
+    kinds: [effect, status_effect, damage_type, condition, resource_meter, tag_definition]
+  world:
+    kinds: [terrain, feature, door, trap, biome, branch, location, room_archetype, vault, map_template, portal]
+  society:
+    kinds: [faction, deity, shop, quest, event, reputation_definition]
+  economy:
+    kinds: [recipe, material, currency, shop_table, loot_table, spawn_table]
+  narrative_naming:
+    kinds: [dialogue_definition, lore_entry, name_fragment, name_table, achievement, message_template]
+  generation_inputs:
+    kinds: [generation_template, weighted_table, placement_rule]
+  fallback:
+    kinds: [other_definition]
+activation_states:
+  - active
+  - conditionally_active
+  - disabled
+  - test_only
+  - debug_only
+  - unknown

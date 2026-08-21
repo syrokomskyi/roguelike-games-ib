@@ -5,6 +5,11 @@ dist/
 .cache/
 operator-profile.md
 
+# Secrets and environment
+.env
+.env.*
+!.env.example
+
 # forge-agent-memory
 .agents/memory/daily/
 # /forge-agent-memory

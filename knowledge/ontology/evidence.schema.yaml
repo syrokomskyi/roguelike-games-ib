@@ -1,0 +1,71 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:evidence:2
+title: Evidence Record v2
+allOf:
+  - $ref: urn:rgkb:schema:record:2
+  - type: object
+    required:
+      - source_id
+      - source_binding_digest
+      - artifact
+      - locator
+      - publication
+    properties:
+      schema:
+        const: rgkb/evidence@2
+      record_type:
+        const: evidence
+      source_id:
+        type: string
+      source_binding_digest:
+        type: string
+        pattern: '^[a-f0-9]{64}$'
+      evidence_kind:
+        enum: [source_code, data, test, documentation, configuration, asset, other]
+      artifact:
+        type: object
+        additionalProperties: false
+        required: [path, sha256]
+        properties:
+          path:
+            type: string
+            minLength: 1
+          sha256:
+            type: string
+            pattern: '^[a-f0-9]{64}$'
+      locator:
+        type: object
+        additionalProperties: false
+        properties:
+          symbol:
+            type: [string, 'null']
+          line_start:
+            type: [integer, 'null']
+            minimum: 1
+          line_end:
+            type: [integer, 'null']
+            minimum: 1
+          byte_start:
+            type: [integer, 'null']
+            minimum: 0
+          byte_end:
+            type: [integer, 'null']
+            minimum: 0
+          data_key:
+            type: [string, 'null']
+      fragment_hash:
+        type: [string, 'null']
+        pattern: '^[a-f0-9]{64}$'
+      publication:
+        type: object
+        additionalProperties: false
+        required: [access, expose_locator, excerpt_policy]
+        properties:
+          access:
+            enum: [public, restricted, private]
+          expose_locator:
+            type: boolean
+          excerpt_policy:
+            enum: [none, short, source_policy]
+          license_ref:
+            type: [string, 'null']

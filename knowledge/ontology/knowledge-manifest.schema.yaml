@@ -1,0 +1,66 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:knowledge-manifest:2
+title: Roguelike Games IB Knowledge Manifest v2
+type: object
+additionalProperties: false
+required:
+  - schema
+  - id
+  - model_version
+  - dataset_version
+  - canonical_language
+  - source_root
+  - publication
+properties:
+  schema:
+    const: rgkb/knowledge-manifest@2
+  id:
+    type: string
+    const: roguelike-games-ib
+  model_version:
+    type: string
+    pattern: '^2\.[0-9]+\.[0-9]+$'
+  dataset_version:
+    type: string
+    minLength: 1
+  canonical_language:
+    const: en
+  source_root:
+    type: object
+    additionalProperties: false
+    required: [strategy, suffix]
+    properties:
+      strategy:
+        const: sibling_suffix
+      suffix:
+        const: '-source'
+  authority:
+    type: object
+    additionalProperties: false
+    properties:
+      canonical_root:
+        const: knowledge
+      staging_root:
+        const: staging
+      laboratory_root:
+        const: laboratory
+  publication:
+    type: object
+    additionalProperties: false
+    required: [dataset_mode, dataset_license]
+    properties:
+      dataset_mode:
+        enum: [open, private, mixed]
+      dataset_license:
+        type: string
+        minLength: 1
+      canonical_language_only:
+        type: boolean
+  decision_policy:
+    type: object
+    additionalProperties: false
+    properties:
+      ontology_change:
+        const: rfc
+      cross_game_concept:
+        enum: [adr, rfc_if_semantic]

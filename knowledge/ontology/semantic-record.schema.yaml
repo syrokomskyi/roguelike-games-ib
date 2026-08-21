@@ -1,0 +1,56 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:semantic-record:2
+title: Curated Semantic Record v2
+allOf:
+  - $ref: urn:rgkb:schema:record:2
+  - type: object
+    required:
+      - semantic_type
+      - title
+      - summary
+      - claim_refs
+      - evidence_refs
+      - participant_refs
+      - body
+    properties:
+      schema:
+        const: rgkb/semantic-record@2
+      record_type:
+        const: semantic_record
+      semantic_type:
+        enum:
+          - rule
+          - mechanic
+          - system
+          - algorithm
+          - generator
+          - interaction
+          - invariant
+          - emergent_behavior
+          - architecture_component
+          - discovery
+          - negative_space
+      title:
+        type: string
+        minLength: 1
+      summary:
+        type: string
+        minLength: 1
+      claim_refs:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+      evidence_refs:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+      participant_refs:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+      body:
+        type: object
+        additionalProperties: true

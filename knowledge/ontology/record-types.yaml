@@ -1,0 +1,43 @@
+# Record type taxonomy — canonical record types
+# This file enumerates all canonical record types and their kind mappings.
+record_types:
+  game_definition:
+    schema: rgkb/game-definition@2
+    taxonomy: game-content-taxonomy.yaml
+  evidence:
+    schema: rgkb/evidence@2
+  claim:
+    schema: rgkb/claim@2
+  relation:
+    schema: rgkb/relation@2
+  semantic_record:
+    schema: rgkb/semantic-record@2
+    semantic_types:
+      - rule
+      - mechanic
+      - system
+      - algorithm
+      - generator
+      - interaction
+      - invariant
+      - emergent_behavior
+      - architecture_component
+      - discovery
+      - negative_space
+  concept:
+    schema: rgkb/concept@2
+    concept_types:
+      - cross_game_mechanic
+      - design_primitive
+      - design_pressure
+      - player_sensation
+      - design_tension
+      - design_knob
+      - mutation_vector
+      - counterplay_pattern
+      - failure_mode
+      - negative_space
+      - emergent_pattern
+      - synergy_pattern
+  contradiction:
+    schema: rgkb/contradiction@2

@@ -1,0 +1,280 @@
+schema: rgkb/relation-ontology@2
+model_version: 2.0.0
+relations:
+- id: PART_OF
+  semantics: Source record is a structural/semantic part of target record.
+  direction: directed
+  inverse: HAS_PART
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: HAS_PART
+  semantics: Source record contains target as a structural/semantic part.
+  direction: directed
+  inverse: PART_OF
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: IMPLEMENTS
+  semantics: Source implementation/system concretely implements target mechanic/rule/concept.
+  direction: directed
+  evidence_required: true
+  domain:
+  - semantic_record
+  - architecture_component
+  range:
+  - semantic_record
+  - concept
+- id: USES
+  semantics: Source depends on or invokes target as part of its behavior without implying ownership.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: REQUIRES
+  semantics: Source cannot operate/occur under the asserted context without target/precondition.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: TRIGGERS
+  semantics: Source event/state causally initiates target behavior/effect under qualifiers.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: APPLIES_EFFECT
+  semantics: Source applies target effect/status to a qualified target.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+- id: CONSUMES
+  semantics: Source consumes target resource/object/state quantity.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+- id: PRODUCES
+  semantics: Source produces target object/state/resource.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+- id: SPAWNS
+  semantics: Source causes instances of target definition to be instantiated/generated.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+- id: DROPS
+  semantics: Source definition/process can yield target as drop/loot.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+- id: INHABITS
+  semantics: Source actor/definition is associated with target spatial/biome/location context.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  range:
+  - game_definition
+- id: TARGETS
+  semantics: Source action/mechanic selects or operates on target class/definition.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: MODIFIES
+  semantics: Source changes target state/property/structure.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: UNLOCKS
+  semantics: Source enables target capability/content/state transition.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: COUNTERS
+  semantics: Source provides meaningful counterplay against target behavior/effect.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: SYNERGIZES_WITH
+  semantics: Source and target interact such that combined behavior has meaningful additional leverage.
+  direction: symmetric
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: INHIBITS
+  semantics: Source reduces, prevents, or suppresses target behavior.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: TRANSFORMS_INTO
+  semantics: Source definition/state can become target definition/state under qualifiers.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - game_definition
+  - semantic_record
+- id: GENERATED_BY
+  semantics: Source content/state is generated by target generator/process.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  range:
+  - semantic_record
+- id: GOVERNED_BY
+  semantics: Source behavior is constrained/controlled by target rule/system/invariant.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - semantic_record
+- id: VARIANT_OF
+  semantics: Source is a semantically recognized variant of target within current source/design ontology.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept
+- id: MAPS_TO
+  semantics: Source local concept corresponds to target governed concept under explicit mapping semantics.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - concept
+- id: REALIZES_CONCEPT
+  semantics: Source game-local implementation is an instance/realization of target cross-game concept.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  range:
+  - concept
+- id: HAS_DESIGN_PRIMITIVE
+  semantics: Source mechanic/system embodies target governed design primitive.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - concept
+- id: CREATES_PRESSURE
+  semantics: Source mechanic/system materially creates target design pressure in play/simulation.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - concept
+- id: HAS_COUNTERPLAY
+  semantics: Source mechanic/effect has target counterplay pattern/implementation.
+  direction: directed
+  evidence_required: true
+  domain:
+  - game_definition
+  - semantic_record
+  - concept
+  range:
+  - game_definition
+  - semantic_record
+  - concept

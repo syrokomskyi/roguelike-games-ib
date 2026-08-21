@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:contradiction:2
+title: Contradiction Record v2
+allOf:
+  - $ref: urn:rgkb:schema:record:2
+  - type: object
+    required: [claim_refs, contradiction_status]
+    properties:
+      schema:
+        const: rgkb/contradiction@2
+      record_type:
+        const: contradiction
+      claim_refs:
+        type: array
+        minItems: 2
+        uniqueItems: true
+        items:
+          type: string
+          pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+      contradiction_status:
+        enum: [unresolved, resolved]
+      resolution:
+        type: [string, 'null']
+      resolution_evidence_refs:
+        type: array
+        items: {type: string}

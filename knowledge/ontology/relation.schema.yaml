@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:relation:2
+title: Typed Relation Record v2
+allOf:
+  - $ref: urn:rgkb:schema:record:2
+  - type: object
+    required:
+      - relation_type
+      - source_record_id
+      - target_record_id
+      - relation_scope
+      - evidence_refs
+      - qualifiers
+    properties:
+      schema:
+        const: rgkb/relation@2
+      record_type:
+        const: relation
+      relation_type:
+        type: string
+        pattern: '^[A-Z][A-Z0-9_]*$'
+      source_record_id:
+        type: string
+        pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+      target_record_id:
+        type: string
+        pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+      relation_scope:
+        enum: [game, cross_game, design]
+      evidence_refs:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+      qualifiers:
+        type: object
+        additionalProperties: true

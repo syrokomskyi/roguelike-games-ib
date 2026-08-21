@@ -1,0 +1,62 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:source-bindings:2
+title: Current Source Bindings v2
+type: object
+additionalProperties: false
+required: [schema, bindings]
+properties:
+  schema:
+    const: rgkb/source-bindings@2
+  bindings:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - source_id
+        - source_unit_path
+        - declared_version
+        - version_scheme
+        - metadata_origin
+        - payload_path
+        - fingerprint
+        - binding_digest
+      properties:
+        source_id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9-]*$'
+        source_unit_path:
+          type: string
+          minLength: 1
+        declared_version:
+          type: string
+          minLength: 1
+        version_scheme:
+          enum: [semver, date, git-describe, document, other]
+        metadata_origin:
+          enum: [readme, package_json, both]
+        payload_path:
+          const: source
+        fingerprint:
+          type: object
+          additionalProperties: false
+          required: [algorithm, value]
+          properties:
+            algorithm:
+              const: sha256-tree-v1
+            value:
+              type: string
+              pattern: '^[a-f0-9]{64}$'
+        vcs:
+          type: [object, 'null']
+          additionalProperties: false
+          properties:
+            repository:
+              type: [string, 'null']
+            commit:
+              type: [string, 'null']
+            clean:
+              type: [boolean, 'null']
+        binding_digest:
+          type: string
+          pattern: '^[a-f0-9]{64}$'

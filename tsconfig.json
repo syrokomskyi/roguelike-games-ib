@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@roguelike-games-ib/knowledge-core": ["./packages/knowledge-core/src/index.ts"],
+      "@roguelike-games-ib/knowledge-schemas": ["./packages/knowledge-schemas/src/index.ts"],
+      "@roguelike-games-ib/test-fixtures": ["./packages/test-fixtures/src/index.ts"]
+    }
+  },
+  "include": ["tests/**/*.ts", "packages/**/*.ts"]
+}

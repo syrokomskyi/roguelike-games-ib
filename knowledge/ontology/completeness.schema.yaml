@@ -1,0 +1,41 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:coverage:2
+title: Coverage Record v2
+type: object
+additionalProperties: false
+required: [schema, source_id, binding_digest, dimensions]
+properties:
+  schema:
+    const: rgkb/coverage@2
+  source_id:
+    type: string
+  binding_digest:
+    type: string
+    pattern: '^[a-f0-9]{64}$'
+  dimensions:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, state, basis]
+      properties:
+        id:
+          type: string
+        state:
+          enum: [not_assessed, partial, substantially_covered, exhaustive_for_binding, blocked]
+        basis:
+          type: string
+        expected:
+          type: [integer, 'null']
+          minimum: 0
+        extracted:
+          type: [integer, 'null']
+          minimum: 0
+        validated:
+          type: [integer, 'null']
+          minimum: 0
+        unresolved:
+          type: [integer, 'null']
+          minimum: 0
+        notes:
+          type: [string, 'null']

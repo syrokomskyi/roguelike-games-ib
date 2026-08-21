@@ -1,0 +1,68 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:record:2
+title: Canonical Record Envelope v2
+type: object
+required:
+  - schema
+  - id
+  - key
+  - record_type
+  - language
+  - origin
+  - aliases
+properties:
+  schema:
+    type: string
+    minLength: 1
+  id:
+    type: string
+    pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+  key:
+    type: string
+    pattern: '^[a-z0-9][a-z0-9._/-]*$'
+  record_type:
+    type: string
+    minLength: 1
+  language:
+    const: en
+  scope:
+    type: object
+    additionalProperties: false
+    properties:
+      source_id:
+        type: [string, 'null']
+        pattern: '^[a-z0-9][a-z0-9-]*$'
+      scope_kind:
+        enum: [source, cross_game, global_design, administrative]
+  origin:
+    type: object
+    additionalProperties: false
+    required: [kind, actor_id]
+    properties:
+      kind:
+        enum: [extractor, ai, human, derived]
+      actor_id:
+        type: string
+        minLength: 1
+      run_id:
+        type: [string, 'null']
+  epistemic:
+    type: object
+    additionalProperties: false
+    required: [status, confidence]
+    properties:
+      status:
+        enum: [observed, reconstructed, inferred]
+      confidence:
+        enum: [verified, strong, moderate]
+  aliases:
+    type: array
+    uniqueItems: true
+    items:
+      type: string
+  decision_refs:
+    type: array
+    uniqueItems: true
+    items:
+      type: string
+additionalProperties: true

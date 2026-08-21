@@ -10,6 +10,27 @@
     },
     "test": {
       "dependsOn": ["^build:check"]
+    },
+    "verify": {},
+    "source:status": {},
+    "materialize": {
+      "dependsOn": ["^build"]
+    },
+    "build:obsidian": {
+      "dependsOn": ["materialize"]
+    },
+    "build:web": {
+      "dependsOn": ["materialize"]
+    },
+    "build:mcp": {
+      "dependsOn": ["materialize"]
+    },
+    "coverage": {},
+    "release:check": {
+      "dependsOn": ["materialize"]
+    },
+    "release:evidence": {
+      "dependsOn": ["release:check"]
     }
   }
 }

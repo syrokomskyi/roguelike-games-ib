@@ -1,8 +1,41 @@
 {
+  "name": "roguelike-games-ib",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "pnpm exec turbo run build:check",
+    "verify": "pnpm exec turbo run verify",
+    "source:status": "pnpm exec turbo run source:status",
+    "materialize": "pnpm exec turbo run materialize",
+    "build:obsidian": "pnpm exec turbo run build:obsidian",
+    "build:web": "pnpm exec turbo run build:web",
+    "build:mcp": "pnpm exec turbo run build:mcp",
+    "build": "pnpm exec turbo run build",
+    "coverage": "pnpm exec turbo run coverage",
+    "test": "pnpm exec vitest",
+    "test:unit": "pnpm exec vitest run --project unit 2>/dev/null || pnpm exec vitest run",
+    "test:integration": "pnpm exec vitest run --project integration 2>/dev/null || echo 'no integration project'",
+    "test:conformance": "pnpm exec vitest run tests/conformance/",
+    "release:check": "pnpm exec turbo run release:check",
+    "release:evidence": "pnpm exec turbo run release:evidence"
+  },
   "devDependencies": {
     "@warpgogol/forge": "^2.9.4",
     "@warpgogol/werkstatt": "^1.3.0",
     "@warpgogol/werkstatt-knowledge": "^0.2.0",
-    "prettier": "^3.9.6"
+    "@roguelike-games-ib/knowledge-core": "workspace:*",
+    "@roguelike-games-ib/knowledge-schemas": "workspace:*",
+    "@roguelike-games-ib/test-fixtures": "workspace:*",
+    "prettier": "^3.9.6",
+    "vitest": "^3.2.4",
+    "typescript": "^5.8.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.7.0",
+    "better-sqlite3": "^12.2.0",
+    "@types/better-sqlite3": "^7.6.13"
   }
 }

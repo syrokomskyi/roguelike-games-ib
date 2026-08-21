@@ -1,0 +1,55 @@
+schema: rgkb/design-space-ontology@2
+model_version: 2.0.0
+concept_types:
+  design_primitive:
+    description: Minimal portable structural mechanism abstracted from one or more implementations.
+    governed_cross_game: true
+  design_pressure:
+    description: Design problem or force a mechanic/system responds to.
+    governed_cross_game: true
+  player_sensation:
+    description: Intended or reconstructed player-facing sensation; game mappings are interpretive.
+    governed_cross_game: true
+  design_tension:
+    description: Competing forces balanced by a design.
+    governed_cross_game: true
+  design_knob:
+    description: Controllable dimension changing behavior of a primitive/system.
+    governed_cross_game: true
+  mutation_vector:
+    description: Structured transformation axis used for creative variation.
+    governed_cross_game: true
+  counterplay_pattern:
+    description: Reusable response structure available to player/system.
+    governed_cross_game: true
+  failure_mode:
+    description: Condition under which design becomes trivial, dominant, opaque, degenerate, or otherwise fails.
+    governed_cross_game: true
+  negative_space:
+    description: Meaningful omission/prohibition/absent affordance. Game-local instances use semantic records; cross-game negative-space concepts are governed.
+    governed_cross_game: true
+  emergent_pattern:
+    description: Generalized outcome caused by interaction of reusable rules.
+    governed_cross_game: true
+  synergy_pattern:
+    description: Reusable interaction with disproportionate combined design leverage.
+    governed_cross_game: true
+mutation_dimensions:
+  - sensory_modality
+  - visibility
+  - persistence
+  - reversibility
+  - topology
+  - propagation
+  - ownership
+  - timing
+  - spatial_scale
+  - agency
+  - information_precision
+  - cost_model
+  - activation
+  - target
+  - directionality
+  - decay
+  - observability
+  - coupling

@@ -1,0 +1,44 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:source-registry:2
+title: Source Registry v2
+type: object
+additionalProperties: false
+required: [schema, sources]
+properties:
+  schema:
+    const: rgkb/source-registry@2
+  sources:
+    type: array
+    uniqueItems: true
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, unit_path, domain, kind]
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9-]*$'
+        unit_path:
+          type: string
+          pattern: '^[^/\\]+$'
+        domain:
+          type: string
+          minLength: 1
+        kind:
+          enum:
+            - game_repository
+            - code_repository
+            - document_collection
+            - dataset
+            - mixed_project
+            - other
+        publication:
+          type: object
+          additionalProperties: false
+          properties:
+            access:
+              enum: [public, restricted, private]
+            evidence_locators:
+              type: boolean
+            excerpts:
+              enum: [none, short, source_policy]

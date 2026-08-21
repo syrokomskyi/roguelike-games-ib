@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:source-knowledge-manifest:2
+title: Per-source Canonical Knowledge Manifest v2
+type: object
+additionalProperties: false
+required: [schema, source_id, domain, binding_digest, canonical_language]
+properties:
+  schema:
+    const: rgkb/source-knowledge-manifest@2
+  source_id:
+    type: string
+    pattern: '^[a-z0-9][a-z0-9-]*$'
+  domain:
+    type: string
+    minLength: 1
+  binding_digest:
+    type: string
+    pattern: '^[a-f0-9]{64}$'
+  canonical_language:
+    const: en

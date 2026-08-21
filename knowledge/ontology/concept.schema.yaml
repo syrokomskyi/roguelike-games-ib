@@ -1,0 +1,54 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:rgkb:schema:concept:2
+title: Governed Cross-game / Design Concept v2
+allOf:
+  - $ref: urn:rgkb:schema:record:2
+  - type: object
+    required:
+      - concept_type
+      - title
+      - definition
+      - inclusion_criteria
+      - exclusion_criteria
+      - implementation_refs
+      - decision_refs
+    properties:
+      schema:
+        const: rgkb/concept@2
+      record_type:
+        const: concept
+      concept_type:
+        enum:
+          - cross_game_mechanic
+          - design_primitive
+          - design_pressure
+          - player_sensation
+          - design_tension
+          - design_knob
+          - mutation_vector
+          - counterplay_pattern
+          - failure_mode
+          - negative_space
+          - emergent_pattern
+          - synergy_pattern
+      title:
+        type: string
+        minLength: 1
+      definition:
+        type: string
+        minLength: 1
+      inclusion_criteria:
+        type: array
+        minItems: 1
+        items: {type: string}
+      exclusion_criteria:
+        type: array
+        items: {type: string}
+      implementation_refs:
+        type: array
+        items:
+          type: string
+          pattern: '^urn:roguelike-games-ib:record:[0-9a-fA-F-]{36}$'
+      evidence_refs:
+        type: array
+        items: {type: string}
