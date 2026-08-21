@@ -1,2 +1,10 @@
 schema: rgkb/source-registry@2
-sources: []
+sources:
+  - id: broguece
+    unit_path: BrogueCE
+    domain: roguelike
+    kind: game_repository
+    publication:
+      access: public
+      evidence_locators: true
+      excerpts: short

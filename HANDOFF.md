@@ -1,8 +1,8 @@
-# Handoff: Roguelike Inspiration Base — Stage 0–8 Complete
+# Handoff: Roguelike Inspiration Base — Stage 0–9 Complete
 
 **Date**: 2026-08-21
-**Session**: Stage 8 — Laboratory runtime (previous sessions: Stages 0–7)
-**Status**: All 261 tests pass (58 test files)
+**Session**: Stage 9 — BrogueCE real vertical slice (previous sessions: Stages 0–8)
+**Status**: All 276 tests pass (59 test files)
 
 ## What was done
 
@@ -215,15 +215,46 @@ Tests: LAB-001..007 (27 tests in 1 file) — all pass:
 
 Gate: LAB-001..007 and C8 (authority boundary).
 
-## What the next agent should do
-
 ### Stage 9 — BrogueCE real vertical slice
 
-Register current BrogueCE source unit. Build deterministic factual extractors. Reconstruct representative evidence-backed semantic slice. Build all projections.
+Registered BrogueCE as a source unit. Built deterministic factual extractors parsing C source code. Reconstructed evidence-backed semantic slice. Promoted 692 records to canonical via transaction.
 
-Required demonstration: exhaustive factual dimensions for creatures/items/terrain; ≥10 semantic records across mechanic/system/interaction/algorithm/generator/invariant/emergence; claim-level evidence; one cross-game-ready concept candidate; one Creator design primitive derived with ancestry.
+**Source registration**:
+- Source bundle at `../roguelike-games-ib-source/BrogueCE/` with `package.json` (`werkstattSource` schema, id `broguece`, version `1.15.1`)
+- Registered in `knowledge/sources/registry.yaml` and `bindings.yaml` with `sha256-tree-v1` fingerprint `42215a96...` and binding digest `5fb1793f...`
 
-Gate: C9 plus zero release-blocking diagnostics for BrogueCE binding.
+**Extractor (`packages/broguece-extractor`)**:
+- `c-parser.ts` — Parses C source: `enum` definitions, `monsterCatalog` array, `tileCatalog` array, `itemTable` arrays (weapon/armor/food/key/staff/ring)
+- `extractor.ts` — Deterministic extractor (`broguece-factual` v1.0.0) producing 327 `game_definition` records:
+  - 67 creatures (maxHP, defense, accuracy, damage, regen, speed, flags, abilities)
+  - 214 terrain tiles (draw priority, flags, mech flags, descriptions, flavor text)
+  - 46 items (frequency, market value, strength, power, damage range, description)
+- Verified deterministic: double-run hash `092e0e23...` matches
+
+**Semantic records (12)** across mechanic/system/algorithm/invariant/emergence:
+- Monster progression, terrain tile system, item identification, fire spread algorithm, stealth/sneak attack, gas propagation, monster ability flags, weapon runic enchantments, dungeon layering invariant, emergent trap interactions, staff magic bolts, ring buff/debuff curses
+
+**Claims (3)**: rat max HP, lava insta-death flag, dagger sneak attack — all with evidence refs
+
+**Relations (2)**: goblin warlord summons (has_ability), fire spreads to flammable (interacts_with)
+
+**Concepts (2)**:
+- Design primitive: "Layered Terrain Promotion" with ancestry (source_games, derived_from, mutation_dimensions)
+- Cross-game concept: "Runic Weapon Enchantments" with inclusion/exclusion criteria
+
+**Runner script**: `scripts/run-stage9.ts` — runs extractor → staging → creates semantic records → promotes all to canonical via `applyPromotionTransaction`
+
+**Test**: `tests/mig/mig-003.test.ts` — 15 C9 conformance tests, all pass
+
+Gate: C9 conformance (15 tests) — all pass. Zero release-blocking diagnostics.
+
+## What the next agent should do
+
+### Stage 9 — ✅ Complete
+
+Stage 9 (BrogueCE vertical slice) is complete. All 15 C9 conformance tests pass. 692 canonical records promoted (327 game_definition + 12 semantic_record + 346 evidence + 3 claim + 2 relation + 2 concept). See Stage 9 section above for details.
+
+**Note**: The runner script `scripts/run-stage9.ts` is re-runnable. It will replace existing canonical records via transaction. The temporary test scripts `scripts/test-extractor.ts` and `scripts/test-determinism.ts` can be deleted.
 
 ### Stage 10 — Cataclysm-BN scale trial
 
@@ -253,7 +284,7 @@ Migration tests (MIG-001..005) are gated on Stages 9–10. See `08-migration/V1-
 
 ## Verification commands
 ```bash
-pnpm exec vitest run                    # all tests (261 tests, 58 files)
+pnpm exec vitest run                    # all tests (276 tests, 59 files)
 pnpm exec tsc --noEmit -p packages/knowledge-core/tsconfig.json   # typecheck core
 pnpm exec tsc --noEmit -p packages/knowledge-schemas/tsconfig.json # typecheck schemas
 pnpm exec tsc --noEmit -p packages/extractor-sdk/tsconfig.json     # typecheck extractor-sdk

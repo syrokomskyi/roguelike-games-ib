@@ -1,2 +1,16 @@
 schema: rgkb/source-bindings@2
-bindings: []
+bindings:
+  - source_id: broguece
+    source_unit_path: BrogueCE
+    declared_version: "1.15.1"
+    version_scheme: semver
+    metadata_origin: package_json
+    payload_path: source
+    fingerprint:
+      algorithm: sha256-tree-v1
+      value: 42215a96064d48187a9d05c6470136187b3b987348e263be9d9da0b0cdcc084c
+    vcs:
+      repository: "https://github.com/tmewett/BrogueCE"
+      commit: null
+      clean: null
+    binding_digest: 5fb1793f11b3fda3bee098aa6af7dda7166111cc06cffcaeeceae4fa7d1fb5b2
