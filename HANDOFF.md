@@ -511,3 +511,24 @@ cd apps/web && npx astro dev --host 0.0.0.0 --port 4321  # start dev server
 **Astro gotchas encountered**:
 - `getStaticPaths` is hoisted to separate scope — all constants (`PAGE_SIZE`, `distDir`) must be defined inside the function
 - Astro 7 expects `string` (joined with `/`), not `string[]` for rest parameter `filter`
+- HTML comments (`<!-- MODULE_CONTRACT -->`) before frontmatter (`---`) break the Astro compiler — must be placed after frontmatter or removed
+
+### Session 2026-08-21 (late 2) — Games pages pre-built + nethack extractor fix
+
+**Problem 1**: `/games/[sourceId]/` and sub-pages (mechanics, systems, definitions) used `prerender=false` + query params. Works in dev, fails in static build.
+
+**Fix** (commit `5502f5b`):
+- Replaced `games/[sourceId]/index.astro` with `games/[sourceId]/[...filter].astro` using `getStaticPaths()` for type×page combos
+- Converted `mechanics.astro`, `systems.astro`, `definitions/[kind].astro` from `prerender=false` to `getStaticPaths()`
+- URL structure: `/games/{sourceId}/` and `/games/{sourceId}/{type}/{page}/`
+- Also removed stale `MODULE_CONTRACT` HTML comment from `compare/[...filter].astro`
+- Verified: 14 URLs pass (home, compare+filters, 3 games+filters+pagination, mechanics, systems, definitions)
+
+**Problem 2**: Nethack extractor had duplicate monster entries and category-level native_ids (K-0005/K-0007).
+
+**Fix** (commit `2616b821`):
+- Added `seenIds` set to deduplicate monster entries in `parseMonsters()`
+- Fixed regex escaping in preprocessor directives (`#if`, `#ifdef`, `#endif`, etc.)
+- Derive `native_id` from object name when enum token is empty
+
+**Note**: ~110 files with `MODULE_CONTRACT` annotations remain uncommitted in working tree (pre-existing, not from this session). `staging/` directory is gitignored.
