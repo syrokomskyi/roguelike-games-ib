@@ -62,7 +62,7 @@ function filterUrl(params: Record<string, string | undefined>): string {
 }
 ---
 
-<Base title="Search" metadata={meta ?? undefined}>
+<Base title="Search" metadata={meta ?? undefined} activeNav="search">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Search</h1>
 
@@ -99,7 +99,7 @@ function filterUrl(params: Record<string, string | undefined>): string {
     {q.trim() && pageHits.length > 0 && (
       <div class="space-y-3">
         {pageHits.map((hit) => (
-          <a href={`/records/${hit.record.key}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-4 hover:border-ib-accent">
+          <a href={`/records/${hit.record.key}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="flex items-center gap-2">
               <span class="font-mono text-xs text-ib-accent">{hit.record.key}</span>
               <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{hit.record.record_type}</span>
@@ -120,11 +120,11 @@ function filterUrl(params: Record<string, string | undefined>): string {
     {q.trim() && total > PAGE_SIZE && (
       <div class="flex items-center justify-center gap-2">
         {currentPage > 1 && (
-          <a href={filterUrl({ page: String(currentPage - 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">← Prev</a>
+          <a href={filterUrl({ page: String(currentPage - 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">← Prev</a>
         )}
         <span class="text-sm text-ib-muted">Page {currentPage} of {totalPages}</span>
         {currentPage < totalPages && (
-          <a href={filterUrl({ page: String(currentPage + 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">Next →</a>
+          <a href={filterUrl({ page: String(currentPage + 1) })} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">Next →</a>
         )}
       </div>
     )}

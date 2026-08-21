@@ -7,15 +7,21 @@ import { getStats } from "../lib/page-data";
 const distDir = Astro.locals.distDir ?? "";
 let stats = null;
 let games = [];
+const recordsBySource = new Map<string, number>();
 
 const ctx = await createWebContext(distDir);
 stats = getStats(ctx.store);
 games = ctx.store.sources;
+for (const r of ctx.store.records) {
+  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+  const sid = si?.["source_id"] as string | undefined;
+  if (sid) recordsBySource.set(sid, (recordsBySource.get(sid) ?? 0) + 1);
+}
 ---
 
 <Base title="Home">
   <div class="space-y-8">
-    <section class="text-center py-8">
+    <section class="rounded-2xl border border-ib-border bg-gradient-to-br from-ib-surface to-ib-surface2 px-8 py-12 text-center">
       <h1 class="text-4xl font-bold text-ib-text">Roguelike Inspiration Base</h1>
       <p class="mt-3 text-lg text-ib-muted">Evidence-backed knowledge base of roguelike game mechanics, systems, and design patterns.</p>
     </section>
@@ -26,19 +32,19 @@ games = ctx.store.sources;
 
     {stats && (
       <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
           <div class="text-3xl font-bold text-ib-accent">{stats.records}</div>
           <div class="mt-1 text-sm text-ib-muted">Records</div>
         </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
           <div class="text-3xl font-bold text-ib-green">{stats.sources}</div>
           <div class="mt-1 text-sm text-ib-muted">Games</div>
         </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
           <div class="text-3xl font-bold text-ib-blue">{stats.mechanics + stats.systems}</div>
           <div class="mt-1 text-sm text-ib-muted">Mechanics & Systems</div>
         </div>
-        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
           <div class="text-3xl font-bold text-ib-accent2">{stats.concepts}</div>
           <div class="mt-1 text-sm text-ib-muted">Design Concepts</div>
         </div>
@@ -50,12 +56,15 @@ games = ctx.store.sources;
         <h2 class="mb-4 text-xl font-semibold text-ib-text">Games</h2>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {games.map((g) => (
-            <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+            <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition-colors hover:border-ib-accent hover:bg-ib-surface2">
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-ib-text">{g.source_id}</h3>
                 <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{g.declared_version}</span>
               </div>
-              <p class="mt-2 text-sm text-ib-muted">View definitions, mechanics, systems →</p>
+              <div class="mt-2 flex items-center gap-3 text-sm text-ib-muted">
+                <span>{recordsBySource.get(g.source_id) ?? 0} records</span>
+                <span>→</span>
+              </div>
             </a>
           ))}
         </div>
@@ -63,10 +72,10 @@ games = ctx.store.sources;
     )}
 
     <section class="flex flex-wrap gap-3 justify-center">
-      <a href="/compare/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Compare Records</a>
-      <a href="/design/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Design Explorer</a>
-      <a href="/dataset/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Dataset Info</a>
-      <a href="/about/method/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Methodology</a>
+      <a href="/compare/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Compare Records</a>
+      <a href="/design/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Design Explorer</a>
+      <a href="/dataset/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Dataset Info</a>
+      <a href="/about/method/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Methodology</a>
     </section>
   </div>
 </Base>

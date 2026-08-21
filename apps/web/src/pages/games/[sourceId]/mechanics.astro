@@ -24,7 +24,7 @@ export async function getStaticPaths() {
 const { sourceId, records, meta } = Astro.props;
 ---
 
-<Base title={`Mechanics — ${sourceId}`} metadata={meta}>
+<Base title={`Mechanics — ${sourceId}`} metadata={meta} activeNav="games">
   <div class="space-y-6">
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-bold text-ib-text">Mechanics</h1>
@@ -33,7 +33,7 @@ const { sourceId, records, meta } = Astro.props;
     {records.length > 0 ? (
       <div class="grid gap-3 sm:grid-cols-2">
         {records.map((r) => (
-          <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface p-4 hover:border-ib-accent">
+          <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="font-mono text-xs text-ib-accent">{r.key}</div>
             {r.title && <div class="mt-1 text-sm text-ib-text">{r.title}</div>}
             {r.summary && <div class="mt-1 text-xs text-ib-muted line-clamp-2">{r.summary}</div>}

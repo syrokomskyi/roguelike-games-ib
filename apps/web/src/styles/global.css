@@ -39,7 +39,6 @@ body {
 }
 
 a {
-  color: var(--color-ib-accent);
   text-decoration: none;
 }
 a:hover {

@@ -65,7 +65,7 @@ function gameUrl(sourceId: string, type: string, page: number): string {
 }
 ---
 
-<Base title={sourceId ?? "Game"} metadata={meta}>
+<Base title={sourceId ?? "Game"} metadata={meta} activeNav="games">
   <div class="space-y-6">
     {source && <SourceBindingPanel binding={source} />}
 
@@ -80,7 +80,7 @@ function gameUrl(sourceId: string, type: string, page: number): string {
       <h2 class="mb-4 text-lg font-semibold text-ib-text">Records ({filteredCount})</h2>
       <div class="grid gap-2 sm:grid-cols-2">
         {pageRecords.map((r) => (
-          <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm hover:border-ib-accent">
+          <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm transition-colors hover:border-ib-accent">
             <span class="font-mono text-xs text-ib-accent">{r.key}</span>
             <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{r.record_type}</span>
           </a>
@@ -91,11 +91,11 @@ function gameUrl(sourceId: string, type: string, page: number): string {
     {totalPages > 1 && (
       <div class="flex items-center justify-center gap-2">
         {currentPage > 1 && (
-          <a href={gameUrl(sourceId, activeType, currentPage - 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">← Prev</a>
+          <a href={gameUrl(sourceId, activeType, currentPage - 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">← Prev</a>
         )}
         <span class="text-sm text-ib-muted">Page {currentPage} of {totalPages}</span>
         {currentPage < totalPages && (
-          <a href={gameUrl(sourceId, activeType, currentPage + 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">Next →</a>
+          <a href={gameUrl(sourceId, activeType, currentPage + 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">Next →</a>
         )}
       </div>
     )}
@@ -106,8 +106,8 @@ function gameUrl(sourceId: string, type: string, page: number): string {
     </div>
 
     <div class="flex gap-4">
-      <a href={`/games/${sourceId}/mechanics/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Mechanics</a>
-      <a href={`/games/${sourceId}/systems/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text hover:border-ib-accent">Systems</a>
+      <a href={`/games/${sourceId}/mechanics/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Mechanics</a>
+      <a href={`/games/${sourceId}/systems/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Systems</a>
     </div>
   </div>
 </Base>

@@ -6,9 +6,18 @@ import "../styles/global.css";
 interface Props {
   title: string;
   metadata?: PageMetadata;
+  activeNav?: string;
 }
 
-const { title, metadata } = Astro.props;
+const { title, metadata, activeNav } = Astro.props;
+const navItems = [
+  { href: "/search", label: "Search", key: "search" },
+  { href: "/games/", label: "Games", key: "games" },
+  { href: "/compare/", label: "Compare", key: "compare" },
+  { href: "/design/", label: "Design", key: "design" },
+  { href: "/dataset/", label: "Dataset", key: "dataset" },
+  { href: "/about/method/", label: "Method", key: "method" },
+];
 ---
 
 <!DOCTYPE html>
@@ -26,20 +35,25 @@ const { title, metadata } = Astro.props;
         <span class="text-ib-accent">◈</span> Roguelike IB
       </a>
       <div class="flex items-center gap-4 text-sm">
-        <a href="/search" class="text-ib-muted hover:text-ib-text">Search</a>
-        <a href="/games/" class="text-ib-muted hover:text-ib-text">Games</a>
-        <a href="/compare/" class="text-ib-muted hover:text-ib-text">Compare</a>
-        <a href="/design/" class="text-ib-muted hover:text-ib-text">Design</a>
-        <a href="/dataset/" class="text-ib-muted hover:text-ib-text">Dataset</a>
-        <a href="/about/method/" class="text-ib-muted hover:text-ib-text">Method</a>
+        {navItems.map((item) => (
+          <a href={item.href} class={`transition-colors hover:text-ib-text ${activeNav === item.key ? "text-ib-accent font-medium" : "text-ib-muted"}`}>{item.label}</a>
+        ))}
       </div>
     </div>
   </nav>
   <main class="mx-auto max-w-7xl px-4 py-8">
     <slot />
   </main>
-  <footer class="border-t border-ib-border py-6 text-center text-sm text-ib-muted">
-    <p>Roguelike Inspiration Base — CC-BY-4.0</p>
+  <footer class="border-t border-ib-border py-6">
+    <div class="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 sm:flex-row sm:justify-between">
+      <p class="text-sm text-ib-muted">Roguelike Inspiration Base — CC-BY-4.0</p>
+      <div class="flex items-center gap-4 text-sm">
+        <a href="/games/" class="text-ib-muted transition-colors hover:text-ib-text">Games</a>
+        <a href="/search" class="text-ib-muted transition-colors hover:text-ib-text">Search</a>
+        <a href="/compare/" class="text-ib-muted transition-colors hover:text-ib-text">Compare</a>
+        <a href="/dataset/" class="text-ib-muted transition-colors hover:text-ib-text">Dataset</a>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

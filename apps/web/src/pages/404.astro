@@ -1,17 +1,11 @@
 ---
-import "../styles/global.css";
+import Base from "../layouts/Base.astro";
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>404 — Not Found</title>
-</head>
-<body class="min-h-screen bg-ib-bg flex items-center justify-center">
-  <div class="text-center">
-    <h1 class="text-4xl font-bold text-ib-text">404</h1>
-    <p class="mt-2 text-ib-muted">The requested page was not found.</p>
-    <a href="/" class="mt-4 inline-block rounded-lg bg-ib-accent px-4 py-2 text-sm font-medium text-white hover:bg-ib-accent2">Return home</a>
+
+<Base title="404">
+  <div class="flex flex-col items-center justify-center py-20 text-center">
+    <h1 class="text-6xl font-bold text-ib-accent">404</h1>
+    <p class="mt-4 text-lg text-ib-muted">The requested page was not found.</p>
+    <a href="/" class="mt-6 rounded-lg bg-ib-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ib-accent2">Return home</a>
   </div>
-</body>
-</html>
+</Base>

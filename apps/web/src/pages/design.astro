@@ -11,7 +11,7 @@ const meta = getPageMetadata(ctx);
 const { concepts, primitives, conceptCards, primitiveCards, designRelationCards, realizesCards } = buildDesignData(ctx.store);
 ---
 
-<Base title="Design Explorer" metadata={meta}>
+<Base title="Design Explorer" metadata={meta} activeNav="design">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Design Space Explorer</h1>
 
@@ -20,7 +20,7 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
       {concepts.length > 0 ? (
         <div class="grid gap-3 sm:grid-cols-2">
           {conceptCards.map((c) => (
-            <a href={`/records/${c.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
+            <a href={`/records/${c.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 transition-colors hover:border-ib-accent">
               <div class="font-semibold text-ib-text">{c.title}</div>
               {c.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.definition}</p>}
               {c.sourceGames.length > 0 && (
@@ -51,7 +51,7 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
       {primitives.length > 0 ? (
         <div class="grid gap-3 sm:grid-cols-2">
           {primitiveCards.map((p) => (
-            <a href={`/records/${p.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 hover:border-ib-accent">
+            <a href={`/records/${p.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 transition-colors hover:border-ib-accent">
               <div class="font-semibold text-ib-text">{p.title}</div>
               {p.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{p.definition}</p>}
               {p.sourceGames.length > 0 && (

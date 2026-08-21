@@ -62,7 +62,7 @@ function compareUrl(type: string, source: string, page: number): string {
 }
 ---
 
-<Base title="Compare" metadata={meta}>
+<Base title="Compare" metadata={meta} activeNav="compare">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Compare Records</h1>
     <p class="text-ib-muted">{filteredCount} of {totalCount} records</p>
@@ -89,11 +89,11 @@ function compareUrl(type: string, source: string, page: number): string {
     {totalPages > 1 && (
       <div class="flex items-center justify-center gap-2">
         {currentPage > 1 && (
-          <a href={compareUrl(activeType, activeSource, currentPage - 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">← Prev</a>
+          <a href={compareUrl(activeType, activeSource, currentPage - 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">← Prev</a>
         )}
         <span class="text-sm text-ib-muted">Page {currentPage} of {totalPages}</span>
         {currentPage < totalPages && (
-          <a href={compareUrl(activeType, activeSource, currentPage + 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted hover:text-ib-text">Next →</a>
+          <a href={compareUrl(activeType, activeSource, currentPage + 1)} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">Next →</a>
         )}
       </div>
     )}
