@@ -34,14 +34,15 @@ const sortedSources = [...sources].sort((a, b) =>
       const typeMap = typesBySource.get(s.source_id);
       const types = typeMap ? [...typeMap.entries()].sort(([a], [b]) => a.localeCompare(b)) : [];
       return (
-        <a href={`/games/${s.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+        <div class="relative rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+          <a href={`/games/${s.source_id}/`} class="absolute inset-0" aria-label={s.source_id}></a>
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold text-ib-text">{s.source_id}</h2>
             <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{s.declared_version}</span>
           </div>
           <div class="mt-3 flex items-center gap-3 text-sm text-ib-muted">
             <span>{total} records</span>
-            {s.vcs?.repository && <a href={s.vcs.repository} class="text-xs text-ib-accent hover:text-ib-accent2">repo →</a>}
+            {s.vcs?.repository && <a href={s.vcs.repository} class="relative text-xs text-ib-accent hover:text-ib-accent2">repo →</a>}
           </div>
           {types.length > 1 && (
             <div class="mt-3 flex flex-wrap gap-1.5">
@@ -50,7 +51,7 @@ const sortedSources = [...sources].sort((a, b) =>
               ))}
             </div>
           )}
-        </a>
+        </div>
       );
     })}
   </div>
