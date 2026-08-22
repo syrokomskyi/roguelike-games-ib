@@ -15,6 +15,7 @@
   <item>Replaced local makeRecordEnvelope with SDK createRecordEnvelope.</item>
   <item>Updated expected population counts: mutations 16→8, dungeon_features 58→145, lights 63→60 after parser entryPattern fixes.</item>
   <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
+  <item>ADR-0007: remapped 6 non-canonical recordKinds to canonical taxonomy kinds (image_asset→other_definition, dungeon_feature→feature, light→feature, monster_class→spawn_table, monster_behavior→trait, monster_ability→ability).</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -66,7 +67,7 @@ const manifest: ExtractorManifest = {
   extractorId: "broguece-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "terrain", "item", "image_asset", "dungeon_feature", "light", "mutation", "monster_class", "status_effect", "monster_behavior", "monster_ability"],
+  recordKinds: ["creature", "terrain", "item", "other_definition", "feature", "mutation", "spawn_table", "status_effect", "trait", "ability"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -291,8 +292,8 @@ export function createBrogueCEExtractor(): Extractor {
         creatureSpec(monsters, GLOBALS_C, sprite),
         terrainSpec(tiles, GLOBALS_C, sprite),
         ...itemSpecs,
-        simpleSpec("dungeon_feature", "dungeonFeature", dungeonFeatures, GLOBALS_C, "dungeonFeatureCatalog", "dungeon_features", {
-          getSlug: (df: DungeonFeatureEntry) => df.nativeId.toLowerCase(),
+        simpleSpec("feature", "dungeonFeature", dungeonFeatures, GLOBALS_C, "dungeonFeatureCatalog", "dungeon_features", {
+          getSlug: (df: DungeonFeatureEntry) => `dungeonFeature-${df.nativeId.toLowerCase()}`,
           getNativeId: (df: DungeonFeatureEntry) => `dungeonFeature:${df.nativeId}`,
           getCanonicalName: (df: DungeonFeatureEntry) => df.description,
           getOriginalName: (df: DungeonFeatureEntry) => df.nativeId,
@@ -300,8 +301,8 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (df: DungeonFeatureEntry) => ({ lineStart: df.lineStart, lineEnd: df.lineEnd }),
           getDataKey: (df: DungeonFeatureEntry) => df.nativeId,
         }),
-        simpleSpec("light", "lightSource", lights, GLOBALS_C, "lightCatalog", "lights", {
-          getSlug: (l: LightEntry) => l.nativeId.toLowerCase(),
+        simpleSpec("feature", "lightSource", lights, GLOBALS_C, "lightCatalog", "lights", {
+          getSlug: (l: LightEntry) => `lightSource-${l.nativeId.toLowerCase()}`,
           getNativeId: (l: LightEntry) => `lightSource:${l.nativeId}`,
           getCanonicalName: (l: LightEntry) => l.description,
           getOriginalName: (l: LightEntry) => l.nativeId,
@@ -318,7 +319,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (m: MutationEntry) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
           getDataKey: (m: MutationEntry) => m.nativeId,
         }),
-        simpleSpec("monster_class", "monsterClass", monsterClasses, GLOBALS_C, "monsterClassCatalog", "monster_classes", {
+        simpleSpec("spawn_table", "monsterClass", monsterClasses, GLOBALS_C, "monsterClassCatalog", "monster_classes", {
           getSlug: (mc: MonsterClassEntry) => mc.nativeId,
           getNativeId: (mc: MonsterClassEntry) => `monsterClass:${mc.nativeId}`,
           getCanonicalName: (mc: MonsterClassEntry) => mc.name,
@@ -336,7 +337,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (se: StatusEffectEntry) => ({ lineStart: se.lineStart, lineEnd: se.lineEnd }),
           getDataKey: (se: StatusEffectEntry) => se.nativeId,
         }),
-        simpleSpec("monster_behavior", "monsterBehavior", monsterBehaviors, GLOBALS_C, "monsterBehaviorCatalog", "monster_behaviors", {
+        simpleSpec("trait", "monsterBehavior", monsterBehaviors, GLOBALS_C, "monsterBehaviorCatalog", "monster_behaviors", {
           getSlug: (mb: MonsterBehaviorEntry) => mb.nativeId.toLowerCase(),
           getNativeId: (mb: MonsterBehaviorEntry) => `monsterBehavior:${mb.nativeId}`,
           getCanonicalName: (mb: MonsterBehaviorEntry) => mb.description || mb.nativeId,
@@ -345,7 +346,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (mb: MonsterBehaviorEntry) => ({ lineStart: mb.lineStart, lineEnd: mb.lineEnd }),
           getDataKey: (mb: MonsterBehaviorEntry) => mb.nativeId,
         }),
-        simpleSpec("monster_ability", "monsterAbility", monsterAbilities, GLOBALS_C, "monsterAbilityCatalog", "monster_abilities", {
+        simpleSpec("ability", "monsterAbility", monsterAbilities, GLOBALS_C, "monsterAbilityCatalog", "monster_abilities", {
           getSlug: (ma: MonsterAbilityEntry) => ma.nativeId.toLowerCase(),
           getNativeId: (ma: MonsterAbilityEntry) => `monsterAbility:${ma.nativeId}`,
           getCanonicalName: (ma: MonsterAbilityEntry) => ma.description || ma.nativeId,

@@ -8,6 +8,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: extracted from extractor.ts to consolidate image walk + media reading behind a single seam.</item>
+  <item>ADR-0007: remapped image_asset kind to other_definition (canonical taxonomy fallback kind).</item>
 </CHANGE_SUMMARY>
 */
 import { readPngDimensions } from "./sprite-pipeline.ts";
@@ -73,7 +74,7 @@ export function collectImageAssets(
 
 export function imageAssetSpec(entries: ImageAssetEntry[]): EntitySpec<ImageAssetEntry> {
   return {
-    kind: "image_asset",
+    kind: "other_definition",
     entries,
     adapter: {
       nativeKind: "image",
