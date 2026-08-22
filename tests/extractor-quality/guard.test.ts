@@ -1,11 +1,12 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Guard test — verifies every extractor package has a corresponding quality test file that imports runQualityChecks.</purpose>
+<purpose>Guard test — verifies every extractor package has a corresponding quality test file that imports runQualityChecks, and a README.md with a GitHub link to the game source.</purpose>
 <non-goals>
-  <item>Does not run the quality checks itself — only verifies file existence and import.</item>
+  <item>Does not run the quality checks itself — only verifies file existence, import, and README content.</item>
 </non-goals>
 <CHANGE_SUMMARY>
   <item>Initial creation: guard test ensuring all extractors have quality test coverage.</item>
+  <item>Added README.md presence and GitHub link check for every extractor package.</item>
 </CHANGE_SUMMARY>
 */
 import { describe, it, expect } from "vitest";
@@ -63,6 +64,26 @@ describe("extractor quality guard — every extractor must have a quality test",
           );
         }
         expect(content).toContain("runQualityChecks");
+      });
+
+      it(`has a README.md with a GitHub link to the game source`, () => {
+        const readmePath = join(EXTRACTORS_DIR, pkgDir, "README.md");
+        if (!existsSync(readmePath)) {
+          expect.fail(
+            `Missing README.md for extractor "${game}".\n` +
+              `Expected: ${readmePath}\n` +
+              `The README must contain at least a link to the game's GitHub repository.`,
+          );
+        }
+        const readme = readFileSync(readmePath, "utf-8");
+        const githubLink = readme.match(/https:\/\/github\.com\/[\w.-]+\/[\w.-]+/i);
+        if (!githubLink) {
+          expect.fail(
+            `README.md for extractor "${game}" does not contain a GitHub link.\n` +
+              `The README must include at least one https://github.com/... URL pointing to the game source repository.`,
+          );
+        }
+        expect(githubLink).not.toBeNull();
       });
     });
   }
