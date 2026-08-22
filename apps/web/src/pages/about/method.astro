@@ -1,36 +1,105 @@
 ---
 import Base from "../../layouts/Base.astro";
+
+const knowledgeStates = [
+  {
+    name: "Observed",
+    color: "text-ib-green",
+    surface: "border-ib-green/30 bg-ib-green/5",
+    description: "Directly present in the source.",
+    example: "This creature has this property. This table contains these values.",
+  },
+  {
+    name: "Reconstructed",
+    color: "text-ib-blue",
+    surface: "border-ib-blue/30 bg-ib-blue/5",
+    description: "Derived from several observable parts of an implementation.",
+    example: "These rules together form a scent-tracking system.",
+  },
+  {
+    name: "Inferred",
+    color: "text-ib-amber",
+    surface: "border-ib-amber/30 bg-ib-amber/5",
+    description: "The most plausible interpretation of the available evidence.",
+    example: "This constraint appears to encourage a particular form of play.",
+  },
+  {
+    name: "Speculative",
+    color: "text-ib-accent2",
+    surface: "border-ib-accent/30 bg-ib-accent/5",
+    description: "A useful hypothesis, not established knowledge.",
+    example: "This may have been intended to create a specific player tension.",
+  },
+];
 ---
 
-<Base title="Method" activeNav="method">
-  <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-ib-text">Authority & Evidence Methodology</h1>
-    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <p class="text-ib-muted">
-        All canonical records in this dataset are backed by evidence anchors that
-        point to specific source code locations. Evidence is extracted deterministically
-        by static extractors and promoted through a transaction-based canonical pipeline.
+<Base title="From source to insight" activeNav="method">
+  <article class="mx-auto max-w-5xl space-y-16 pb-8">
+    <header class="space-y-5 pt-4 sm:pt-8">
+      <p class="text-sm font-medium tracking-[0.18em] text-ib-accent">METHODOLOGY</p>
+      <h1 class="max-w-3xl text-4xl font-bold tracking-tight text-ib-text sm:text-5xl">Know where an idea comes from.</h1>
+      <p class="max-w-3xl text-lg leading-8 text-ib-muted">
+        Every conclusion in the Knowledge Base should have a path back to evidence. Every new direction in the Laboratory should have a visible path back to the structures that inspired it.
       </p>
-    </div>
-    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Authority Levels</h2>
-      <div class="space-y-3">
-        <div class="flex items-start gap-3">
-          <span class="rounded-full bg-ib-green/15 px-2.5 py-0.5 text-xs font-semibold text-ib-green">Canonical</span>
-          <p class="text-sm text-ib-muted">Sourced from evidence-backed extractors, immutable once promoted.</p>
-        </div>
-        <div class="flex items-start gap-3">
-          <span class="rounded-full bg-ib-amber/15 px-2.5 py-0.5 text-xs font-semibold text-ib-amber">Laboratory</span>
-          <p class="text-sm text-ib-muted">Generated or experimental content, never presented as canonical fact.</p>
-        </div>
+      <div class="rounded-2xl border border-ib-border bg-ib-surface p-5 font-mono text-sm leading-7 text-ib-text sm:p-7">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="text-ib-blue">SOURCE</span><span class="text-ib-muted">→</span><span>EVIDENCE</span><span class="text-ib-muted">→</span><span>WHAT EXISTS</span><span class="text-ib-muted">→</span><span>HOW IT WORKS</span><span class="text-ib-muted">→</span><span>WHY IT MATTERS</span><span class="text-ib-muted">→</span><span>ACROSS GAMES</span></div>
+        <div class="my-4 border-t border-dashed border-ib-accent/70"></div>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="text-ib-accent2">NEW DIRECTIONS</span></div>
       </div>
-    </div>
-    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Evidence Policy</h2>
-      <p class="text-sm text-ib-muted">
-        Public evidence includes locators and short excerpts under CC-BY-4.0.
-        Restricted evidence is excluded from projections entirely.
-      </p>
-    </div>
-  </div>
+      <p class="max-w-2xl text-sm leading-6 text-ib-muted">Above the line, we study existing games. Below it, we deliberately create. The two are connected, but never confused.</p>
+    </header>
+
+    <section class="space-y-6">
+      <div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent">01 · FROM SOURCE TO KNOWLEDGE</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">We start with the game, not with an answer.</h2><p class="leading-7 text-ib-muted">Enumerable facts are extracted from source code and structured game data whenever possible. AI is used where understanding requires reconstruction — not as a substitute for looking at the source.</p></div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5"><p class="font-mono text-sm text-ib-green">EXTRACT</p><h3 class="mt-2 font-semibold text-ib-text">What exists?</h3><p class="mt-2 text-sm leading-6 text-ib-muted">Definitions, values, tables, rules and direct relationships.</p></div>
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5"><p class="font-mono text-sm text-ib-blue">RECONSTRUCT</p><h3 class="mt-2 font-semibold text-ib-text">How does it work?</h3><p class="mt-2 text-sm leading-6 text-ib-muted">States, behaviours and interactions examined as a whole.</p></div>
+        <div class="rounded-xl border border-ib-border bg-ib-surface p-5"><p class="font-mono text-sm text-ib-amber">INTERPRET</p><h3 class="mt-2 font-semibold text-ib-text">Why is it interesting?</h3><p class="mt-2 text-sm leading-6 text-ib-muted">A cautious reading of the design pressure a system creates.</p></div>
+      </div>
+    </section>
+
+    <section class="space-y-6">
+      <div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent">02 · EPISTEMIC STATUS</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Not every statement has the same status.</h2><p class="leading-7 text-ib-muted">Confidence and epistemic status are different dimensions. A clear status says what kind of statement you are reading; confidence says how strongly the available evidence supports it.</p></div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        {knowledgeStates.map((state) => <div class={`rounded-xl border p-5 ${state.surface}`}><h3 class={`font-mono text-sm font-semibold ${state.color}`}>{state.name.toUpperCase()}</h3><p class="mt-3 font-medium text-ib-text">{state.description}</p><p class="mt-2 text-sm italic leading-6 text-ib-muted">“{state.example}”</p></div>)}
+      </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+      <div class="space-y-3"><p class="text-sm font-medium text-ib-accent">03 · TRACEABILITY</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Follow the evidence.</h2><p class="leading-7 text-ib-muted">A conclusion should not end at “the database says so.” Where publication rules allow it, records link back through the claim and mechanic to a concrete source locator and snapshot.</p></div>
+      <div class="rounded-2xl border border-ib-border bg-ib-surface p-6 font-mono text-sm leading-7"><p class="text-ib-text">“Monsters can track the player through an invisible field.”</p><p class="py-2 text-ib-muted">↓</p><p><span class="text-ib-accent">mechanic</span> · Scent tracking</p><p class="py-2 text-ib-muted">↓</p><p><span class="text-ib-blue">claim</span> · The field influences monster navigation.</p><p class="py-2 text-ib-muted">↓</p><p><span class="text-ib-green">evidence</span> · source file · symbol · source span</p><p class="py-2 text-ib-muted">↓</p><p><span class="text-ib-amber">snapshot</span> · game revision and publication state</p></div>
+    </section>
+
+    <section class="space-y-5 rounded-2xl border border-ib-border bg-ib-surface p-6 sm:p-8">
+      <div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent">04 · SEMANTIC RECONSTRUCTION</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Code does not explain itself.</h2><p class="leading-7 text-ib-muted">A source file can show a value changing, another rule reading it, and a creature responding. Useful knowledge appears when those pieces are reconstructed as a mechanic or system.</p></div>
+      <div class="flex flex-wrap items-center gap-3 font-mono text-sm"><span class="rounded bg-ib-surface2 px-3 py-2 text-ib-muted">definitions</span><span class="text-ib-muted">+</span><span class="rounded bg-ib-surface2 px-3 py-2 text-ib-muted">state</span><span class="text-ib-muted">+</span><span class="rounded bg-ib-surface2 px-3 py-2 text-ib-muted">rules</span><span class="text-ib-muted">+</span><span class="rounded bg-ib-surface2 px-3 py-2 text-ib-muted">behaviours</span><span class="text-ib-muted">→</span><span class="rounded bg-ib-accent/15 px-3 py-2 text-ib-accent2">MECHANIC</span><span class="text-ib-muted">→</span><span class="rounded bg-ib-blue/15 px-3 py-2 text-ib-blue">SYSTEM</span></div>
+    </section>
+
+    <section class="space-y-5">
+      <div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent">05 · CROSS-GAME UNDERSTANDING</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">We compare structures, not labels.</h2><p class="leading-7 text-ib-muted">Games do not need to use the same mechanic to solve the same design problem. Comparison looks for functional equivalence, causal structure, tensions and meaningful differences — not merely shared terminology.</p></div>
+      <div class="grid gap-3 text-sm sm:grid-cols-4"><div class="rounded-xl border border-ib-border bg-ib-surface p-4"><strong class="text-ib-text">Similarity</strong><p class="mt-2 text-ib-muted">Looks alike.</p></div><div class="rounded-xl border border-ib-border bg-ib-surface p-4"><strong class="text-ib-text">Functional equivalence</strong><p class="mt-2 text-ib-muted">Solves the same problem.</p></div><div class="rounded-xl border border-ib-border bg-ib-surface p-4"><strong class="text-ib-text">Structural analogy</strong><p class="mt-2 text-ib-muted">Works in a similar way.</p></div><div class="rounded-xl border border-ib-border bg-ib-surface p-4"><strong class="text-ib-text">Creative adjacency</strong><p class="mt-2 text-ib-muted">May combine unexpectedly well.</p></div></div>
+    </section>
+
+    <section class="space-y-6 border-y border-dashed border-ib-accent/60 py-12">
+      <div class="max-w-3xl space-y-3"><p class="text-sm font-medium text-ib-accent2">THE LABORATORY</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Then we deliberately leave the evidence behind.</h2><p class="text-lg leading-8 text-ib-muted">The Laboratory is where knowledge becomes material for invention. Its outputs are not claims about the source games.</p></div>
+      <div class="flex flex-wrap items-center gap-3 font-mono text-sm text-ib-muted"><span>verified structures</span><span>→</span><span>select ingredients</span><span>→</span><span>change dimensions</span><span>→</span><span>combine / invert / constrain</span><span>→</span><span class="text-ib-accent2">NEW DESIGN DIRECTION</span></div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-2">
+      <div class="space-y-3"><p class="text-sm font-medium text-ib-accent">06 · ANTI-COPY</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Inspiration without imitation.</h2><p class="leading-7 text-ib-muted">The goal is not to rename an existing mechanic. Creative exploration works on underlying dimensions: information, timing, topology, persistence, visibility, cost, reversibility and agency.</p><p class="font-medium text-ib-text">Don’t copy a mechanic. Understand why it works.</p></div>
+      <div class="rounded-2xl border border-ib-border bg-ib-surface p-6 text-sm leading-6"><p class="font-mono text-ib-amber">SOURCE IDEA</p><p class="mt-1 text-ib-text">Invisible scent field used for tracking</p><p class="my-3 text-ib-muted">↓ abstract</p><p class="text-ib-muted">Persistent spatial information, perceived only by selected agents</p><p class="my-3 text-ib-muted">↓ mutate</p><p class="text-ib-muted">scent → memory · temporary → persistent · monster-only → faction-dependent</p><p class="my-3 text-ib-muted">↓</p><p class="font-mono text-ib-accent2">NEW DIRECTION</p><p class="mt-1 text-ib-text">Creatures navigate by traces of past events left behind in the world.</p></div>
+    </section>
+
+    <section class="space-y-5 rounded-2xl border border-ib-accent/30 bg-ib-accent/5 p-6 sm:p-8">
+      <div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent2">07 · CREATIVE LINEAGE</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Ideas have ancestry too.</h2><p class="leading-7 text-ib-muted">A design direction should show which verified structures contributed to it, what transformations were applied and which dataset snapshot it used. The source remains visible as ancestry, not as authorship of the new idea.</p></div>
+      <div class="font-mono text-sm leading-7 text-ib-muted"><p class="text-ib-text">Design seed</p><p>derived from</p><p>├── Brogue / scent propagation</p><p>├── NetHack / persistent world state</p><p>└── Concept / asymmetric information</p><p class="mt-2">mutations</p><p>├── modality: scent → memory</p><p>├── persistence: transient → persistent</p><p>└── observer: species → faction</p></div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-2">
+      <div class="space-y-3"><p class="text-sm font-medium text-ib-accent">08 · HONEST COVERAGE</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">Unknown is a valid result.</h2><p class="leading-7 text-ib-muted">A game can be exhaustively catalogued in one area and poorly understood in another. Missing evidence, unresolved interpretations and incomplete semantic coverage stay visible rather than being filled with plausible prose.</p></div>
+      <div class="space-y-3 rounded-xl border border-ib-border bg-ib-surface p-5 text-sm"><div class="flex justify-between"><span class="text-ib-muted">Definitions</span><span class="text-ib-green">100%</span></div><div class="flex justify-between"><span class="text-ib-muted">Evidence</span><span class="text-ib-green">98%</span></div><div class="flex justify-between"><span class="text-ib-muted">Mechanics</span><span class="text-ib-amber">71%</span></div><div class="flex justify-between"><span class="text-ib-muted">Systems</span><span class="text-ib-amber">64%</span></div><div class="flex justify-between"><span class="text-ib-muted">Cross-game mapping</span><span class="text-ib-muted">32%</span></div><p class="pt-2 text-xs text-ib-muted">Illustrative coverage dimensions; percentages are never a claim of total understanding.</p></div>
+    </section>
+
+    <section class="space-y-5 pb-4"><div class="max-w-3xl space-y-2"><p class="text-sm font-medium text-ib-accent">09 · OPEN AND REPRODUCIBLE</p><h2 class="text-3xl font-bold tracking-tight text-ib-text">The site is a view of a specific dataset.</h2><p class="leading-7 text-ib-muted">What you see is generated from a verified publication snapshot. The web interface, machine-readable dataset and agent interfaces are designed to describe the same knowledge state.</p></div><div class="flex flex-wrap gap-3"><a href="/dataset/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm font-medium text-ib-text hover:border-ib-accent">Dataset</a><a href="/about/method/" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm font-medium text-ib-text hover:border-ib-accent">Methodology</a><a href="https://github.com/syrokomskyi/roguelike-games-ib" class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm font-medium text-ib-text hover:border-ib-accent">Source code</a></div><p class="max-w-3xl text-sm leading-6 text-ib-muted">The schemas, ontology, extraction rules, verifier, knowledge records and methodology can be inspected, challenged and improved.</p></section>
+  </article>
 </Base>
