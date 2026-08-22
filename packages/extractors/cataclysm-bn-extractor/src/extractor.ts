@@ -10,6 +10,7 @@
   <item>Initial creation: Cataclysm-BN extractor with monster, item, mutation, and profession parsing.</item>
   <item>Deepened into SDK Entity Pipeline: run() is now a declarative spec list, not a 280-line flat sequence.</item>
   <item>Population denominators derived from manifest.exhaustivePopulations — no more hard-coded duplicates.</item>
+  <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
 </CHANGE_SUMMARY>
 */
 import type {

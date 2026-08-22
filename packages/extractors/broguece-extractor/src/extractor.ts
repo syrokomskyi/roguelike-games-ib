@@ -14,6 +14,7 @@
   <item>Deepened into Entity Pipeline + Sprite Pipeline: run() is now a declarative spec list, not a 390-line flat sequence.</item>
   <item>Replaced local makeRecordEnvelope with SDK createRecordEnvelope.</item>
   <item>Updated expected population counts: mutations 16→8, dungeon_features 58→145, lights 63→60 after parser entryPattern fixes.</item>
+  <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
 </CHANGE_SUMMARY>
 */
 import type {

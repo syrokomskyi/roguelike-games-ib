@@ -1,3 +1,16 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Crawl factual extractor — parses YAML data files and .des vault definitions, emits creature, species, profession, vault, and sprite records with evidence anchors and population counts.</purpose>
+<non-goals>
+  <item>Does not parse C source — Crawl data is YAML and .des files only.</item>
+  <item>Does not compute design-space relations — factual extraction only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: Crawl extractor with monster, species, job, and vault parsing.</item>
+  <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
+</CHANGE_SUMMARY>
+*/
 import type {
   Extractor,
   ExtractorContext,
