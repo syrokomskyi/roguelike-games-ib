@@ -77,8 +77,9 @@ function glyphToTileCoords(glyph: string | null, glyphMap: Map<string, number>):
   if (!glyph) return null;
   const val = glyphMap.get(glyph);
   if (val == null) return null;
-  const tileIndex = val - GLYPH_BASE;
-  if (tileIndex < 0) return null;
+  // BrogueCE fontIndex(): tile sprites start at 256, so tileIndex = glyph + 128 - 2 = glyph + 126
+  // (subtract 2 for G_UP_ARROW/G_DOWN_ARROW which are font glyphs, not tile sprites)
+  const tileIndex = val + 126;
   const row = Math.floor(tileIndex / TILE_COLS);
   const col = tileIndex % TILE_COLS;
   return { x: col * TILE_WIDTH, y: row * TILE_HEIGHT, w: TILE_WIDTH, h: TILE_HEIGHT };
