@@ -12,3 +12,7 @@ minimumReleaseAgeExclude:
   - '@warpgogol/forge@2.9.1 || 2.9.4'
   - "@warpgogol/werkstatt-knowledge@0.2.0"
   - "@warpgogol/werkstatt@1.4.0"
+patchedDependencies:
+  '@warpgogol/forge@2.9.1': patches/@warpgogol__forge@2.9.1.patch
+  '@warpgogol/forge@2.9.4': patches/@warpgogol__forge@2.9.4.patch
+  '@warpgogol/werkstatt@1.4.0': patches/@warpgogol__werkstatt@1.4.0.patch

@@ -6,6 +6,7 @@ export default defineKernelConfig({
   moduleLoaders: {
     "forge-core": async () =>
       (await import("@warpgogol/forge/os/core")).forgeCoreModule,
+    ecosystem: async () => (await import("./ecosystem.module")).ecosystemModule,
     ...werkstattKnowledgePlugin.moduleLoaders,
   },
 });

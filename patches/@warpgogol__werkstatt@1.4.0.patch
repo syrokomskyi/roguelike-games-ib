@@ -1,0 +1,53 @@
+diff --git a/src/kernel/discovery.ts b/src/kernel/discovery.ts
+index 250b067d591382646ca3636bccd17c135cbb2b90..c317908003d826ea7f93118b086b9fa649ced850 100644
+--- a/src/kernel/discovery.ts
++++ b/src/kernel/discovery.ts
+@@ -9,6 +9,7 @@
+ </MODULE_CONTRACT>
+ <CHANGE_SUMMARY>
+   <item>Added Compass scaffolding to enhance code navigation and maintainability.</item>
++  <item>Unwraps TypeScript runtime CommonJS default-export interop layers when loading kernel configuration.</item>
+ </CHANGE_SUMMARY>
+ */
+ 
+@@ -27,6 +28,22 @@ const APP_CONFIG_FILENAMES = [
+   "kernel.config.mjs",
+ ] as const;
+ 
++function unwrapKernelConfigExport(moduleNamespace: Record<string, unknown>): unknown {
++  let candidate = moduleNamespace.default ?? moduleNamespace.config;
++
++  while (
++    candidate
++    && typeof candidate === "object"
++    && !("modules" in candidate)
++    && !("moduleLoaders" in candidate)
++    && "default" in candidate
++  ) {
++    candidate = (candidate as Record<string, unknown>).default;
++  }
++
++  return candidate;
++}
++
+ async function resolveAppConfigPath(toolsDirectory: string): Promise<string | undefined> {
+   for (const filename of APP_CONFIG_FILENAMES) {
+     const filePath = path.join(toolsDirectory, filename);
+@@ -53,7 +70,7 @@ export async function loadKernelAppConfig(site: DiscoveredSiteWorkspace): Promis
+   process.stderr.write(`  [config] loading ${site.configPath} …\n`);
+   const moduleNamespace = await tsImport(pathToFileURL(site.configPath).href, import.meta.url);
+   process.stderr.write(`  [config] loaded ${site.configPath}\n`);
+-  const candidate = moduleNamespace.default ?? moduleNamespace.config;
++  const candidate = unwrapKernelConfigExport(moduleNamespace);
+ 
+   if (!candidate || typeof candidate !== "object") {
+     throw new Error(`Kernel config \`${site.configPath}\` does not export a valid config object.`);
+@@ -82,7 +99,7 @@ export async function loadWorkspaceConfig(
+   process.stderr.write(`  [config] loading ${configPath} …\n`);
+   const moduleNamespace = await tsImport(pathToFileURL(configPath).href, import.meta.url);
+   process.stderr.write(`  [config] loaded ${configPath}\n`);
+-  const candidate = moduleNamespace.default ?? moduleNamespace.config;
++  const candidate = unwrapKernelConfigExport(moduleNamespace);
+ 
+   if (!candidate || typeof candidate !== "object") {
+     throw new Error(

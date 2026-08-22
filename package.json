@@ -47,7 +47,7 @@
     "@roguelike-games-ib/web": "workspace:*",
     "@types/better-sqlite3": "^7.6.13",
     "@warpgogol/forge": "^2.9.4",
-    "@warpgogol/werkstatt": "^1.3.0",
+    "@warpgogol/werkstatt": "^1.4.0",
     "@warpgogol/werkstatt-knowledge": "^0.2.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

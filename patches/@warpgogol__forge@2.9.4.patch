@@ -1,0 +1,21 @@
+diff --git a/src/utils/fs-trash.ts b/src/utils/fs-trash.ts
+index 986ac16a67da830c4312ab046292cfcca3432268..f081f457d51be3cb06d6cac91e37609812f95408 100644
+--- a/src/utils/fs-trash.ts
++++ b/src/utils/fs-trash.ts
+@@ -11,14 +11,14 @@ Windows.</purpose>
+ </non-goals>
+ </MODULE_CONTRACT>
+ <CHANGE_SUMMARY>
+-  <item>Initial implementation: wraps npm `trash` package with glob disabled for safe path handling.</item>
++  <item>Loads the ESM-only `trash` dependency lazily so CLI startup remains compatible with the TypeScript runtime loader.</item>
+ </CHANGE_SUMMARY>
+ */
+ 
+ import { existsSync } from "node:fs";
+-import trash from "trash";
+ 
+ export async function trashPath(targetPath: string): Promise<void> {
+   if (!existsSync(targetPath)) return;
++  const { default: trash } = await import("trash");
+   await trash(targetPath, { glob: false });
+ }
