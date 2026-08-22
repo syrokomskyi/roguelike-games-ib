@@ -68,6 +68,9 @@ async function main() {
   const catbnCoverage = computeCoverage("cataclysm-bn", "a8b27380f9ca96a859a50604569e6993c3da98bd1c8507f9a8421f5f5d979cbd", catbnDims);
 
   // === NetHack ===
+  // Expected counts aligned with nethack-extractor manifest exhaustivePopulations.
+  // Previous values (creatures=379, items=430) were source-tree counts; now match
+  // extractor-expected counts (376, 454) per RFC-0001 Principle 5.
   const nethackDims = [
     makeDimension("creatures", "extractor_population", 376, 376, 376, "extractor_population", "All monsters in monsters.h (MON() entries, excluding NUMMONS terminator and duplicates)"),
     makeDimension("items", "extractor_population", 454, 454, 454, "extractor_population", "All items in objects.h (WEAPON, ARMOR, RING, POTION, SCROLL, SPELL, WAND, FOOD, AMULET, TOOL, GEM entries, excluding #if 0 blocks)"),
