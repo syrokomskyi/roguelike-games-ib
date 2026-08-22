@@ -8,7 +8,7 @@ categories:
   objects:
     kinds: [item, weapon, armor, consumable, tool, artifact, projectile, resource_item, container]
   abilities_character:
-    kinds: [spell, ability, skill, feat, trait, mutation, class, species, background]
+    kinds: [spell, ability, skill, feat, trait, mutation, class, species, background, profession]
   simulation:
     kinds: [effect, status_effect, damage_type, condition, resource_meter, tag_definition]
   world:
