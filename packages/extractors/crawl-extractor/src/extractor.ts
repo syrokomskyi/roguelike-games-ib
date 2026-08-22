@@ -28,6 +28,7 @@ import {
   type JobEntry,
 } from "./yaml-parser.ts";
 import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
+import { parseDesVaults, type VaultEntry } from "./des-parser.ts";
 
 const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
 
@@ -36,7 +37,7 @@ const manifest: ExtractorManifest = {
   extractorId: "crawl-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "species", "profession"],
+  recordKinds: ["creature", "species", "profession", "vault"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -57,6 +58,12 @@ const manifest: ExtractorManifest = {
       denominatorKind: "extractor_population",
       expected: 26,
       description: "All job YAML files in dat/jobs/",
+    },
+    {
+      dimension: "vaults",
+      denominatorKind: "extractor_population",
+      expected: 6246,
+      description: "All NAME: blocks in .des files under dat/des/ (excluding test/)",
     },
   ],
 };
@@ -193,6 +200,36 @@ function jobSpec(entries: JobEntry[]): EntitySpec<JobEntry> {
   };
 }
 
+function vaultSpec(entries: VaultEntry[]): EntitySpec<VaultEntry> {
+  return {
+    kind: "vault",
+    entries,
+    adapter: {
+      nativeKind: "DES_VAULT",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_"),
+      getNativeId: (e) => `vault:${e.nativeId}`,
+      getCanonicalName: (e) => e.nativeId,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: (e) => ({
+        depth: e.depth,
+        weight: e.weight,
+        tags: e.tags,
+        orient: e.orient,
+        chance: e.chance,
+        mons: e.mons,
+        items: e.items,
+        has_map: e.hasMap,
+      }),
+      populationDimension: "vaults",
+    },
+  };
+}
+
 export function createCrawlExtractor(): Extractor {
   return {
     manifest,
@@ -221,10 +258,27 @@ export function createCrawlExtractor(): Extractor {
       const spriteOutDir = join(process.cwd(), "knowledge/evidence/crawl/sprites");
       const sprite = createCrawlSpritePipeline(rltilesRoot, spriteOutDir);
 
+      // --- Parse .des vault files ---
+      const allFiles = ctx.source.walk();
+      const desFiles = allFiles.filter(
+        (p) => p.startsWith("des/") && p.endsWith(".des") && !p.includes("/test/"),
+      );
+      const allVaults: VaultEntry[] = [];
+      for (const desFile of desFiles) {
+        const text = ctx.source.readText(desFile);
+        try {
+          allVaults.push(...parseDesVaults(text, desFile));
+        } catch (err) {
+          console.warn(`[crawl-extractor] Failed to parse ${desFile}: ${err}`);
+          continue;
+        }
+      }
+
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));
       if (speciesEntries.length > 0) specs.push(speciesSpec(speciesEntries));
       if (jobEntries.length > 0) specs.push(jobSpec(jobEntries));
+      if (allVaults.length > 0) specs.push(vaultSpec(allVaults));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 

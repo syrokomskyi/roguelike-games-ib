@@ -17,6 +17,7 @@ import {
   parseMonsterYaml,
   parseSpeciesYaml,
   parseJobYaml,
+  parseDesVaults,
 } from "@roguelike-games-ib/crawl-extractor";
 import {
   ReadonlySourceReader,
@@ -167,6 +168,21 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
       if (j) totalJobs++;
     }
     expect(totalJobs).toBeGreaterThanOrEqual(20);
+  });
+
+  it("extracts vault family with exact denominator", () => {
+    const reader = new ReadonlySourceReader(SOURCE_ROOT);
+    const allFiles = reader.walk();
+    const desFiles = allFiles.filter(
+      (p) => p.startsWith("des/") && p.endsWith(".des") && !p.includes("/test/"),
+    );
+    let totalVaults = 0;
+    for (const file of desFiles) {
+      const text = readFileSync(join(SOURCE_ROOT, file), "utf-8");
+      const vaults = parseDesVaults(text, file);
+      totalVaults += vaults.length;
+    }
+    expect(totalVaults).toBeGreaterThanOrEqual(6000);
   });
 
   it("extraction runtime is under 10 seconds", async () => {

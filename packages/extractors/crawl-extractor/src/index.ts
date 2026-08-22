@@ -8,4 +8,5 @@ export {
   type JobEntry,
 } from "./yaml-parser.ts";
 export { createCrawlSpritePipeline, type CrawlSpritePipeline } from "./sprite-pipeline.ts";
+export { parseDesVaults, type VaultEntry } from "./des-parser.ts";
 
