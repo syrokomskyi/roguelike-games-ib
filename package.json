@@ -30,6 +30,7 @@
   "devDependencies": {
     "@roguelike-games-ib/broguece-extractor": "workspace:*",
     "@roguelike-games-ib/cataclysm-bn-extractor": "workspace:*",
+    "@roguelike-games-ib/crawl-extractor": "workspace:*",
     "@roguelike-games-ib/extractor-sdk": "workspace:*",
     "@roguelike-games-ib/knowledge-core": "workspace:*",
     "@roguelike-games-ib/knowledge-schemas": "workspace:*",

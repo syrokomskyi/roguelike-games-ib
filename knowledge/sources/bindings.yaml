@@ -45,3 +45,18 @@ bindings:
       clean: null
       default_branch: "NetHack-5.0"
     binding_digest: bb2d375f5feea0baa2e24b7848786a6100b7504febb2419ba24b42df701b2b7f
+  - source_id: crawl
+    source_unit_path: crawl
+    declared_version: "0.32.0"
+    version_scheme: semver
+    metadata_origin: other
+    payload_path: crawl-ref/source/dat
+    fingerprint:
+      algorithm: sha256-tree-v1
+      value: c3f1ce6053667450dbde94a77162411888438cdbc084edc64835536a58035317
+    vcs:
+      repository: "https://github.com/crawl/crawl"
+      commit: null
+      clean: null
+      default_branch: "master"
+    binding_digest: de8b21b4beb5654ebb656bdb6f8947d286bf5bf8f31729816e38074471b1ec4a
