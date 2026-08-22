@@ -115,7 +115,7 @@ function makeRecordEnvelope(sourceId, key, id, originActorId) {
     schema: "rgkb/game-definition@2",
     id,
     key,
-    record_type: "game_definition",
+    record_type: "definition",
     language: "en",
     scope: { source_id: sourceId, scope_kind: "source" as const },
     origin: { kind: "extractor" as const, actor_id: originActorId, run_id: null },

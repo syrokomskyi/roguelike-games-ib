@@ -5,24 +5,24 @@ import type { KeyEntry, AliasEntry } from "@roguelike-games-ib/knowledge-core";
 describe("CORE-016: UUID/key registry rejects duplicate id/key", () => {
   it("rejects duplicate IDs", () => {
     const entries: KeyEntry[] = [
-      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "game_definition" },
-      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/ogre", record_type: "game_definition" },
+      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "definition" },
+      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/ogre", record_type: "definition" },
     ];
     expect(() => assertNoDuplicates(entries)).toThrow(/Duplicate record ID/);
   });
 
   it("rejects duplicate keys", () => {
     const entries: KeyEntry[] = [
-      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "game_definition" },
-      { id: "urn:roguelike-games-ib:record:22222222-2222-7222-8222-222222222222", key: "brogue-ce/creature/goblin", record_type: "game_definition" },
+      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "definition" },
+      { id: "urn:roguelike-games-ib:record:22222222-2222-7222-8222-222222222222", key: "brogue-ce/creature/goblin", record_type: "definition" },
     ];
     expect(() => assertNoDuplicates(entries)).toThrow(/Duplicate record key/);
   });
 
   it("accepts unique entries", () => {
     const entries: KeyEntry[] = [
-      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "game_definition" },
-      { id: "urn:roguelike-games-ib:record:22222222-2222-7222-8222-222222222222", key: "brogue-ce/creature/ogre", record_type: "game_definition" },
+      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "definition" },
+      { id: "urn:roguelike-games-ib:record:22222222-2222-7222-8222-222222222222", key: "brogue-ce/creature/ogre", record_type: "definition" },
     ];
     expect(() => assertNoDuplicates(entries)).not.toThrow();
   });
@@ -31,7 +31,7 @@ describe("CORE-016: UUID/key registry rejects duplicate id/key", () => {
 describe("CORE-017: refresh matching retains id for stable native identity", () => {
   it("matches by exact key and returns same id", () => {
     const keys: KeyEntry[] = [
-      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "game_definition" },
+      { id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111", key: "brogue-ce/creature/goblin", record_type: "definition" },
     ];
     const result = matchDefinitionOnRefresh(keys, [], "brogue-ce", "creature", "goblin", "goblin_native");
     expect(result.matched).toBe(true);

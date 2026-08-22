@@ -73,7 +73,7 @@ async function main() {
     ops.push({
       type: "create",
       record_id: record.id,
-      record_type: "game_definition",
+      record_type: "definition",
       key: record.key,
       data: record,
     });

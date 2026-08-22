@@ -20,10 +20,10 @@ describe("CORE-023: transaction crash before COMMITTED rolls back", () => {
     const canonicalRoot = join(workspace, "knowledge");
     const stagingRoot = join(workspace, "staging");
     mkdirSync(join(stagingRoot, "transactions"), { recursive: true });
-    mkdirSync(join(canonicalRoot, "game_definition"), { recursive: true });
+    mkdirSync(join(canonicalRoot, "definition"), { recursive: true });
 
     // Write an existing file to test replace rollback
-    const existingFile = join(canonicalRoot, "game_definition", "existing.jsonl");
+    const existingFile = join(canonicalRoot, "definition", "existing.jsonl");
     writeFileSync(existingFile, '{"id":"old","key":"existing"}\n', "utf-8");
 
     const txId = "test-tx-001";
@@ -31,14 +31,14 @@ describe("CORE-023: transaction crash before COMMITTED rolls back", () => {
       {
         type: "create",
         record_id: "urn:roguelike-games-ib:record:11111111-1111-7111-8111-111111111111",
-        record_type: "game_definition",
+        record_type: "definition",
         key: "new-record",
         data: { id: "new", key: "new-record", schema: "rgkb/game-definition@2" },
       },
       {
         type: "replace",
         record_id: "urn:roguelike-games-ib:record:22222222-2222-7222-8222-222222222222",
-        record_type: "game_definition",
+        record_type: "definition",
         key: "existing",
         data: { id: "new2", key: "existing", schema: "rgkb/game-definition@2" },
       },
@@ -54,7 +54,7 @@ describe("CORE-023: transaction crash before COMMITTED rolls back", () => {
     );
 
     // Apply the operations manually (simulating partial application)
-    const newFile = join(canonicalRoot, "game_definition", "new-record.jsonl");
+    const newFile = join(canonicalRoot, "definition", "new-record.jsonl");
     writeFileSync(newFile, '{"id":"new","key":"new-record"}\n', "utf-8");
     writeFileSync(existingFile, '{"id":"new2","key":"existing"}\n', "utf-8");
 
@@ -101,13 +101,13 @@ describe("CORE-024: transaction success leaves full integrity-valid canonical st
       {
         type: "create",
         record_id: "urn:roguelike-games-ib:record:33333333-3333-7333-8333-333333333333",
-        record_type: "game_definition",
+        record_type: "definition",
         key: "test-game/creature/test-creature",
         data: {
           schema: "rgkb/game-definition@2",
           id: "urn:roguelike-games-ib:record:33333333-3333-7333-8333-333333333333",
           key: "test-game/creature/test-creature",
-          record_type: "game_definition",
+          record_type: "definition",
           kind: "creature",
           native_kind: "Monster",
           name: { canonical: "Test Creature", original: "Test Creature" },
@@ -124,7 +124,7 @@ describe("CORE-024: transaction success leaves full integrity-valid canonical st
     expect(result.status).toBe("COMMITTED");
 
     // Verify the file was created
-    const createdFile = join(canonicalRoot, "game_definition", "test-game/creature/test-creature.jsonl");
+    const createdFile = join(canonicalRoot, "definition", "test-game/creature/test-creature.jsonl");
     expect(existsSync(createdFile)).toBe(true);
 
     // Verify content

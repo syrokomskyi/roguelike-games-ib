@@ -62,7 +62,7 @@ describe("MIG-005: migration does not preserve ambiguous Obsidian stem links as 
       {
         id: "00000000-0000-7000-8000-000000000030",
         key: "dungeon",
-        record_type: "game_definition",
+        record_type: "definition",
         name: "Dungeon",
         epistemic_status: "candidate",
         source_identity: {

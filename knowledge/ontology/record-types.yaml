@@ -1,7 +1,7 @@
 # Record type taxonomy — canonical record types
 # This file enumerates all canonical record types and their kind mappings.
 record_types:
-  game_definition:
+  definition:
     schema: rgkb/game-definition@2
     taxonomy: game-content-taxonomy.yaml
   evidence:

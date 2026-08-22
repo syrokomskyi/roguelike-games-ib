@@ -60,7 +60,7 @@ function makeRecordEnvelope(
     schema: "rgkb/game-definition@2",
     id,
     key,
-    record_type: "game_definition",
+    record_type: "definition",
     language: "en",
     scope: {
       source_id: sourceId,

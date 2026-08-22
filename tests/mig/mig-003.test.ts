@@ -169,8 +169,8 @@ describe("C9: BrogueCE vertical slice", () => {
     }
   });
 
-  it("canonical knowledge base has game_definition records for creatures, terrain, and items", () => {
-    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+  it("canonical knowledge base has definition records for creatures, terrain, and items", () => {
+    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const creatures = gameDefs.filter((r) => r.kind === "creature");
     const terrain = gameDefs.filter((r) => r.kind === "terrain");
     const items = gameDefs.filter((r) => r.kind === "item");

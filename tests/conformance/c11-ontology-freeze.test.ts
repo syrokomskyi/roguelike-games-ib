@@ -48,7 +48,7 @@ describe("C11: Ontology freeze — v1 implementation contract", () => {
     const rt = relationTypes.get("HAS_ABILITY");
     expect(rt).toBeDefined();
     expect(rt!.direction).toBe("directed");
-    expect(rt!.domain).toContain("game_definition");
+    expect(rt!.domain).toContain("definition");
     expect(rt!.range).toContain("semantic_record");
   });
 
@@ -76,7 +76,7 @@ describe("C11: Ontology freeze — v1 implementation contract", () => {
 
   it("every canonical relation satisfies domain constraint", () => {
     const relations = readJsonlDir(join(CANONICAL_ROOT, "relation"));
-    const allRecords = readJsonlDir(join(CANONICAL_ROOT, "game_definition"))
+    const allRecords = readJsonlDir(join(CANONICAL_ROOT, "definition"))
       .concat(readJsonlDir(join(CANONICAL_ROOT, "semantic_record")))
       .concat(readJsonlDir(join(CANONICAL_ROOT, "concept")));
 
@@ -147,7 +147,7 @@ describe("C11: Ontology freeze — v1 implementation contract", () => {
     }
   });
 
-  it("game_definition schema allows empty evidence_refs (data-driven extractor pressure point)", () => {
+  it("definition schema allows empty evidence_refs (data-driven extractor pressure point)", () => {
     const raw = readFileSync(join(CANONICAL_ROOT, "ontology", "game-definition.schema.yaml"), "utf-8");
     const parsed = parseYaml(raw);
 
@@ -155,8 +155,8 @@ describe("C11: Ontology freeze — v1 implementation contract", () => {
     expect(evidenceRefsProp.minItems).toBe(0);
   });
 
-  it("all canonical game_definition records have required envelope fields", () => {
-    const records = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+  it("all canonical definition records have required envelope fields", () => {
+    const records = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     expect(records.length).toBeGreaterThan(100);
 
     const requiredFields = ["schema", "id", "key", "record_type", "language", "origin", "aliases", "kind", "native_kind", "name", "source_identity", "attributes"];
@@ -175,7 +175,7 @@ describe("C11: Ontology freeze — v1 implementation contract", () => {
     const raw = readFileSync(join(CANONICAL_ROOT, "ontology", "record-types.yaml"), "utf-8");
     const parsed = parseYaml(raw);
 
-    const requiredTypes = ["game_definition", "evidence", "claim", "relation", "semantic_record", "concept", "contradiction"];
+    const requiredTypes = ["definition", "evidence", "claim", "relation", "semantic_record", "concept", "contradiction"];
     const actualTypes = Object.keys(parsed.record_types);
     for (const t of requiredTypes) {
       expect(actualTypes).toContain(t);

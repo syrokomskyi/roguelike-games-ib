@@ -304,7 +304,7 @@ describe("LAB-006: generator/provider failure cannot mutate canonical state", ()
       sessionId: "session-fail",
       constraints: normalizeConstraints({}),
       canonicalIngredients: [
-        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "game_definition", title: "Goblin", description: "A creature" },
+        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "definition", title: "Goblin", description: "A creature" },
       ],
       mutationVectors: [
         createMutationVector("mv-1", "sensory_modality", "sight", "sound", "Change sensory modality"),
@@ -332,7 +332,7 @@ describe("LAB-006: generator/provider failure cannot mutate canonical state", ()
       sessionId: "session-null",
       constraints: normalizeConstraints({}),
       canonicalIngredients: [
-        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "game_definition", title: "Goblin", description: "A creature" },
+        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "definition", title: "Goblin", description: "A creature" },
       ],
       mutationVectors: [
         createMutationVector("mv-1", "sensory_modality", "sight", "sound", "Change sensory modality"),
@@ -384,7 +384,7 @@ describe("LAB-007: persisted generated seed records provider/model/template and 
       sessionId: "session-meta",
       constraints: normalizeConstraints({}),
       canonicalIngredients: [
-        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "game_definition", title: "Goblin", description: "A creature" },
+        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "definition", title: "Goblin", description: "A creature" },
       ],
       mutationVectors: [
         createMutationVector("mv-1", "sensory_modality", "sight", "sound", "Change sensory modality"),
@@ -424,7 +424,7 @@ describe("LAB-007: persisted generated seed records provider/model/template and 
       sessionId: "session-null-meta",
       constraints: normalizeConstraints({}),
       canonicalIngredients: [
-        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "game_definition", title: "Goblin", description: "A creature" },
+        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "definition", title: "Goblin", description: "A creature" },
       ],
       mutationVectors: [
         createMutationVector("mv-1", "sensory_modality", "sight", "sound", "Change sensory modality"),
@@ -453,7 +453,7 @@ describe("LAB-007: persisted generated seed records provider/model/template and 
       sessionId: "session-readback",
       constraints: normalizeConstraints({}),
       canonicalIngredients: [
-        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "game_definition", title: "Goblin", description: "A creature" },
+        { id: CANONICAL_ID_1, key: "a/creature/goblin", record_type: "definition", title: "Goblin", description: "A creature" },
       ],
       mutationVectors: [
         createMutationVector("mv-1", "sensory_modality", "sight", "sound", "Change sensory modality"),

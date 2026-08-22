@@ -15,7 +15,7 @@ allOf:
       schema:
         const: rgkb/game-definition@2
       record_type:
-        const: game_definition
+        const: definition
       kind:
         type: string
         minLength: 1

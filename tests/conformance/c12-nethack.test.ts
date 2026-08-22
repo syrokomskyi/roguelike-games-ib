@@ -135,8 +135,8 @@ describe("C12: NetHack scale trial", () => {
     expect(objects.length).toBeGreaterThanOrEqual(400);
   });
 
-  it("canonical knowledge base has game_definition records for nethack", () => {
-    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+  it("canonical knowledge base has definition records for nethack", () => {
+    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const nhDefs = gameDefs.filter((r) => r.scope?.source_id === "nethack");
     expect(nhDefs.length).toBeGreaterThan(0);
 
@@ -190,7 +190,7 @@ describe("C12: NetHack scale trial", () => {
   });
 
   it("canonical record count for nethack exceeds 800", () => {
-    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const nhDefs = gameDefs.filter((r) => r.scope?.source_id === "nethack");
     expect(nhDefs.length).toBeGreaterThan(800);
   });

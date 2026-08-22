@@ -184,8 +184,8 @@ describe("C10: Cataclysm-BN scale trial", () => {
     expect(professions.length).toBeGreaterThanOrEqual(300);
   });
 
-  it("canonical knowledge base has game_definition records for cataclysm-bn", () => {
-    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+  it("canonical knowledge base has definition records for cataclysm-bn", () => {
+    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const catbnDefs = gameDefs.filter((r) => r.scope?.source_id === "cataclysm-bn");
     expect(catbnDefs.length).toBeGreaterThan(0);
 
@@ -243,7 +243,7 @@ describe("C10: Cataclysm-BN scale trial", () => {
   });
 
   it("canonical record count for cataclysm-bn exceeds 5000", () => {
-    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "game_definition"));
+    const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const catbnDefs = gameDefs.filter((r) => r.scope?.source_id === "cataclysm-bn");
     expect(catbnDefs.length).toBeGreaterThan(5000);
   });

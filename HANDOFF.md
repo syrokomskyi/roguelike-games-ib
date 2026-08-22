@@ -225,7 +225,7 @@ Registered BrogueCE as a source unit. Built deterministic factual extractors par
 
 **Extractor (`packages/broguece-extractor`)**:
 - `c-parser.ts` — Parses C source: `enum` definitions, `monsterCatalog` array, `tileCatalog` array, `itemTable` arrays (weapon/armor/food/key/staff/ring)
-- `extractor.ts` — Deterministic extractor (`broguece-factual` v1.0.0) producing 327 `game_definition` records:
+- `extractor.ts` — Deterministic extractor (`broguece-factual` v1.0.0) producing 327 `definition` records:
   - 67 creatures (maxHP, defense, accuracy, damage, regen, speed, flags, abilities)
   - 214 terrain tiles (draw priority, flags, mech flags, descriptions, flavor text)
   - 46 items (frequency, market value, strength, power, damage range, description)
@@ -259,7 +259,7 @@ Built data-driven JSON extractor for Cataclysm-BN. High-cardinality families ext
 
 **Extractor (`packages/cataclysm-bn-extractor`)**:
 - `json-parser.ts` — Parses Cataclysm-BN JSON data: monsters (type=MONSTER), items (any id), mutations, professions
-- `extractor.ts` — Deterministic extractor (`cataclysm-bn-factual` v1.0.0) producing 7,447 `game_definition` records:
+- `extractor.ts` — Deterministic extractor (`cataclysm-bn-factual` v1.0.0) producing 7,447 `definition` records:
   - 597 creatures (hp, speed, aggression, morale, melee, dodge, species, flags)
   - 5,886 items (symbol, color, price, volume, weight, material, flags)
   - 625 mutations (points, visibility, category, leads_to)
@@ -273,7 +273,7 @@ Built data-driven JSON extractor for Cataclysm-BN. High-cardinality families ext
 - Promotion runtime: ~0.6s
 - Peak heap: ~68MB
 - Peak RSS: ~208MB
-- Total canonical records: 14,894 (7,447 game_definition + 7,447 evidence)
+- Total canonical records: 14,894 (7,447 definition + 7,447 evidence)
 
 **Test**: `tests/conformance/c10-cataclysm-bn.test.ts` — 14 C10 conformance tests, all pass
 
@@ -290,7 +290,7 @@ Built C-header parser for NetHack. 809 canonical records promoted.
 
 **Extractor (`packages/extractors/nethack-extractor`)**:
 - `c-parser.ts` — Parses `monsters.h` (MON() entries) and `objects.h` (WEAPON/ARMOR/RING/POTION/SCROLL/SPELL/WAND/FOOD/AMULET/TOOL/GEM/COIN/OBJECT/XTRA_SCROLL_LABEL entries)
-- `extractor.ts` — Deterministic extractor producing 834+ `game_definition` records:
+- `extractor.ts` — Deterministic extractor producing 834+ `definition` records:
   - 376 creatures (name, difficulty, speed, armor class, attack damage, resistances, flags)
   - 458 items (name, cost, weight, material, color, probability) — 106.5% of expected 430
 - Verified deterministic
@@ -371,7 +371,7 @@ Complete visual overhaul of the Astro web app using TailwindCSS with a dark them
 
 ### Current dataset totals
 
-- **8572** materialized records (7395 Cataclysm-BN game_definition + 597 BrogueCE game_definition + 834 NetHack game_definition + 12 BrogueCE semantic + 6 Cataclysm-BN semantic + 6 NetHack semantic + 2 BrogueCE concept + 2 Cataclysm-BN concept + 2 NetHack concept + 6 claims + 3 relations + 3 coverage)
+- **8572** materialized records (7395 Cataclysm-BN definition + 597 BrogueCE definition + 834 NetHack definition + 12 BrogueCE semantic + 6 Cataclysm-BN semantic + 6 NetHack semantic + 2 BrogueCE concept + 2 Cataclysm-BN concept + 2 NetHack concept + 6 claims + 3 relations + 3 coverage)
 - **22044** evidence entries
 - **3** sources (broguece, cataclysm-bn, nethack)
 - Canonical hash: `7234f83f...`, logical dump hash: `88584e0f...`
@@ -393,13 +393,13 @@ Reviewed ontology pressure points from Stages 9–10. Froze v1 schema/plugin/pro
 
 **Schema pressure point fix**:
 - `game-definition.schema.yaml`: `evidence_refs.minItems` relaxed from `1` → `0` — data-driven extractors (Cataclysm-BN JSON, BrogueCE C) have implicit evidence (source file IS the evidence); individual evidence records are created for semantic records/claims/relations only
-- 14K+ game_definition records had empty `evidence_refs`, which violated the previous schema constraint
+- 14K+ definition records had empty `evidence_refs`, which violated the previous schema constraint
 
 **V1 contract freeze verified**:
 - `rgkb/relation-ontology@2`, `rgkb/schema-registry@2`, `rgkb/knowledge-manifest@2` — frozen
 - `werkstatt/knowledge-config@1`, `werkstatt/knowledge-extractor@1` — frozen
 - `record-types.yaml` — all 7 required types present
-- All canonical game_definition records have required envelope fields
+- All canonical definition records have required envelope fields
 
 **Test**: `tests/conformance/c11-ontology-freeze.test.ts` — 14 C11 conformance tests, all pass
 
@@ -412,7 +412,7 @@ Gate: C11 conformance (14 tests) — all pass.
 ### Completed in prior sessions
 
 - **Stages 0–11**: Core packages, extractors, materializer, search, MCP, web, laboratory runtime, BrogueCE slice, Cataclysm-BN scale trial, v1 contract freeze — all complete
-- **Stage 12 (NetHack extractor)**: 834 game_definition records (376 creatures + 458 items). Runner: `scripts/run-stage12-nethack.ts`
+- **Stage 12 (NetHack extractor)**: 834 definition records (376 creatures + 458 items). Runner: `scripts/run-stage12-nethack.ts`
 - **UI/UX redesign**: TailwindCSS dark theme across all 14 pages and 10 components
 - **Semantic records**: 12 semantic records + 4 concepts + 3 claims + 1 relation for Cataclysm-BN and NetHack. Runner: `scripts/run-stage-semantic.ts`
 - **Coverage dimensions**: 3 coverage records (15 total dimensions) for all 3 sources. Runner: `scripts/run-stage-coverage.ts`

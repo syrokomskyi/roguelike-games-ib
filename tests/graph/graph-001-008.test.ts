@@ -14,23 +14,23 @@ const relationTypes = new Map<string, RelationTypeDefinition>([
     semantics: "Source depends on target",
     direction: "directed",
     evidence_required: true,
-    domain: ["game_definition", "semantic_record"],
-    range: ["game_definition", "semantic_record", "concept"],
+    domain: ["definition", "semantic_record"],
+    range: ["definition", "semantic_record", "concept"],
   }],
   ["SYNERGIZES_WITH", {
     id: "SYNERGIZES_WITH",
     semantics: "Symmetric synergy",
     direction: "symmetric",
     evidence_required: true,
-    domain: ["game_definition", "semantic_record", "concept"],
-    range: ["game_definition", "semantic_record", "concept"],
+    domain: ["definition", "semantic_record", "concept"],
+    range: ["definition", "semantic_record", "concept"],
   }],
 ]);
 
 function makeRecords(): Map<string, { record_type: string; data: Record<string, unknown> }> {
   const records = new Map<string, { record_type: string; data: Record<string, unknown> }>();
-  records.set(VALID_ID_1, { record_type: "game_definition", data: { id: VALID_ID_1, key: "a/creature/goblin" } });
-  records.set(VALID_ID_2, { record_type: "game_definition", data: { id: VALID_ID_2, key: "a/creature/ogre" } });
+  records.set(VALID_ID_1, { record_type: "definition", data: { id: VALID_ID_1, key: "a/creature/goblin" } });
+  records.set(VALID_ID_2, { record_type: "definition", data: { id: VALID_ID_2, key: "a/creature/ogre" } });
   records.set(VALID_ID_3, { record_type: "evidence", data: { id: VALID_ID_3, key: "a/evidence/ev1" } });
   return records;
 }
@@ -148,7 +148,7 @@ describe("GRAPH-005: canonical evidence cannot reference Laboratory", () => {
   it("rejects Laboratory record appearing as canonical", () => {
     const records = makeRecords();
     const labIds = new Set<string>([LAB_ID]);
-    records.set(LAB_ID, { record_type: "game_definition", data: { id: LAB_ID, key: "lab/seed/test" } });
+    records.set(LAB_ID, { record_type: "definition", data: { id: LAB_ID, key: "lab/seed/test" } });
 
     const result = validateCanonicalGraph({
       records,
