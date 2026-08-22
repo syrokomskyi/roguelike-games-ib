@@ -6,21 +6,18 @@ interface Props {
   size?: number;
 }
 
-const SPRITE_AR = 232 / 128;
-
 const { recordKey, size = 24 } = Astro.props;
 const url = keyToSpriteUrl(recordKey);
 const hasSprite = spriteExists(recordKey);
-const width = Math.round(size / SPRITE_AR);
 ---
 
-<span class="shrink-0" style={`display:inline-block;width:${width}px;height:${size}px`}>
+<span class="shrink-0" style={`display:inline-block;height:${size}px;min-width:${size}px`}>
   {hasSprite && (
     <img
       src={url}
       alt=""
       loading="lazy"
-      class="h-full w-full"
+      class="h-full w-auto"
     />
   )}
 </span>
