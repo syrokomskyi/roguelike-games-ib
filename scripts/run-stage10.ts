@@ -12,10 +12,79 @@ import {
   createRecordId,
   preparePromotion,
   applyPromotionTransaction,
+  readKeyRegistry,
+  writeKeyRegistry,
+  readAliasRegistry,
+  type KeyEntry,
+  type AliasEntry,
   type TransactionOperation,
 } from "../packages/knowledge-core/src/index.ts";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+
+function loadExistingKeys(canonicalRoot: string, sourceId: string): KeyEntry[] {
+  const keysPath = join(canonicalRoot, "identity", "keys.jsonl");
+  const fromRegistry = readKeyRegistry(keysPath);
+  if (fromRegistry.length > 0) {
+    return fromRegistry.filter((k) => k.key.startsWith(`${sourceId}/`));
+  }
+
+  const keys: KeyEntry[] = [];
+  const defRoot = join(canonicalRoot, "definition", sourceId);
+  if (!existsSync(defRoot)) return keys;
+
+  function walkDefDir(dir: string) {
+    const items = readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      const fullPath = join(dir, item.name);
+      if (item.isDirectory()) {
+        walkDefDir(fullPath);
+      } else if (item.isFile() && item.name.endsWith(".jsonl")) {
+        const text = readFileSync(fullPath, "utf-8");
+        for (const line of text.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const obj = JSON.parse(trimmed);
+            if (obj.id && obj.key && obj.record_type) {
+              keys.push({ id: obj.id, key: obj.key, record_type: obj.record_type });
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+    }
+  }
+
+  walkDefDir(defRoot);
+  return keys;
+}
+
+function loadExistingEvidenceIds(canonicalRoot: string, sourceId: string): Map<string, string> {
+  const map = new Map<string, string>();
+  const evRoot = join(canonicalRoot, "evidence", sourceId, "evidence");
+  if (!existsSync(evRoot)) return map;
+
+  const files = readdirSync(evRoot);
+  for (const file of files) {
+    if (!file.endsWith(".jsonl")) continue;
+    const text = readFileSync(join(evRoot, file), "utf-8");
+    for (const line of text.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const obj = JSON.parse(trimmed);
+        if (obj.record_id && obj.id) {
+          map.set(obj.record_id, obj.id);
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+  return map;
+}
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 const SOURCE_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/Cataclysm-BN/data/json";
@@ -45,9 +114,14 @@ async function main() {
   const stagingRunDir = join(STAGING_ROOT, runId);
   mkdirSync(stagingRunDir, { recursive: true });
 
+  const existingKeys = loadExistingKeys(CANONICAL_ROOT, "cataclysm-bn");
+  const existingAliases = readAliasRegistry(join(CANONICAL_ROOT, "identity", "aliases.jsonl"));
+  const existingEvidenceIds = loadExistingEvidenceIds(CANONICAL_ROOT, "cataclysm-bn");
+  console.log(`Loaded ${existingKeys.length} existing keys, ${existingAliases.length} aliases, ${existingEvidenceIds.size} evidence IDs`);
+
   const source = new ReadonlySourceReader(SOURCE_ROOT);
   const evidence = new EvidenceFactory("cataclysm-bn", BINDING_DIGEST, source);
-  const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
+  const ids = new RefreshIdentityResolver(existingKeys, existingAliases, "cataclysm-bn");
   const schemas = createNullSchemaFacade();
   const output = new CandidateWriter(STAGING_ROOT, runId, "cataclysm-bn", "cataclysm-bn-factual", "1.0.0");
 
@@ -80,10 +154,12 @@ async function main() {
   }
 
   for (const ev of factualEvidence) {
+    const recordId = (ev as any).record_id;
+    const existingEvId = existingEvidenceIds.get(recordId);
     const evRecord = {
       schema: "rgkb/evidence@2",
-      id: createRecordId(),
-      key: `cataclysm-bn/evidence/${(ev as any).record_id.split(":").pop()}`,
+      id: existingEvId ?? createRecordId(),
+      key: `cataclysm-bn/evidence/${recordId.split(":").pop()}`,
       record_type: "evidence",
       language: "en",
       scope: { source_id: "cataclysm-bn", scope_kind: "source" },
@@ -117,6 +193,20 @@ async function main() {
     console.error("Transaction failed:", JSON.stringify(applyResult.plan.diagnostics, null, 2));
     process.exit(1);
   }
+
+  const allKeys: KeyEntry[] = [];
+  for (const record of factualRecords) {
+    allKeys.push({ id: record.id, key: record.key, record_type: "definition" });
+  }
+  for (const op of ops) {
+    if (op.record_type === "evidence") {
+      allKeys.push({ id: op.record_id, key: op.key, record_type: "evidence" });
+    }
+  }
+  const existingNonCatBnKeys = readKeyRegistry(join(CANONICAL_ROOT, "identity", "keys.jsonl"))
+    .filter((k) => !k.key.startsWith("cataclysm-bn/"));
+  writeKeyRegistry(join(CANONICAL_ROOT, "identity", "keys.jsonl"), [...existingNonCatBnKeys, ...allKeys]);
+  console.log(`Updated keys.jsonl with ${allKeys.length} cataclysm-bn entries`);
 
   console.log("=== Benchmarks ===");
   console.log(JSON.stringify({
