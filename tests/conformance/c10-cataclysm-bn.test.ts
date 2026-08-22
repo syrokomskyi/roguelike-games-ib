@@ -26,7 +26,6 @@ import {
 
 const WORKSPACE = resolve(__dirname, "../..");
 const SOURCE_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/Cataclysm-BN/data/json");
-const SOURCE_UNIT = resolve(WORKSPACE, "../roguelike-games-ib-source/Cataclysm-BN");
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 
 function readJsonlDir(dir: string): any[] {
@@ -69,16 +68,6 @@ describe("C10: Cataclysm-BN scale trial", () => {
     expect(binding.fingerprint.algorithm).toBe("sha256-tree-v1");
     expect(binding.fingerprint.value).toMatch(/^[a-f0-9]{64}$/);
     expect(binding.binding_digest).toMatch(/^[a-f0-9]{64}$/);
-  });
-
-  it("source metadata is readable from package.json", () => {
-    const pkgJson = JSON.parse(
-      readFileSync(join(SOURCE_UNIT, "package.json"), "utf-8"),
-    );
-    expect(pkgJson.werkstattSource).toBeDefined();
-    expect(pkgJson.werkstattSource.id).toBe("cataclysm-bn");
-    expect(pkgJson.werkstattSource.schema).toBe("werkstatt/source-unit@1");
-    expect(pkgJson.version).toBe("0.7.1");
   });
 
   it("fingerprint matches actual source tree", () => {

@@ -220,7 +220,7 @@ Gate: LAB-001..007 and C8 (authority boundary).
 Registered BrogueCE as a source unit. Built deterministic factual extractors parsing C source code. Reconstructed evidence-backed semantic slice. Promoted 692 records to canonical via transaction.
 
 **Source registration**:
-- Source bundle at `../roguelike-games-ib-source/BrogueCE/` with `package.json` (`werkstattSource` schema, id `broguece`, version `1.15.1`)
+- Source at `../roguelike-games-ib-source/BrogueCE/` (read-only, no modifications to upstream)
 - Registered in `knowledge/sources/registry.yaml` and `bindings.yaml` with `sha256-tree-v1` fingerprint `42215a96...` and binding digest `5fb1793f...`
 
 **Extractor (`packages/broguece-extractor`)**:
@@ -253,7 +253,7 @@ Gate: C9 conformance (15 tests) — all pass. Zero release-blocking diagnostics.
 Built data-driven JSON extractor for Cataclysm-BN. High-cardinality families extracted with exact denominator counts. 14,894 canonical records promoted.
 
 **Source registration**:
-- Source bundle at `../roguelike-games-ib-source/Cataclysm-BN/` with `package.json` (`werkstattSource` schema, id `cataclysm-bn`, version `0.7.1`)
+- Source at `../roguelike-games-ib-source/Cataclysm-BN/` (read-only, no modifications to upstream)
 - Registered in `knowledge/sources/registry.yaml` and `bindings.yaml` with `sha256-tree-v1` fingerprint `0747e1f4...` and binding digest `a8b27380...`
 - Payload path: `data/json` (JSON data files, not C source)
 
