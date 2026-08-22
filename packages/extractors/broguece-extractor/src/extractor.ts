@@ -21,9 +21,23 @@ import {
   parseMonsterCatalog,
   parseTileCatalog,
   parseItemTable,
+  parseDungeonFeatureCatalog,
+  parseLightCatalog,
+  parseMutationCatalog,
+  parseMonsterClassCatalog,
+  parseStatusEffectCatalog,
+  parseMonsterBehaviorCatalog,
+  parseMonsterAbilityCatalog,
   type MonsterEntry,
   type TileEntry,
   type ItemTableEntry,
+  type DungeonFeatureEntry,
+  type LightEntry,
+  type MutationEntry,
+  type MonsterClassEntry,
+  type StatusEffectEntry,
+  type MonsterBehaviorEntry,
+  type MonsterAbilityEntry,
 } from "./c-parser.ts";
 import sharp from "sharp";
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -31,6 +45,7 @@ import { join, dirname } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";
+const GLOBALS_BROGUE_C = "src/variants/GlobalsBrogue.c";
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"];
 
 const MIME_MAP: Record<string, string> = {
@@ -137,7 +152,7 @@ const manifest: ExtractorManifest = {
   extractorId: "broguece-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "terrain", "item", "image_asset"],
+  recordKinds: ["creature", "terrain", "item", "image_asset", "dungeon_feature", "light", "mutation", "monster_class", "status_effect", "monster_behavior", "monster_ability"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -156,8 +171,50 @@ const manifest: ExtractorManifest = {
     {
       dimension: "items",
       denominatorKind: "extractor_population",
-      expected: 46,
-      description: "All items across weapon/armor/food/key/staff/ring tables",
+      expected: 97,
+      description: "All items across weapon/armor/food/key/staff/ring/potion/scroll/wand/charm tables",
+    },
+    {
+      dimension: "dungeon_features",
+      denominatorKind: "extractor_population",
+      expected: 58,
+      description: "All entries in dungeonFeatureCatalog",
+    },
+    {
+      dimension: "lights",
+      denominatorKind: "extractor_population",
+      expected: 63,
+      description: "All entries in lightCatalog",
+    },
+    {
+      dimension: "mutations",
+      denominatorKind: "extractor_population",
+      expected: 16,
+      description: "All entries in mutationCatalog",
+    },
+    {
+      dimension: "monster_classes",
+      denominatorKind: "extractor_population",
+      expected: 15,
+      description: "All entries in monsterClassCatalog",
+    },
+    {
+      dimension: "status_effects",
+      denominatorKind: "extractor_population",
+      expected: 26,
+      description: "All entries in statusEffectCatalog",
+    },
+    {
+      dimension: "monster_behaviors",
+      denominatorKind: "extractor_population",
+      expected: 29,
+      description: "All entries in monsterBehaviorCatalog",
+    },
+    {
+      dimension: "monster_abilities",
+      denominatorKind: "extractor_population",
+      expected: 18,
+      description: "All entries in monsterAbilityCatalog",
     },
   ],
 };
@@ -329,17 +386,22 @@ export function createBrogueCEExtractor(): Extractor {
         terrainCount++;
       }
 
-      const itemTables: Array<{ name: string; array: string }> = [
-        { name: "weapon", array: "weaponTable" },
-        { name: "armor", array: "armorTable" },
-        { name: "food", array: "foodTable" },
-        { name: "key", array: "keyTable" },
-        { name: "staff", array: "staffTable" },
-        { name: "ring", array: "ringTable" },
+      const itemTables: Array<{ name: string; array: string; source: string }> = [
+        { name: "weapon", array: "weaponTable", source: GLOBALS_C },
+        { name: "armor", array: "armorTable", source: GLOBALS_C },
+        { name: "food", array: "foodTable", source: GLOBALS_C },
+        { name: "key", array: "keyTable", source: GLOBALS_C },
+        { name: "staff", array: "staffTable", source: GLOBALS_C },
+        { name: "ring", array: "ringTable", source: GLOBALS_C },
+        { name: "potion", array: "potionTable_Brogue", source: GLOBALS_BROGUE_C },
+        { name: "scroll", array: "scrollTable_Brogue", source: GLOBALS_BROGUE_C },
+        { name: "wand", array: "wandTable_Brogue", source: GLOBALS_BROGUE_C },
+        { name: "charm", array: "charmTable_Brogue", source: GLOBALS_BROGUE_C },
       ];
 
       for (const table of itemTables) {
-        const items = parseItemTable(globalsC, table.name, table.array);
+        const tableSource = ctx.source.readText(table.source);
+        const items = parseItemTable(tableSource, table.name, table.array);
         for (const item of items) {
           const slug = `${table.name}/${item.nativeId}`;
           const resolved = ctx.ids.resolveOrCreate("item", slug, `${table.name}:${item.nativeId}`);
@@ -393,6 +455,213 @@ export function createBrogueCEExtractor(): Extractor {
           ctx.output.writeEvidence(resolved.id, evidence);
           itemCount++;
         }
+      }
+
+      // --- Dungeon Features ---
+      const dungeonFeatures = parseDungeonFeatureCatalog(globalsC);
+      for (const df of dungeonFeatures) {
+        const slug = df.nativeId.toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("dungeon_feature", slug, `dungeonFeature:${df.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "dungeon_feature", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "dungeon_feature",
+          native_kind: "dungeonFeature",
+          name: { canonical: df.description, original: df.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `dungeonFeature:${df.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            layer: df.layer,
+            start: df.start,
+            decay: df.decay,
+            flags: df.flags,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "dungeonFeatureCatalog", line_start: df.lineStart, line_end: df.lineEnd, byte_start: null, byte_end: null, data_key: df.nativeId },
+          fragmentLines: { lineStart: df.lineStart, lineEnd: df.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Lights ---
+      const lights = parseLightCatalog(globalsC);
+      for (const lt of lights) {
+        const slug = lt.nativeId.toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("light", slug, `lightSource:${lt.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "light", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "light",
+          native_kind: "lightSource",
+          name: { canonical: lt.description, original: lt.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `lightSource:${lt.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            color: lt.color,
+            radius_min: lt.radiusMin,
+            radius_max: lt.radiusMax,
+            fade_percent: lt.fadePercent,
+            pass_through_creatures: lt.passThroughCreatures,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "lightCatalog", line_start: lt.lineStart, line_end: lt.lineEnd, byte_start: null, byte_end: null, data_key: lt.nativeId },
+          fragmentLines: { lineStart: lt.lineStart, lineEnd: lt.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Mutations ---
+      const mutations = parseMutationCatalog(globalsC);
+      for (const mut of mutations) {
+        const slug = mut.nativeId;
+        const resolved = ctx.ids.resolveOrCreate("mutation", slug, `mutation:${mut.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "mutation", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "mutation",
+          native_kind: "mutation",
+          name: { canonical: mut.name, original: mut.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `mutation:${mut.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            health_factor: mut.healthFactor,
+            move_speed_mult: mut.moveSpeedMult,
+            attack_speed_mult: mut.attackSpeedMult,
+            defense_mult: mut.defenseMult,
+            damage_mult: mut.damageMult,
+            description: mut.description,
+            can_be_negated: mut.canBeNegated,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "mutationCatalog", line_start: mut.lineStart, line_end: mut.lineEnd, byte_start: null, byte_end: null, data_key: mut.nativeId },
+          fragmentLines: { lineStart: mut.lineStart, lineEnd: mut.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Monster Classes ---
+      const monsterClasses = parseMonsterClassCatalog(globalsC);
+      for (const mc of monsterClasses) {
+        const slug = mc.nativeId;
+        const resolved = ctx.ids.resolveOrCreate("monster_class", slug, `monsterClass:${mc.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_class", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "monster_class",
+          native_kind: "monsterClass",
+          name: { canonical: mc.name, original: mc.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterClass:${mc.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            frequency: mc.frequency,
+            max_depth: mc.maxDepth,
+            members: mc.members,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "monsterClassCatalog", line_start: mc.lineStart, line_end: mc.lineEnd, byte_start: null, byte_end: null, data_key: mc.nativeId },
+          fragmentLines: { lineStart: mc.lineStart, lineEnd: mc.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Status Effects ---
+      const statusEffects = parseStatusEffectCatalog(globalsC);
+      for (const se of statusEffects) {
+        const slug = se.nativeId.toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("status_effect", slug, `statusEffect:${se.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "status_effect", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "status_effect",
+          native_kind: "statusEffect",
+          name: { canonical: se.name || se.nativeId, original: se.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `statusEffect:${se.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            is_buff: se.isBuff,
+            display_in_sidebar: se.displayInSidebar,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "statusEffectCatalog", line_start: se.lineStart, line_end: se.lineEnd, byte_start: null, byte_end: null, data_key: se.nativeId },
+          fragmentLines: { lineStart: se.lineStart, lineEnd: se.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Monster Behaviors ---
+      const monsterBehaviors = parseMonsterBehaviorCatalog(globalsC);
+      for (const mb of monsterBehaviors) {
+        const slug = mb.nativeId.toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("monster_behavior", slug, `monsterBehavior:${mb.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_behavior", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "monster_behavior",
+          native_kind: "monsterBehavior",
+          name: { canonical: mb.description || mb.nativeId, original: mb.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterBehavior:${mb.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            description: mb.description,
+            is_always_active: mb.isAlwaysActive,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "monsterBehaviorCatalog", line_start: mb.lineStart, line_end: mb.lineEnd, byte_start: null, byte_end: null, data_key: mb.nativeId },
+          fragmentLines: { lineStart: mb.lineStart, lineEnd: mb.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+      }
+
+      // --- Monster Abilities ---
+      const monsterAbilities = parseMonsterAbilityCatalog(globalsC);
+      for (const ma of monsterAbilities) {
+        const slug = ma.nativeId.toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("monster_ability", slug, `monsterAbility:${ma.nativeId}`);
+        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_ability", resolved.key, resolved.id, "broguece-factual");
+        const record = {
+          ...envelope,
+          kind: "monster_ability",
+          native_kind: "monsterAbility",
+          name: { canonical: ma.description || ma.nativeId, original: ma.nativeId },
+          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterAbility:${ma.nativeId}`, path: GLOBALS_C },
+          activation: "active" as const,
+          attributes: {
+            description: ma.description,
+            is_always_active: ma.isAlwaysActive,
+          },
+          evidence_refs: [] as string[],
+        };
+        ctx.output.writeRecord(record);
+        const evidence = ctx.evidence.create({
+          artifactPath: GLOBALS_C,
+          locator: { symbol: "monsterAbilityCatalog", line_start: ma.lineStart, line_end: ma.lineEnd, byte_start: null, byte_end: null, data_key: ma.nativeId },
+          fragmentLines: { lineStart: ma.lineStart, lineEnd: ma.lineEnd },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       let imageAssetCount = 0;
@@ -454,19 +723,33 @@ export function createBrogueCEExtractor(): Extractor {
 
       ctx.output.writePopulation("creatures", 67, creatureCount);
       ctx.output.writePopulation("terrain", 214, terrainCount);
-      ctx.output.writePopulation("items", 46, itemCount);
+      ctx.output.writePopulation("items", 97, itemCount);
       ctx.output.writePopulation("image_assets", imageFiles.length, imageAssetCount);
+      ctx.output.writePopulation("dungeon_features", 58, dungeonFeatures.length);
+      ctx.output.writePopulation("lights", 63, lights.length);
+      ctx.output.writePopulation("mutations", 16, mutations.length);
+      ctx.output.writePopulation("monster_classes", 15, monsterClasses.length);
+      ctx.output.writePopulation("status_effects", 26, statusEffects.length);
+      ctx.output.writePopulation("monster_behaviors", 29, monsterBehaviors.length);
+      ctx.output.writePopulation("monster_abilities", 18, monsterAbilities.length);
 
       return {
         extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "broguece-run",
-        recordCount: creatureCount + terrainCount + itemCount + imageAssetCount,
+        recordCount: creatureCount + terrainCount + itemCount + imageAssetCount + dungeonFeatures.length + lights.length + mutations.length + monsterClasses.length + statusEffects.length + monsterBehaviors.length + monsterAbilities.length,
         populationCounts: [
           { dimension: "creatures", expected: 67, extracted: creatureCount },
           { dimension: "terrain", expected: 214, extracted: terrainCount },
-          { dimension: "items", expected: 46, extracted: itemCount },
+          { dimension: "items", expected: 97, extracted: itemCount },
           { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
+          { dimension: "dungeon_features", expected: 58, extracted: dungeonFeatures.length },
+          { dimension: "lights", expected: 63, extracted: lights.length },
+          { dimension: "mutations", expected: 16, extracted: mutations.length },
+          { dimension: "monster_classes", expected: 15, extracted: monsterClasses.length },
+          { dimension: "status_effects", expected: 26, extracted: statusEffects.length },
+          { dimension: "monster_behaviors", expected: 29, extracted: monsterBehaviors.length },
+          { dimension: "monster_abilities", expected: 18, extracted: monsterAbilities.length },
         ],
         diagnostics: [],
       };

@@ -380,6 +380,10 @@ function finalizeItemEntry(
     key: "G_KEY",
     staff: "G_STAFF",
     ring: "G_RING",
+    potion: "G_POTION",
+    scroll: "G_SCROLL",
+    wand: "G_WAND",
+    charm: "G_CHARM",
   };
   const glyph = TABLE_GLYPHS[tableName] ?? null;
 
@@ -411,4 +415,436 @@ function finalizeItemEntry(
     lineStart: partial.lineStart,
     lineEnd,
   };
+}
+
+// --- Dungeon Feature Catalog ---
+
+export interface DungeonFeatureEntry {
+  nativeId: string;
+  description: string;
+  layer: string | null;
+  start: number | null;
+  decay: number | null;
+  flags: string | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[] {
+  const entries: DungeonFeatureEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("dungeonFeatureCatalog[NUMBER_DUNGEON_FEATURES] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const commentMatch = line.match(/\/\/\s*(.+)/);
+    const comment = commentMatch ? commentMatch[1].trim() : null;
+    if (!comment) continue;
+
+    const nativeId = comment.replace(/\s+/g, "_").toUpperCase();
+    const lineStart = i + 1;
+
+    let fullLine = line;
+    let lineEnd = lineStart;
+    if (!line.includes("}") || (line.match(/{/g)?.length ?? 0) > (line.match(/}/g)?.length ?? 0)) {
+      for (let j = i + 1; j < lines.length; j++) {
+        fullLine += " " + lines[j].trim();
+        lineEnd = j + 1;
+        const opens = fullLine.match(/{/g)?.length ?? 0;
+        const closes = fullLine.match(/}/g)?.length ?? 0;
+        if (closes >= opens && fullLine.includes("}")) break;
+      }
+    }
+
+    const braceMatch = fullLine.match(/\{([^}]+)\}/);
+    if (!braceMatch) continue;
+    const fields = braceMatch[1].split(",").map((s) => s.trim());
+
+    const layer = fields[1] ?? null;
+    const start = fields[2] ? parseInt(fields[2], 10) || null : null;
+    const decay = fields[3] ? parseInt(fields[3], 10) || null : null;
+    const flagsMatch = fullLine.match(/(DFF_[A-Z_][A-Z0-9_| ]*)/);
+    const flags = flagsMatch ? flagsMatch[1].trim() : null;
+
+    entries.push({
+      nativeId,
+      description: comment,
+      layer,
+      start,
+      decay,
+      flags,
+      lineStart,
+      lineEnd,
+    });
+  }
+
+  return entries;
+}
+
+// --- Light Catalog ---
+
+export interface LightEntry {
+  nativeId: string;
+  description: string;
+  color: string | null;
+  radiusMin: number | null;
+  radiusMax: number | null;
+  fadePercent: number | null;
+  passThroughCreatures: boolean | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseLightCatalog(source: string): LightEntry[] {
+  const entries: LightEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("lightCatalog[NUMBER_LIGHT_KINDS] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const commentMatch = line.match(/\/\/\s*(.+)/);
+    const comment = commentMatch ? commentMatch[1].trim() : null;
+    if (!comment) continue;
+
+    const nativeId = comment.replace(/\s+/g, "_").toUpperCase();
+    const lineStart = i + 1;
+
+    let fullLine = line;
+    let lineEnd = lineStart;
+    if (!line.includes("true") && !line.includes("false") && !line.includes("}")) {
+      for (let j = i + 1; j < lines.length; j++) {
+        fullLine += " " + lines[j].trim();
+        lineEnd = j + 1;
+        if (lines[j].includes("true") || lines[j].includes("false")) break;
+      }
+    }
+
+    const colorMatch = fullLine.match(/&([a-zA-Z_]+)/);
+    const color = colorMatch ? colorMatch[1] : null;
+
+    const radiusMatch = fullLine.match(/\{(\d+),\s*(\d+),\s*\d+\}/);
+    const radiusMin = radiusMatch ? parseInt(radiusMatch[1], 10) : null;
+    const radiusMax = radiusMatch ? parseInt(radiusMatch[2], 10) : null;
+
+    const fadeMatch = fullLine.match(/\}\s*,\s*(\d+)/);
+    const fadePercent = fadeMatch ? parseInt(fadeMatch[1], 10) : null;
+
+    const passMatch = fullLine.match(/(true|false)\s*\)/);
+    const passThroughCreatures = passMatch ? passMatch[1] === "true" : null;
+
+    entries.push({
+      nativeId,
+      description: comment,
+      color,
+      radiusMin,
+      radiusMax,
+      fadePercent,
+      passThroughCreatures,
+      lineStart,
+      lineEnd,
+    });
+  }
+
+  return entries;
+}
+
+// --- Mutation Catalog ---
+
+export interface MutationEntry {
+  nativeId: string;
+  name: string;
+  healthFactor: number | null;
+  moveSpeedMult: number | null;
+  attackSpeedMult: number | null;
+  defenseMult: number | null;
+  damageMult: number | null;
+  description: string;
+  canBeNegated: boolean | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMutationCatalog(source: string): MutationEntry[] {
+  const entries: MutationEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("mutationCatalog[NUMBER_MUTATORS] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const nameMatch = line.match(/"([^"]+)"/);
+    if (!nameMatch) continue;
+
+    const name = nameMatch[1];
+    const nativeId = name.replace(/\s+/g, "_").toLowerCase();
+    const lineStart = i + 1;
+
+    let fullLine = line;
+    let lineEnd = lineStart;
+    for (let j = i + 1; j < lines.length; j++) {
+      fullLine += " " + lines[j].trim();
+      lineEnd = j + 1;
+      if (lines[j].includes("true}") || lines[j].includes("false}")) break;
+    }
+
+    const allQuoted = [...fullLine.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    const description = allQuoted.filter((s) => s.length > 20).pop() ?? "";
+    const canBeNegatedMatch = fullLine.match(/(true|false)\s*\}/);
+    const canBeNegated = canBeNegatedMatch ? canBeNegatedMatch[1] === "true" : null;
+
+    const braceMatch = fullLine.match(/\{([^}]+)\}/);
+    const fields = braceMatch ? braceMatch[1].split(",").map((s) => s.trim()) : [];
+    const healthFactor = fields[2] ? parseInt(fields[2], 10) || null : null;
+    const moveSpeedMult = fields[3] ? parseInt(fields[3], 10) || null : null;
+    const attackSpeedMult = fields[4] ? parseInt(fields[4], 10) || null : null;
+    const defenseMult = fields[5] ? parseInt(fields[5], 10) || null : null;
+    const damageMult = fields[6] ? parseInt(fields[6], 10) || null : null;
+
+    entries.push({
+      nativeId,
+      name,
+      healthFactor,
+      moveSpeedMult,
+      attackSpeedMult,
+      defenseMult,
+      damageMult,
+      description,
+      canBeNegated,
+      lineStart,
+      lineEnd,
+    });
+  }
+
+  return entries;
+}
+
+// --- Monster Class Catalog ---
+
+export interface MonsterClassEntry {
+  nativeId: string;
+  name: string;
+  frequency: number | null;
+  maxDepth: number | null;
+  members: string[];
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMonsterClassCatalog(source: string): MonsterClassEntry[] {
+  const entries: MonsterClassEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("monsterClassCatalog[MONSTER_CLASS_COUNT] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const nameMatch = line.match(/"([^"]+)"/);
+    if (!nameMatch) continue;
+
+    const name = nameMatch[1];
+    const nativeId = name.replace(/\s+/g, "_").toLowerCase();
+    const lineStart = i + 1;
+
+    let fullLine = line;
+    let lineEnd = lineStart;
+    for (let j = i + 1; j < lines.length; j++) {
+      fullLine += " " + lines[j].trim();
+      lineEnd = j + 1;
+      if (lines[j].includes("}}")) break;
+    }
+
+    const braceMatch = fullLine.match(/\{([^}]+)\}/);
+    const fields = braceMatch ? braceMatch[1].split(",").map((s) => s.trim()) : [];
+    const frequency = fields[1] ? parseInt(fields[1], 10) || null : null;
+    const maxDepth = fields[2] ? parseInt(fields[2], 10) || null : null;
+
+    const membersMatch = fullLine.match(/\{([^}]+)\}/);
+    const members = membersMatch
+      ? membersMatch[1].split(",").map((s) => s.trim()).filter((s) => s.startsWith("MK_"))
+      : [];
+
+    entries.push({
+      nativeId,
+      name,
+      frequency,
+      maxDepth,
+      members,
+      lineStart,
+      lineEnd,
+    });
+  }
+
+  return entries;
+}
+
+// --- Status Effect Catalog ---
+
+export interface StatusEffectEntry {
+  nativeId: string;
+  name: string;
+  isBuff: boolean | null;
+  displayInSidebar: number | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseStatusEffectCatalog(source: string): StatusEffectEntry[] {
+  const entries: StatusEffectEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("statusEffectCatalog[NUMBER_OF_STATUS_EFFECTS] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const commentMatch = line.match(/\/\/\s*(STATUS_[A-Z_]+)/);
+    const nativeId = commentMatch ? commentMatch[1] : null;
+    if (!nativeId) continue;
+
+    const nameMatch = line.match(/"([^"]*)"/);
+    const name = nameMatch ? nameMatch[1] : "";
+    const lineStart = i + 1;
+
+    const boolMatch = line.match(/(true|false)/);
+    const isBuff = boolMatch ? boolMatch[1] === "true" : null;
+
+    const numMatch = line.match(/,\s*(\d+)\s*\}/);
+    const displayInSidebar = numMatch ? parseInt(numMatch[1], 10) : null;
+
+    entries.push({
+      nativeId,
+      name,
+      isBuff,
+      displayInSidebar,
+      lineStart,
+      lineEnd: lineStart,
+    });
+  }
+
+  return entries;
+}
+
+// --- Monster Behavior Catalog ---
+
+export interface MonsterBehaviorEntry {
+  nativeId: string;
+  description: string;
+  isAlwaysActive: boolean | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMonsterBehaviorCatalog(source: string): MonsterBehaviorEntry[] {
+  const entries: MonsterBehaviorEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("monsterBehaviorCatalog[32] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const commentMatch = line.match(/\/\/\s*(MONST_[A-Z0-9_]+)/);
+    const nativeId = commentMatch ? commentMatch[1] : null;
+    if (!nativeId) continue;
+
+    const descMatch = line.match(/"([^"]*)"/);
+    const description = descMatch ? descMatch[1] : "";
+    const lineStart = i + 1;
+
+    const boolMatch = line.match(/(true|false)/);
+    const isAlwaysActive = boolMatch ? boolMatch[1] === "true" : null;
+
+    entries.push({
+      nativeId,
+      description,
+      isAlwaysActive,
+      lineStart,
+      lineEnd: lineStart,
+    });
+  }
+
+  return entries;
+}
+
+// --- Monster Ability Catalog ---
+
+export interface MonsterAbilityEntry {
+  nativeId: string;
+  description: string;
+  isAlwaysActive: boolean | null;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMonsterAbilityCatalog(source: string): MonsterAbilityEntry[] {
+  const entries: MonsterAbilityEntry[] = [];
+  const lines = source.split("\n");
+
+  let inCatalog = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes("monsterAbilityCatalog[32] = {")) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const commentMatch = line.match(/\/\/\s*(MA_[A-Z0-9_]+)/);
+    const nativeId = commentMatch ? commentMatch[1] : null;
+    if (!nativeId) continue;
+
+    const descMatch = line.match(/"([^"]*)"/);
+    const description = descMatch ? descMatch[1] : "";
+    const lineStart = i + 1;
+
+    const boolMatch = line.match(/(true|false)/);
+    const isAlwaysActive = boolMatch ? boolMatch[1] === "true" : null;
+
+    entries.push({
+      nativeId,
+      description,
+      isAlwaysActive,
+      lineStart,
+      lineEnd: lineStart,
+    });
+  }
+
+  return entries;
 }
