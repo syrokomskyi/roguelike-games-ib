@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — nethack-extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              nethack-extractor
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 &middot; packages/extractors/nethack-extractor
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">608</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines of source
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">2</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              entity kinds extracted
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">90</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines in run() method
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">0</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              parser unit tests
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">&rarr;</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="c-macro-scanner"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen the C-macro scanner &mdash; extract the duplicated
+                paren-depth accumulation loop
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/nethack-extractor/src/c-parser.ts (lines
+              56&ndash;91, 224&ndash;287, 383&ndash;436)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 3 parsers, same accumulation loop copied
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S["source text"] --> PM["parseMonsters\n(match MON( → accumulate → finalize)"]
+                  S --> PO["parseObjects\n(match WEAPON|ARMOR|...\n+ preprocessor handling\n→ accumulate → finalize)"]
+                  S --> PA["parseArtifacts\n(match OBJECT( OBJ( → accumulate → finalize)"]
+                  AL["paren-depth accumulation loop\n(10 lines, copied 3×)"] -.leak.-> PM
+                  AL -.leak.-> PO
+                  AL -.leak.-> PA
+                  PP["preprocessor directives\n(#if 0, #ifdef, #endif...\n25 lines, inline in parseObjects only"] -.leak.-> PO
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class AL,PP,PM,PO,PA leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep C-macro scanner module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S["source text"] -->|small seam| CS["C-Macro Scanner"]
+                  subgraph CSI["deep implementation"]
+                    M["macro pattern matching"]
+                    A["paren-depth accumulation\n(single implementation)"]
+                    P["preprocessor filter\n(optional, pluggable)"]
+                    R["{fullText, lineStart, lineEnd}[]"]
+                    M --> P --> A --> R
+                  end
+                  CS -.contains.-> CSI
+                  CS -->|"raw macro invocations[]"| FM["finalizeMonsterEntry"]
+                  CS -->|"raw macro invocations[]"| FO["finalizeObjectEntry"]
+                  CS -->|"raw macro invocations[]"| FA["finalizeArtifactEntry"]
+                  class CS,CSI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                All three parsers (<code>parseMonsters</code>,
+                <code>parseObjects</code>, <code>parseArtifacts</code>) share
+                the same core loop: scan lines, match a macro pattern, accumulate
+                multi-line text by tracking paren depth, then hand off to a
+                <code>finalize*Entry</code> function. The accumulation loop
+                (10 lines) is copied verbatim into each parser. The
+                preprocessor directive handling (25 lines of
+                <code>#if</code>/<code>#ifdef</code>/<code>#endif</code> logic)
+                is inline in <code>parseObjects</code> only &mdash; if
+                <code>monsters.h</code> ever gains <code>#if 0</code> blocks,
+                <code>parseMonsters</code> will silently parse dead code.
+                Understanding the shared scanning pattern requires reading all
+                three parsers and noticing the duplication.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep <code>scanCMacros</code> module that owns the
+                line-scanning, macro-matching, paren-depth-accumulation, and
+                optional preprocessor filtering. Its seam: caller provides source
+                text, a macro regex, and an optional preprocessor-handling flag.
+                The module returns <code>{fullText, lineStart, lineEnd}[]</code>
+                &mdash; one entry per matched macro invocation. Each parser
+                becomes a thin wrapper: call <code>scanCMacros</code>, map
+                results through the finalize function. The preprocessor filter
+                becomes a pluggable option, not 25 inline lines. Adding a new
+                entity kind (e.g., artifacts) is a new finalize function + a
+                <code>scanCMacros</code> call, not a 50-line parser.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: macro scanning logic in one module</li>
+              <li>depth: callers pass pattern, receive raw invocations</li>
+              <li>leverage: preprocessor handling available to all parsers</li>
+              <li>tests: synthetic C fragments with known paren nesting</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="declarative-field-extraction"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen <code>finalize*Entry</code> into declarative field
+                extractors
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/nethack-extractor/src/c-parser.ts:93&ndash;166
+              (finalizeMonsterEntry, 73 lines) &middot; lines 289&ndash;368
+              (finalizeObjectEntry, 78 lines)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 15+ regex chains with silent fallbacks
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  FT["fullText"] --> FME["finalizeMonsterEntry\n73 lines"]
+                  subgraph RC["regex chain — 15+ matches"]
+                    R1["NAM( regex → name"]
+                    R2["S_ regex → symbol"]
+                    R3["LVL( regex → 5 fields"]
+                    R4["A( regex → attacks"]
+                    R5["SIZ( regex → 4 fields"]
+                    R6["afterSiz split → 7 fields"]
+                    R1 --> R2 --> R3 --> R4 --> R5 --> R6
+                  end
+                  FME -.contains.-> RC
+                  R6 --> ME["MonsterEntry\nor null"]
+                  D1["silent defaults:\n0, 'S_UNKNOWN', 'MS_SILENT'..."] -. "masks parse failures" .-> R2
+                  D1 -. "masks parse failures" .-> R3
+                  D1 -. "masks parse failures" .-> R5
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class D1,RC leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; declarative field map + single extraction engine
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  FT["fullText"] -->|small seam| FE["Field Extractor"]
+                  subgraph FEI["deep implementation"]
+                    FM["field map:\n[{name, regex, group, transform, default}]"]
+                    IT["iterate + extract\n(apply each field spec)"]
+                    VL["validate required fields\n(name, SIZ presence)"]
+                    FM --> IT --> VL
+                  end
+                  FE -.contains.-> FEI
+                  FE --> ME["MonsterEntry\nor null with reason"]
+                  MM["monster field map\n20 field specs"] -.-> FE
+                  OM["object field map\n9 field specs"] -.-> FE
+                  class FE,FEI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>finalizeMonsterEntry</code> (73 lines) and
+                <code>finalizeObjectEntry</code> (78 lines) are long sequences
+                of regex matches with fallback defaults. Each field is extracted
+                by its own regex, and failures are silent &mdash; a mismatched
+                regex returns <code>0</code>, <code>"S_UNKNOWN"</code>, or
+                <code>"CLR_GRAY"</code> with no diagnostic. The object parser's
+                positional regexes (e.g., <code>,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+</code>
+                for cost) are particularly fragile: if the C macro format adds
+                or removes a parameter, the regex silently matches the wrong
+                field. There is no locality &mdash; debugging a single field
+                requires reading the entire function and tracing which regex
+                might be failing.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Replace the regex chains with a declarative field map: an array
+                of <code>{name, regex, group, transform, default}</code>
+                objects. A single extraction engine iterates over the field map,
+                applies each regex, transforms the captured group, and falls
+                back to the default on mismatch. Required fields (e.g., name,
+                SIZ presence) are validated explicitly. The monster field map
+                (20 specs) and object field map (9 specs) become data, not code.
+                Each field is testable in isolation: pass a synthetic C fragment,
+                assert the extracted value. The engine can optionally emit
+                diagnostics for fields that fell back to defaults, making
+                silent parse failures visible.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: each field defined in one place, not scattered</li>
+              <li>depth: extraction engine hides regex application loop</li>
+              <li>leverage: new fields are specs, not regex lines</li>
+              <li>tests: per-field unit tests with synthetic fragments</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="parse-artifacts-dead-code"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Remove or integrate <code>parseArtifacts</code> &mdash; dead
+                code that duplicates <code>parseObjects</code>
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                >Speculative</span
+              >
+              <span
+                class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800"
+                >dead code</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/nethack-extractor/src/c-parser.ts:379&ndash;436
+              (parseArtifacts) &middot; src/index.ts (export) &middot;
+              src/extractor.ts (not imported)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; parseArtifacts is exported but never called
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  OH["objects.h"] --> PO["parseObjects\n(matches OBJECT( including artifacts)"]
+                  OH --> PA["parseArtifacts\n(matches OBJECT( OBJ( — subset of parseObjects)"]
+                  PA --> EXP["index.ts export"]
+                  EXP -. "never imported by extractor.ts" .-> X["✗ dead code"]
+                  PO --> EXT["extractor.ts\n(used)"]
+                  PA -. "duplicates artifact\nentries already in parseObjects" .-> PO
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class PA,X leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; either removed or integrated as a third entity
+                kind
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  OH["objects.h"] --> PO["parseObjects"]
+                  PO --> EXT["extractor.ts"]
+                  subgraph OPT["Option A: remove"]
+                    PA1["delete parseArtifacts\n+ remove from index.ts"]
+                  end
+                  subgraph OPT2["Option B: integrate"]
+                    PA2["parseArtifacts →\nartifact EntitySpec\nin extractor.ts"]
+                    PA2 --> EXT2["extractor.ts\n(3 entity kinds)"]
+                  end
+                  class OPT,OPT2 deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>parseArtifacts</code> (57 lines) is exported from
+                <code>index.ts</code> but never imported by
+                <code>extractor.ts</code>. It matches
+                <code>OBJECT(\s*OBJ(</code> patterns &mdash; a subset of what
+                <code>parseObjects</code> already handles (the
+                <code>OBJECT</code> macro is in the
+                <code>OBJECT_MACROS</code> table). Artifact entries are already
+                extracted as items by <code>parseObjects</code>. The function
+                is dead code that adds maintenance burden and confuses readers
+                who expect it to be called.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                <strong>Option A (remove):</strong> Delete
+                <code>parseArtifacts</code> and its export from
+                <code>index.ts</code>. Artifacts are already covered by
+                <code>parseObjects</code>. <strong>Option B (integrate):</strong>
+                If artifacts should be a separate entity kind (e.g.,
+                <code>artifact</code> vs <code>item</code>), add an
+                <code>EntitySpec</code> for artifacts in
+                <code>extractor.ts</code> and filter them out of
+                <code>parseObjects</code> to avoid double-counting. This
+                requires deciding whether artifacts are a distinct knowledge
+                kind or just items with special flags.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: no dead code confusing readers</li>
+              <li>depth: clearer module surface for c-parser.ts</li>
+              <li>leverage: Option B adds a new entity kind via a spec</li>
+              <li>tests: either way, artifact coverage is explicit</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="preprocessor-filter"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Extract preprocessor directive handling into a reusable line
+                filter
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >pairs with Candidate 01</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/nethack-extractor/src/c-parser.ts:223&ndash;248
+              (inline in parseObjects)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 25 lines of preprocessor logic inline in
+                parseObjects
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  L["line iterator"] --> PP["preprocessor handling\n25 lines inline"]
+                  subgraph PPI["#if 0 → skipDepth++\n#ifdef + skipDepth>0 → skipDepth++\n#ifndef + skipDepth>0 → skipDepth++\n#endif → skipDepth--\n#else / #elif → skip\nskipDepth>0 → skip line"]
+                    S1["skipDepth tracking"]
+                    S2["conditional skip logic"]
+                    S1 --> S2
+                  end
+                  PP -.contains.-> PPI
+                  PP --> ML["macro matching\n(only if skipDepth === 0)"]
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class PP,PPI leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; pluggable preprocessor filter
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  L["line iterator"] -->|small seam| PF["Preprocessor Filter"]
+                  subgraph PFI["deep implementation"]
+                    SD["skipDepth state"]
+                    CL["conditional logic\n(#if / #ifdef / #ifndef / #endif / #else)"]
+                    SD --> CL
+                  end
+                  PF -.contains.-> PFI
+                  PF -->|"filtered lines[]"| PO["parseObjects\n(no preprocessor logic)"]
+                  PF -->|"filtered lines[]"| PM["parseMonsters\n(gains #if 0 safety)"]
+                  class PF,PFI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                25 lines of C preprocessor directive handling
+                (<code>#if</code>, <code>#ifdef</code>, <code>#ifndef</code>,
+                <code>#endif</code>, <code>#else</code>, <code>#elif</code>) are
+                inline in <code>parseObjects</code>. This logic is a
+                cross-cutting concern for any C header parser, but only
+                <code>parseObjects</code> has it.
+                <code>parseMonsters</code> and <code>parseArtifacts</code> have
+                no preprocessor handling &mdash; if <code>monsters.h</code>
+                contains <code>#if 0</code> blocks (which it does in some
+                NetHack variants), those entries will be parsed as live code.
+                The preprocessor logic is also shallow: its interface (line
+                iterator + skipDepth state) is nearly as complex as its
+                implementation.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Extract a <code>createPreprocessorFilter</code> function that
+                wraps a line iterator and yields only lines outside of skipped
+                preprocessor blocks. The filter owns the
+                <code>skipDepth</code> state and the conditional logic. It can
+                be composed with the C-macro scanner from Candidate 01: the
+                scanner accepts an optional filter, and all parsers gain
+                preprocessor safety without duplicating the logic. The filter's
+                seam is small: <code>{isSkipped(line): boolean}</code> or a
+                generator that yields only active lines.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: preprocessor logic in one module</li>
+              <li>depth: callers pass lines, receive filtered lines</li>
+              <li>leverage: all parsers gain #if 0 safety</li>
+              <li>tests: synthetic C with known preprocessor blocks</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#c-macro-scanner"
+            >Deepen the C-macro scanner first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          The duplicated paren-depth accumulation loop is the single largest
+          source of friction in <code>c-parser.ts</code>. It forces every reader
+          to hold three nearly-identical scanning loops in their head
+          simultaneously, and the preprocessor handling is trapped in only one
+          of them. Extracting a deep <code>scanCMacros</code> module
+          concentrates the scanning logic behind a small seam, makes
+          preprocessor filtering available to all parsers (Candidate 04 plugs in
+          naturally), and reduces each parser to a finalize function + a scanner
+          call. Candidate 02 (declarative field extraction) should follow
+          &mdash; it's easier to design field maps when the parsers are already
+          thin wrappers. Candidate 03 (<code>parseArtifacts</code> dead code)
+          is a quick cleanup that can happen anytime.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> Extract C-macro scanner
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> Plug in preprocessor filter
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> Declarative field extraction
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> Remove or integrate
+            parseArtifacts
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from c-parser.ts (437 lines), extractor.ts (150 lines),
+        index.ts (21 lines), extractor-sdk/src/entity-pipeline.ts (105 lines),
+        extractor-sdk/src/types.ts (95 lines), broguece-extractor (entity-pipeline.ts,
+        sprite-pipeline.ts, extractor.ts), cataclysm-bn-extractor, ADR-0004, and the
+        conformance + quality test harness on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>

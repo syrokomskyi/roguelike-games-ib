@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Static C-source parser for NetHack — extracts monster, object, and artifact entries from C header files using macro-based parsing.</purpose>
+<purpose>Static C-source parser for NetHack — extracts monster and object entries from C header files using macro-based parsing.</purpose>
 <non-goals>
   <item>Does not execute or compile C code — pure regex-based static parsing.</item>
   <item>Does not construct knowledge records — returns structured entries for the extractor.</item>
@@ -8,8 +8,13 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: parsers for MON, WEAPON/ARMOR/etc., and OBJECT/OBJ macros with line-range tracking.</item>
+  <item>Refactored: extracted macro scanning into macro-scanner.ts and field extraction into field-extractor.ts.</item>
+  <item>Removed parseArtifacts (dead code — artifacts already covered by parseObjects).</item>
 </CHANGE_SUMMARY>
 */
+import { scanCMacros } from "./macro-scanner.ts";
+import { extractFields, type FieldSpec } from "./field-extractor.ts";
+
 function findMatchingParen(s: string): number {
   let depth = 0;
   for (let i = 0; i < s.length; i++) {
@@ -48,43 +53,35 @@ export interface MonsterEntry {
   lineEnd: number;
 }
 
+const LVL_RE = /LVL\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/;
+const SIZ_RE = /SIZ\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(MS_[A-Z_]+)\s*,\s*(MZ_[A-Z_]+)\s*\)/;
+
+const monsterFieldSpecs: FieldSpec[] = [
+  { name: "symbol", regex: /,\s*(S_[A-Z_]+)\s*,/, group: 1, default: "S_UNKNOWN" },
+  { name: "level", regex: LVL_RE, group: 1, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "moveSpeed", regex: LVL_RE, group: 2, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "armorClass", regex: LVL_RE, group: 3, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "magicResistance", regex: LVL_RE, group: 4, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "alignment", regex: LVL_RE, group: 5, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "genoFlags", regex: /LVL\([^)]*\)\s*,\s*\(([^)]+)\)/, group: 1, default: "0" },
+  { name: "attacks", regex: /A\(([^)]+(?:\)[^A]*\([^)]+)*)\)/, group: 1, default: "NO_ATTK" },
+  { name: "weight", regex: SIZ_RE, group: 1, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "nutrition", regex: SIZ_RE, group: 2, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "sound", regex: SIZ_RE, group: 3, default: "MS_SILENT" },
+  { name: "size", regex: SIZ_RE, group: 4, default: "MZ_MEDIUM" },
+];
+
 export function parseMonsters(source: string): MonsterEntry[] {
+  const scanned = scanCMacros(source, /^\s*MON\(/);
   const entries: MonsterEntry[] = [];
   const seenIds = new Set<string>();
-  const lines = source.split("\n");
 
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const monMatch = line.match(/^\s*MON\(/);
-    if (!monMatch) {
-      i++;
-      continue;
-    }
-
-    const lineStart = i + 1;
-    let fullText = "";
-    let depth = 0;
-    let lineEnd = lineStart;
-
-    for (let j = i; j < lines.length; j++) {
-      fullText += " " + lines[j].trim();
-      for (const ch of lines[j]) {
-        if (ch === "(") depth++;
-        else if (ch === ")") depth--;
-      }
-      lineEnd = j + 1;
-      if (depth <= 0 && j > i) break;
-      if (j === i && depth <= 0) break;
-    }
-
+  for (const { fullText, lineStart, lineEnd } of scanned) {
     const entry = finalizeMonsterEntry(fullText, lineStart, lineEnd);
     if (entry && !seenIds.has(entry.nativeId)) {
       seenIds.add(entry.nativeId);
       entries.push(entry);
     }
-
-    i = lineEnd;
   }
 
   return entries;
@@ -101,27 +98,7 @@ function finalizeMonsterEntry(
   const name = nameMatch[1];
   const nativeId = name.replace(/\s+/g, "_").toLowerCase();
 
-  const symMatch = fullText.match(/,\s*(S_[A-Z_]+)\s*,/);
-  const symbol = symMatch ? symMatch[1] : "S_UNKNOWN";
-
-  const lvlMatch = fullText.match(/LVL\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
-  const level = lvlMatch ? parseInt(lvlMatch[1], 10) : 0;
-  const moveSpeed = lvlMatch ? parseInt(lvlMatch[2], 10) : 0;
-  const armorClass = lvlMatch ? parseInt(lvlMatch[3], 10) : 0;
-  const magicResistance = lvlMatch ? parseInt(lvlMatch[4], 10) : 0;
-  const alignment = lvlMatch ? parseInt(lvlMatch[5], 10) : 0;
-
-  const genoMatch = fullText.match(/LVL\([^)]*\)\s*,\s*\(([^)]+)\)/);
-  const genoFlags = genoMatch ? genoMatch[1].trim() : "0";
-
-  const atkMatch = fullText.match(/A\(([^)]+(?:\)[^A]*\([^)]+)*)\)/);
-  const attacks = atkMatch ? atkMatch[1].trim() : "NO_ATTK";
-
-  const sizMatch = fullText.match(/SIZ\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(MS_[A-Z_]+)\s*,\s*(MZ_[A-Z_]+)\s*\)/);
-  const weight = sizMatch ? parseInt(sizMatch[1], 10) : 0;
-  const nutrition = sizMatch ? parseInt(sizMatch[2], 10) : 0;
-  const sound = sizMatch ? sizMatch[3] : "MS_SILENT";
-  const size = sizMatch ? sizMatch[4] : "MZ_MEDIUM";
+  const fields = extractFields(fullText, monsterFieldSpecs);
 
   const afterSizIdx = fullText.indexOf("SIZ(");
   if (afterSizIdx < 0) return null;
@@ -130,36 +107,29 @@ function finalizeMonsterEntry(
   const afterSiz = afterSizRaw.substring(sizCloseIdx + 1).trim();
 
   const tokens = afterSiz.split(/,\s*/).filter((t) => t.length > 0);
-  const resistances = tokens[0]?.trim() || "0";
-  const conveys = tokens[1]?.trim() || "0";
-  const flags1 = tokens[2]?.trim() || "0";
-  const flags2 = tokens[3]?.trim() || "0";
-  const flags3 = tokens[4]?.trim() || "0";
-  const difficulty = tokens[5] ? parseInt(tokens[5].trim(), 10) : 0;
-  const color = tokens[6]?.trim().replace(/[)]$/, "") || "CLR_GRAY";
 
   return {
     nativeId,
     name,
-    symbol,
-    level,
-    moveSpeed,
-    armorClass,
-    magicResistance,
-    alignment,
-    genoFlags,
-    attacks,
-    weight,
-    nutrition,
-    sound,
-    size,
-    resistances,
-    conveys,
-    flags1,
-    flags2,
-    flags3,
-    difficulty,
-    color,
+    symbol: fields.symbol as string,
+    level: fields.level as number,
+    moveSpeed: fields.moveSpeed as number,
+    armorClass: fields.armorClass as number,
+    magicResistance: fields.magicResistance as number,
+    alignment: fields.alignment as number,
+    genoFlags: fields.genoFlags as string,
+    attacks: fields.attacks as string,
+    weight: fields.weight as number,
+    nutrition: fields.nutrition as number,
+    sound: fields.sound as string,
+    size: fields.size as string,
+    resistances: tokens[0]?.trim() || "0",
+    conveys: tokens[1]?.trim() || "0",
+    flags1: tokens[2]?.trim() || "0",
+    flags2: tokens[3]?.trim() || "0",
+    flags3: tokens[4]?.trim() || "0",
+    difficulty: tokens[5] ? parseInt(tokens[5].trim(), 10) : 0,
+    color: tokens[6]?.trim().replace(/[)]$/, "") || "CLR_GRAY",
     lineStart,
     lineEnd,
   };
@@ -213,63 +183,25 @@ const OBJECT_MACROS: ObjectMacro[] = [
   { name: "OBJECT", class: "object" },
 ];
 
+const objectFieldSpecs: FieldSpec[] = [
+  { name: "probability", regex: /,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,/, group: 1, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "cost", regex: /,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/, group: 1, transform: (v) => parseInt(v, 10), default: 0 },
+  { name: "material", regex: /\b(IRON|WOOD|LEATHER|COPPER|SILVER|GOLD|MITHRIL|PLASTIC|GLASS|BONE|PAPER|MINERAL|GEMSTONE|METAL|CLOTH|DRAGON_HIDE|PLATINUM|WAX|FLESH|VEGGY|LIQUID)\b/, group: 1, default: "UNKNOWN" },
+  { name: "weight", regex: /,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/, group: 1, transform: (v) => parseInt(v, 10), default: 0 },
+];
+
 export function parseObjects(source: string): ObjectEntry[] {
-  const entries: ObjectEntry[] = [];
-  const seenKeys = new Set<string>();
-  const lines = source.split("\n");
   const macroNames = OBJECT_MACROS.map((m) => m.name);
   const macroPattern = new RegExp(`^\\s*(${macroNames.join("|")})\\(`);
 
-  let skipDepth = 0;
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
+  const scanned = scanCMacros(source, macroPattern, { handlePreprocessor: true });
+  const entries: ObjectEntry[] = [];
+  const seenKeys = new Set<string>();
 
-    if (trimmed.match(/^#if\s+0\b/) || (trimmed.match(/^#if\b/) && skipDepth > 0) ||
-        (trimmed.match(/^#ifdef\b/) && skipDepth > 0) ||
-        (trimmed.match(/^#ifndef\b/) && skipDepth > 0)) {
-      skipDepth++;
-      i++;
-      continue;
-    }
-    if (trimmed.match(/^#endif\b/)) {
-      if (skipDepth > 0) skipDepth--;
-      i++;
-      continue;
-    }
-    if (trimmed.match(/^#else\b/) || trimmed.match(/^#elif\b/)) {
-      i++;
-      continue;
-    }
-    if (skipDepth > 0) {
-      i++;
-      continue;
-    }
-
-    const match = line.match(macroPattern);
-    if (!match) {
-      i++;
-      continue;
-    }
-
-    const macroName = match[1];
-    const objClass = OBJECT_MACROS.find((m) => m.name === macroName)!.class;
-    const lineStart = i + 1;
-
-    let fullText = "";
-    let depth = 0;
-    let lineEnd = lineStart;
-
-    for (let j = i; j < lines.length; j++) {
-      fullText += " " + lines[j].trim();
-      for (const ch of lines[j]) {
-        if (ch === "(") depth++;
-        else if (ch === ")") depth--;
-      }
-      lineEnd = j + 1;
-      if (depth <= 0) break;
-    }
+  for (const { fullText, lineStart, lineEnd } of scanned) {
+    const macroMatch = fullText.match(new RegExp(`\\b(${macroNames.join("|")})\\(`));
+    const macroName = macroMatch ? macroMatch[1] : "";
+    const objClass = OBJECT_MACROS.find((m) => m.name === macroName)?.class ?? "object";
 
     const entry = finalizeObjectEntry(fullText, macroName, objClass, lineStart, lineEnd);
     if (entry) {
@@ -279,8 +211,6 @@ export function parseObjects(source: string): ObjectEntry[] {
         entries.push(entry);
       }
     }
-
-    i = lineEnd;
   }
 
   return entries;
@@ -335,20 +265,10 @@ function finalizeObjectEntry(
     }
   }
 
-  const probMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,/);
-  const probability = probMatch ? parseInt(probMatch[1], 10) : 0;
-
-  const costMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/);
-  const cost = costMatch ? parseInt(costMatch[1], 10) : 0;
-
-  const materialMatch = fullText.match(/\b(IRON|WOOD|LEATHER|COPPER|SILVER|GOLD|MITHRIL|PLASTIC|GLASS|BONE|PAPER|MINERAL|GEMSTONE|METAL|CLOTH|DRAGON_HIDE|PLATINUM|WAX|FLESH|VEGGY|LIQUID)\b/);
-  const material = materialMatch ? materialMatch[1] : "UNKNOWN";
+  const fields = extractFields(fullText, objectFieldSpecs);
 
   const colorMatch = fullText.match(/\b(CLR_[A-Z_]+|HI_[A-Z_]+|DRAGON_[A-Z_]+)\b/g);
   const color = colorMatch ? colorMatch[colorMatch.length - 1] : "CLR_GRAY";
-
-  const wtMatch = fullText.match(/,\s*(\d+)\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+/);
-  const weight = wtMatch ? parseInt(wtMatch[1], 10) : 0;
 
   const nativeId = rawNativeId || name.replace(/\s+/g, "_").toLowerCase();
 
@@ -357,80 +277,12 @@ function finalizeObjectEntry(
     name,
     description: rawDesc === "NoDes" ? "" : rawDesc,
     objClass: resolvedClass,
-    probability,
-    weight,
-    cost,
-    material,
+    probability: fields.probability as number,
+    weight: fields.weight as number,
+    cost: fields.cost as number,
+    material: fields.material as string,
     color,
     lineStart,
     lineEnd,
   };
-}
-
-export interface ArtifactEntry {
-  nativeId: string;
-  name: string;
-  description: string;
-  objClass: string;
-  lineStart: number;
-  lineEnd: number;
-}
-
-export function parseArtifacts(source: string): ArtifactEntry[] {
-  const entries: ArtifactEntry[] = [];
-  const lines = source.split("\n");
-
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const match = line.match(/^\s*OBJECT\(\s*OBJ\(/);
-    if (!match) {
-      i++;
-      continue;
-    }
-
-    const lineStart = i + 1;
-    let fullText = "";
-    let depth = 0;
-    let lineEnd = lineStart;
-
-    for (let j = i; j < lines.length; j++) {
-      fullText += " " + lines[j].trim();
-      for (const ch of lines[j]) {
-        if (ch === "(") depth++;
-        else if (ch === ")") depth--;
-      }
-      lineEnd = j + 1;
-      if (depth <= 0) break;
-    }
-
-    const nameMatch = fullText.match(/OBJ\(\s*"([^"]+)"/);
-    if (!nameMatch) {
-      i = lineEnd;
-      continue;
-    }
-
-    const name = nameMatch[1];
-    const descMatch = fullText.match(/OBJ\(\s*"[^"]+"\s*,\s*"([^"]*)"/);
-    const description = descMatch ? descMatch[1] : "";
-
-    const classMatch = fullText.match(/,\s*([A-Z_]+_CLASS)\s*,/);
-    const objClass = classMatch ? classMatch[1].replace("_CLASS", "").toLowerCase() : "unknown";
-
-    const lastTokenMatch = fullText.match(/,\s*([A-Z_][A-Z0-9_]*)\s*\)\s*$/);
-    const nativeId = lastTokenMatch ? lastTokenMatch[1].toLowerCase() : name.replace(/\s+/g, "_").toLowerCase();
-
-    entries.push({
-      nativeId,
-      name,
-      description,
-      objClass,
-      lineStart,
-      lineEnd,
-    });
-
-    i = lineEnd;
-  }
-
-  return entries;
 }
