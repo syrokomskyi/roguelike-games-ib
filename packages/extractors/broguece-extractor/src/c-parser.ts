@@ -441,7 +441,7 @@ export interface DungeonFeatureEntry {
 export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[] {
   const scanned = scanCatalogEntries(source, {
     startMarker: "dungeonFeatureCatalog[NUMBER_DUNGEON_FEATURES] = {",
-    entryPattern: /\/\/\s*(.+)/,
+    entryPattern: /^\s*\{\s*([A-Za-z0-9_]+)/,
     isComplete: (full) => {
       const opens = full.match(/{/g)?.length ?? 0;
       const closes = full.match(/}/g)?.length ?? 0;
@@ -449,9 +449,17 @@ export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[
     },
   });
 
-  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
-    const comment = match[1].trim();
-    const nativeId = comment.replace(/\s+/g, "_").toUpperCase();
+  const seen = new Set<string>();
+  const results: DungeonFeatureEntry[] = [];
+
+  for (const { fullLine, lineStart, lineEnd, match } of scanned) {
+    const firstField = match[1];
+    const nativeId = firstField === "0" ? "NOTHING" : firstField.toUpperCase();
+    if (seen.has(nativeId)) continue;
+    seen.add(nativeId);
+
+    const commentMatch = fullLine.match(/\/\/\s*(.+)$/);
+    const comment = commentMatch ? commentMatch[1].trim() : nativeId;
 
     const braceMatch = fullLine.match(/\{([^}]+)\}/);
     const fields = braceMatch ? parseEntryFields(braceMatch[1]) : [];
@@ -459,7 +467,7 @@ export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[
     const flagsMatch = fullLine.match(/(DFF_[A-Z_][A-Z0-9_| ]*)/);
     const flags = flagsMatch ? flagsMatch[1].trim() : null;
 
-    return {
+    results.push({
       nativeId,
       description: comment,
       layer: fields[1] ?? null,
@@ -468,8 +476,10 @@ export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[
       flags,
       lineStart,
       lineEnd,
-    };
-  });
+    });
+  }
+
+  return results;
 }
 
 // --- Light Catalog ---
@@ -489,8 +499,8 @@ export interface LightEntry {
 export function parseLightCatalog(source: string): LightEntry[] {
   const scanned = scanCatalogEntries(source, {
     startMarker: "lightCatalog[NUMBER_LIGHT_KINDS] = {",
-    entryPattern: /\/\/\s*(.+)/,
-    isComplete: (full) => full.includes("true") || full.includes("false"),
+    entryPattern: /\{.*\/\/\s*(.+)/,
+    isComplete: (full) => full.includes("}"),
   });
 
   return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
@@ -535,7 +545,7 @@ export interface MutationEntry {
 export function parseMutationCatalog(source: string): MutationEntry[] {
   const scanned = scanCatalogEntries(source, {
     startMarker: "mutationCatalog[NUMBER_MUTATORS] = {",
-    entryPattern: /"([^"]+)"/,
+    entryPattern: /\{"([^"]+)"/,
     isComplete: (full) => full.includes("true}") || full.includes("false}"),
   });
 
@@ -581,7 +591,7 @@ export interface MonsterClassEntry {
 export function parseMonsterClassCatalog(source: string): MonsterClassEntry[] {
   const scanned = scanCatalogEntries(source, {
     startMarker: "monsterClassCatalog[MONSTER_CLASS_COUNT] = {",
-    entryPattern: /"([^"]+)"/,
+    entryPattern: /\{"([^"]+)"/,
     isComplete: (full) => full.includes("}}"),
   });
 

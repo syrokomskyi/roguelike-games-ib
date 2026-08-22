@@ -30,7 +30,7 @@ const { rows } = Astro.props;
               <a href={`/records/${row.record_key}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{row.record_key}</a>
             </div>
           </td>
-          <td class="px-3 py-2"><span class="rounded-md bg-ib-accent/15 px-2 py-0.5 text-xs text-ib-accent">{row.record_type}</span></td>
+          <td class="px-3 py-2"><span class="rounded-md bg-ib-accent/15 px-2 py-0.5 text-xs text-ib-accent">{row.kind ?? row.record_type}</span></td>
           <td class="px-3 py-2 text-ib-text">{row.title ?? "—"}</td>
           <td class="px-3 py-2 text-center text-ib-muted">{row.claim_count}</td>
           <td class="px-3 py-2 text-center text-ib-muted">{row.outgoing_relation_count}</td>

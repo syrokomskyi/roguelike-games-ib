@@ -13,7 +13,7 @@ export async function getStaticPaths() {
 
   const allRows = buildCompareRows(ctx.store);
 
-  const types = [...new Set(allRows.map((r) => r.record_type))].sort();
+  const types = [...new Set(allRows.map((r) => r.kind ?? r.record_type).filter(Boolean))].sort();
   const sources = [...new Set(allRows.map((r) => r.source_id).filter((s) => s !== "all"))].sort();
   const allTypes = ["all", ...types];
   const allSources = ["all", ...sources];
@@ -24,7 +24,7 @@ export async function getStaticPaths() {
   for (const type of allTypes) {
     for (const source of allSources) {
       let filtered = allRows;
-      if (type !== "all") filtered = filtered.filter((r) => r.record_type === type);
+      if (type !== "all") filtered = filtered.filter((r) => (r.kind ?? r.record_type) === type);
       if (source !== "all") filtered = filtered.filter((r) => r.source_id === source);
 
       const totalPages = Math.ceil(filtered.length / PAGE_SIZE);

@@ -27,6 +27,7 @@ export interface CompareRow {
   record_id: string;
   record_key: string;
   record_type: string;
+  kind: string | null;
   title: string | null;
   summary: string | null;
   claim_count: number;
@@ -46,6 +47,7 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
       record_id: r.id,
       record_key: r.key,
       record_type: r.record_type,
+      kind: (ra["kind"] as string | null) ?? null,
       title: (ra["title"] as string | null) ?? null,
       summary: (ra["summary"] as string | null) ?? null,
       claim_count: claims.length,
