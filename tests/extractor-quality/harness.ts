@@ -1,5 +1,7 @@
 // Implements ADR-0003: Extractor creation skill and quality test contour
 import { describe, it, expect } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, join } from "node:path";
 import {
   runExtractorDeterministic,
   type Extractor,
@@ -17,6 +19,7 @@ export interface QualityCheckOptions {
   sourceRoot: () => string;
   timeBudgetMs?: number;
   recordLossThreshold?: number;
+  spriteChecks?: boolean;
 }
 
 export type ContextFactory = () => ExtractorContext;
@@ -404,6 +407,168 @@ export function runQualityChecks(
       expect(missingInRun1).toHaveLength(0);
     });
   });
+
+  if (options.spriteChecks) {
+    describe("Q-008: sprite coverage — records with glyph have sprite_path and tile_coords", () => {
+      it("all records with a glyph field have non-null sprite_path and tile_coords", async () => {
+        const ctx = createContext();
+        await extractor.run(ctx);
+        const records = ctx.output.getRecords();
+
+        const withGlyph = records.filter(
+          (r) => {
+            const a = r.attributes as Record<string, unknown> | undefined;
+            return a && a.glyph != null;
+          },
+        );
+
+        if (withGlyph.length === 0) return;
+
+        const missingSprite = withGlyph.filter(
+          (r) => (r.attributes as Record<string, unknown>).sprite_path == null,
+        );
+        const missingCoords = withGlyph.filter(
+          (r) => (r.attributes as Record<string, unknown>).tile_coords == null,
+        );
+
+        if (missingSprite.length > 0) {
+          const details = missingSprite
+            .slice(0, 10)
+            .map((r) => `  ${r.key} (glyph=${(r.attributes as Record<string, unknown>).glyph})`)
+            .join("\n");
+          expect.fail(
+            `${missingSprite.length}/${withGlyph.length} records with glyph have null sprite_path:\n${details}`,
+          );
+        }
+
+        if (missingCoords.length > 0) {
+          const details = missingCoords
+            .slice(0, 10)
+            .map((r) => `  ${r.key} (glyph=${(r.attributes as Record<string, unknown>).glyph})`)
+            .join("\n");
+          expect.fail(
+            `${missingCoords.length}/${withGlyph.length} records with glyph have null tile_coords:\n${details}`,
+          );
+        }
+
+        expect(missingSprite).toHaveLength(0);
+        expect(missingCoords).toHaveLength(0);
+      });
+    });
+
+    describe("Q-009: sprite determinism — sprite_path and tile_coords stable across runs", () => {
+      it("sprite_path and tile_coords are identical between two runs", async () => {
+        const ctx1 = createContext();
+        await extractor.run(ctx1);
+        const records1 = ctx1.output.getRecords();
+
+        const ctx2 = createContext();
+        await extractor.run(ctx2);
+        const records2 = ctx2.output.getRecords();
+
+        const sprites1 = new Map(
+          records1
+            .filter((r) => {
+              const a = r.attributes as Record<string, unknown> | undefined;
+              return a && a.sprite_path != null;
+            })
+            .map((r) => {
+              const a = r.attributes as Record<string, unknown>;
+              return [r.key, { sprite_path: a.sprite_path, tile_coords: a.tile_coords }] as const;
+            }),
+        );
+        const sprites2 = new Map(
+          records2
+            .filter((r) => {
+              const a = r.attributes as Record<string, unknown> | undefined;
+              return a && a.sprite_path != null;
+            })
+            .map((r) => {
+              const a = r.attributes as Record<string, unknown>;
+              return [r.key, { sprite_path: a.sprite_path, tile_coords: a.tile_coords }] as const;
+            }),
+        );
+
+        if (sprites1.size === 0) return;
+
+        const mismatches: string[] = [];
+        for (const [key, s1] of sprites1) {
+          const s2 = sprites2.get(key);
+          if (!s2) {
+            mismatches.push(`  ${key}: missing in run 2`);
+          } else {
+            if (s1.sprite_path !== s2.sprite_path) {
+              mismatches.push(`  ${key}: sprite_path differs (${s1.sprite_path} vs ${s2.sprite_path})`);
+            }
+            const c1 = JSON.stringify(s1.tile_coords);
+            const c2 = JSON.stringify(s2.tile_coords);
+            if (c1 !== c2) {
+              mismatches.push(`  ${key}: tile_coords differ (${c1} vs ${c2})`);
+            }
+          }
+        }
+
+        if (mismatches.length > 0) {
+          expect.fail(`Sprite data differs between runs:\n${mismatches.slice(0, 10).join("\n")}`);
+        }
+
+        expect(mismatches).toHaveLength(0);
+      });
+    });
+
+    describe("Q-011: sprite file integrity — extracted PNG files exist and are valid", () => {
+      it("all sprite_path values point to existing valid PNG files", async () => {
+        const ctx = createContext();
+        await extractor.run(ctx);
+        const records = ctx.output.getRecords();
+
+        const withSprite = records.filter(
+          (r) => {
+            const a = r.attributes as Record<string, unknown> | undefined;
+            return a && typeof a.sprite_path === "string";
+          },
+        );
+
+        if (withSprite.length === 0) return;
+
+        const workspaceRoot = resolve(options.sourceRoot(), "../..");
+        const invalid: string[] = [];
+
+        for (const r of withSprite) {
+          const relPath = (r.attributes as Record<string, unknown>).sprite_path as string;
+          const absPath = join(workspaceRoot, relPath);
+
+          if (!existsSync(absPath)) {
+            invalid.push(`  ${r.key}: file not found at ${relPath}`);
+            continue;
+          }
+
+          const buf = readFileSync(absPath);
+          if (buf.length < 24) {
+            invalid.push(`  ${r.key}: file too small (${buf.length} bytes) at ${relPath}`);
+            continue;
+          }
+
+          if (buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) {
+            invalid.push(`  ${r.key}: not a valid PNG at ${relPath}`);
+            continue;
+          }
+
+          const width = buf.readUInt32BE(16);
+          const height = buf.readUInt32BE(20);
+          if (width <= 0 || height <= 0) {
+            invalid.push(`  ${r.key}: invalid dimensions ${width}x${height} at ${relPath}`);
+          }
+        }
+
+        if (invalid.length > 0) {
+          expect.fail(`${invalid.length}/${withSprite.length} sprite files are invalid:\n${invalid.slice(0, 10).join("\n")}`);
+        }
+
+        expect(invalid).toHaveLength(0);
+      });
+    });
+  }
 
   describe("Quality report", () => {
     it("generates and prints quality report", async () => {

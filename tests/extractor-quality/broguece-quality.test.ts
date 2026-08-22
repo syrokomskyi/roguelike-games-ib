@@ -55,5 +55,6 @@ describe("broguece extractor quality", () => {
     sourceId: "broguece",
     sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 10000,
+    spriteChecks: true,
   });
 });

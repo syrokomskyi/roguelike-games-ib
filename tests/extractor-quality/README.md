@@ -17,7 +17,10 @@ This directory contains a reusable test harness (`harness.ts`) that validates an
 | Q-005 | Record loss | No unexpected record loss vs previous run (threshold-based) |
 | Q-006 | Performance | Extractor completes within a configurable time budget |
 | Q-007 | Record uniqueness | No duplicate record keys or native_ids |
+| Q-008 | Sprite coverage | All records with a glyph field have non-null sprite_path and tile_coords (opt-in via `spriteChecks`) |
+| Q-009 | Sprite determinism | sprite_path and tile_coords are identical across two runs (opt-in via `spriteChecks`) |
 | Q-010 | Record key stability | Record key sets are identical across two runs |
+| Q-011 | Sprite file integrity | All sprite_path values point to existing valid PNG files on disk (opt-in via `spriteChecks`) |
 | Report | Quality report | Prints a markdown summary with populations, file breakdown, duplicates, evidence issues, and field coverage |
 
 ## Usage
@@ -56,6 +59,7 @@ describe("<game> extractor quality", () => {
     sourceId: "<game>",
     sourceRoot: () => SOURCE_ROOT,
     timeBudgetMs: 10000,
+    spriteChecks: true, // enable for extractors that produce sprite_path/tile_coords
   });
 });
 ```
