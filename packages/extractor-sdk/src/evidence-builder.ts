@@ -18,6 +18,7 @@ import {
   defaultPublicPolicy,
   defaultPrivatePolicy,
   type EvidenceAnchor,
+  type MediaQuery,
   type PublicationPolicy,
 } from "@roguelike-games-ib/knowledge-core";
 
@@ -26,6 +27,8 @@ export interface EvidenceBuildOptions {
   locator: EvidenceAnchor["locator"];
   publication?: Partial<PublicationPolicy>;
   fragmentLines?: { lineStart: number; lineEnd: number };
+  evidenceKind?: string;
+  media?: MediaQuery | null;
 }
 
 export class EvidenceFactory {
@@ -61,6 +64,8 @@ export class EvidenceFactory {
       opts.locator,
       policy,
       fragmentHash,
+      opts.evidenceKind,
+      opts.media,
     );
   }
 

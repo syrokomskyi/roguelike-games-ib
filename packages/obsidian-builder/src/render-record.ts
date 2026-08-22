@@ -131,9 +131,24 @@ function renderEvidence(
 
   const lines: string[] = ["## Evidence"];
   for (const e of ev) {
-    const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
     const url = buildEvidenceUrl(e, store.sources);
     const link = url ? ` ([GitHub](${url}))` : "";
+
+    if (e.evidence_kind === "asset" && e.media) {
+      const altText = e.media.alt_text ?? e.artifact_path;
+      const dims = e.media.width && e.media.height
+        ? ` (${e.media.width}x${e.media.height})`
+        : "";
+      lines.push(`- **[${altText}]${dims}**`);
+      if (url) {
+        lines.push(`  ![](${url})`);
+      }
+      lines.push(`  - Path: \`${e.artifact_path}\``);
+      lines.push(`  - SHA-256: \`${e.artifact_sha256}\``);
+      continue;
+    }
+
+    const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
     lines.push(`- [${e.id}]${excerpt}${link}`);
   }
   return lines.join("\n");

@@ -28,13 +28,52 @@ import {
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"];
+
+const MIME_MAP: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".bmp": "image/bmp",
+};
+
+function readPngDimensions(buf: Buffer): { width: number; height: number } | null {
+  if (buf.length < 24) return null;
+  if (buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) return null;
+  const width = buf.readUInt32BE(16);
+  const height = buf.readUInt32BE(20);
+  return { width, height };
+}
+
+function readImageMedia(
+  source: { readBytes: (path: string) => Buffer },
+  relativePath: string,
+): { mime_type: string; width: number | null; height: number | null; alt_text: string | null } {
+  const ext = relativePath.toLowerCase().match(/\.[^.]+$/)?.[0] ?? "";
+  const mime_type = MIME_MAP[ext] ?? "application/octet-stream";
+  let width: number | null = null;
+  let height: number | null = null;
+  if (ext === ".png") {
+    const buf = source.readBytes(relativePath);
+    const dims = readPngDimensions(buf);
+    if (dims) {
+      width = dims.width;
+      height = dims.height;
+    }
+  }
+  const fileName = relativePath.split("/").pop() ?? relativePath;
+  return { mime_type, width, height, alt_text: `Image asset: ${fileName}` };
+}
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
   extractorId: "broguece-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "terrain", "item"],
+  recordKinds: ["creature", "terrain", "item", "image_asset"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -271,19 +310,78 @@ export function createBrogueCEExtractor(): Extractor {
         }
       }
 
+      let imageAssetCount = 0;
+      const imageFiles = ctx.source.walk((p) => {
+        const ext = p.toLowerCase().match(/\.[^.]+$/)?.[0] ?? "";
+        return IMAGE_EXTENSIONS.includes(ext);
+      });
+      for (const imgPath of imageFiles) {
+        const fileName = imgPath.split("/").pop() ?? imgPath;
+        const slug = imgPath.replace(/\.[^.]+$/, "").replace(/[/\s]+/g, "-").toLowerCase();
+        const resolved = ctx.ids.resolveOrCreate("image_asset", slug, imgPath);
+        const envelope = makeRecordEnvelope(
+          ctx.binding.source_id,
+          "image_asset",
+          resolved.key,
+          resolved.id,
+          "broguece-factual",
+        );
+
+        const media = readImageMedia(ctx.source, imgPath);
+
+        const record = {
+          ...envelope,
+          kind: "image_asset",
+          native_kind: "image",
+          name: { canonical: fileName, original: fileName },
+          source_identity: {
+            source_id: ctx.binding.source_id,
+            native_id: imgPath,
+            path: imgPath,
+          },
+          activation: "active" as const,
+          attributes: {
+            mime_type: media.mime_type,
+            width: media.width,
+            height: media.height,
+          },
+          evidence_refs: [] as string[],
+        };
+
+        ctx.output.writeRecord(record);
+
+        const evidence = ctx.evidence.create({
+          artifactPath: imgPath,
+          evidenceKind: "asset",
+          media,
+          locator: {
+            symbol: null,
+            line_start: null,
+            line_end: null,
+            byte_start: null,
+            byte_end: null,
+            data_key: imgPath,
+          },
+        });
+        ctx.output.writeEvidence(resolved.id, evidence);
+        imageAssetCount++;
+      }
+
       ctx.output.writePopulation("creatures", 67, creatureCount);
       ctx.output.writePopulation("terrain", 214, terrainCount);
       ctx.output.writePopulation("items", 46, itemCount);
+      ctx.output.writePopulation("image_assets", imageFiles.length, imageAssetCount);
 
       return {
         extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "broguece-run",
-        recordCount: creatureCount + terrainCount + itemCount,
+        recordCount: creatureCount + terrainCount + itemCount + imageAssetCount,
         populationCounts: [
           { dimension: "creatures", expected: 67, extracted: creatureCount },
           { dimension: "terrain", expected: 214, extracted: terrainCount },
           { dimension: "items", expected: 46, extracted: itemCount },
+          { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
         ],
         diagnostics: [],
       };

@@ -20,8 +20,15 @@ export interface PublicEvidence {
   id: string;
   record_id: string | null;
   source_id: string;
+  evidence_kind: string;
   artifact_path: string;
   artifact_sha256: string;
+  media: {
+    mime_type: string;
+    width: number | null;
+    height: number | null;
+    alt_text: string | null;
+  } | null;
   publication_access: string;
   locator: {
     symbol: string | null;
@@ -77,8 +84,10 @@ export function redactPublicEvidence(
         id: evId ?? "",
         record_id: recordId ?? null,
         source_id: ev.source_id,
+        evidence_kind: ev.evidence_kind,
         artifact_path: ev.artifact.path,
         artifact_sha256: ev.artifact.sha256,
+        media: ev.media,
         publication_access: pub.access,
         locator,
         fragment_hash: ev.fragment_hash,

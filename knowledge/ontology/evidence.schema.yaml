@@ -33,6 +33,21 @@ allOf:
           sha256:
             type: string
             pattern: '^[a-f0-9]{64}$'
+      media:
+        type: [object, 'null']
+        additionalProperties: false
+        properties:
+          mime_type:
+            type: string
+            pattern: '^[a-z]+/[a-z0-9.+-]+$'
+          width:
+            type: [integer, 'null']
+            minimum: 1
+          height:
+            type: [integer, 'null']
+            minimum: 1
+          alt_text:
+            type: [string, 'null']
       locator:
         type: object
         additionalProperties: false

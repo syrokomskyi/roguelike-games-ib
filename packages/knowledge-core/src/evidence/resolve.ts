@@ -14,13 +14,22 @@ import { EvidenceError } from "../errors.ts";
 import { existsSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
 
+export interface MediaQuery {
+  mime_type: string;
+  width: number | null;
+  height: number | null;
+  alt_text: string | null;
+}
+
 export interface EvidenceAnchor {
   source_id: string;
   source_binding_digest: string;
+  evidence_kind: string;
   artifact: {
     path: string;
     sha256: string;
   };
+  media: MediaQuery | null;
   locator: {
     symbol: string | null;
     line_start: number | null;
@@ -49,14 +58,18 @@ export function createEvidenceAnchor(
   locator: EvidenceAnchor["locator"],
   publication: EvidenceAnchor["publication"],
   fragmentHash?: string | null,
+  evidenceKind?: string,
+  media?: MediaQuery | null,
 ): EvidenceAnchor {
   return {
     source_id: sourceId,
     source_binding_digest: sourceBindingDigest,
+    evidence_kind: evidenceKind ?? "source_code",
     artifact: {
       path: artifactPath,
       sha256: artifactSha256,
     },
+    media: media ?? null,
     locator,
     fragment_hash: fragmentHash ?? null,
     publication,
