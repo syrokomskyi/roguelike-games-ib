@@ -12,13 +12,25 @@ const meta = getPageMetadata(ctx);
 const sources = ctx.store.sources;
 const recordsBySource = countRecordsBySource(ctx.store);
 const typesBySource = new Map<string, Map<string, number>>();
-for (const r of ctx.store.records) {
-  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-  const sid = si?.["source_id"] as string | undefined;
-  if (!sid) continue;
+function addType(sid: string, type: string) {
+  if (!sid) return;
   if (!typesBySource.has(sid)) typesBySource.set(sid, new Map());
   const typeMap = typesBySource.get(sid)!;
-  typeMap.set(r.record_type, (typeMap.get(r.record_type) ?? 0) + 1);
+  typeMap.set(type, (typeMap.get(type) ?? 0) + 1);
+}
+for (const r of ctx.store.records) {
+  const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
+  const scope = (r as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+  const sid = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined);
+  addType(sid ?? "", r.record_type);
+}
+for (const c of ctx.store.claims) {
+  const scope = (c as unknown as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+  addType((scope?.["source_id"] as string | undefined) ?? "", "claim");
+}
+for (const r of ctx.store.relations) {
+  const scope = (r as unknown as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+  addType((scope?.["source_id"] as string | undefined) ?? "", "relation");
 }
 
 const illustrationBySource = new Map<string, string>();

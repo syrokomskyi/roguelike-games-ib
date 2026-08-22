@@ -69,7 +69,7 @@ export interface GameRecord {
 }
 
 export function recordsForSource(store: ProjectionStore, sourceId: string): GameRecord[] {
-  return store.records.filter((r) => {
+  const fromRecords = store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
     return getSourceId(ra) === sourceId;
   }).map((r) => {
@@ -82,6 +82,36 @@ export function recordsForSource(store: ProjectionStore, sourceId: string): Game
       sprite_path: getSpritePath(ra),
     };
   });
+
+  const fromClaims = store.claims.filter((c) => {
+    const ca = c as unknown as Record<string, unknown>;
+    return getSourceId(ca) === sourceId;
+  }).map((c) => {
+    const ca = c as unknown as Record<string, unknown>;
+    return {
+      id: c.id,
+      key: (ca["key"] as string) ?? c.id,
+      record_type: (ca["record_type"] as string) ?? "claim",
+      source_id: getSourceId(ca),
+      sprite_path: null,
+    };
+  });
+
+  const fromRelations = store.relations.filter((r) => {
+    const ra = r as unknown as Record<string, unknown>;
+    return getSourceId(ra) === sourceId;
+  }).map((r) => {
+    const ra = r as unknown as Record<string, unknown>;
+    return {
+      id: r.id,
+      key: (ra["key"] as string) ?? r.id,
+      record_type: (ra["record_type"] as string) ?? "relation",
+      source_id: getSourceId(ra),
+      sprite_path: null,
+    };
+  });
+
+  return [...fromRecords, ...fromClaims, ...fromRelations];
 }
 
 export interface SimpleRecord {
@@ -172,6 +202,7 @@ export function getStats(store: ProjectionStore) {
       const ra = r as Record<string, unknown>;
       return r.record_type === "semantic_record" && ra["semantic_type"] === "system";
     }).length,
+    semanticRecords: records.filter((r) => r.record_type === "semantic_record").length,
   };
 }
 
@@ -179,6 +210,14 @@ export function countRecordsBySource(store: ProjectionStore): Map<string, number
   const map = new Map<string, number>();
   for (const r of store.records) {
     const sid = getSourceId(r as Record<string, unknown>);
+    if (sid) map.set(sid, (map.get(sid) ?? 0) + 1);
+  }
+  for (const c of store.claims) {
+    const sid = getSourceId(c as unknown as Record<string, unknown>);
+    if (sid) map.set(sid, (map.get(sid) ?? 0) + 1);
+  }
+  for (const r of store.relations) {
+    const sid = getSourceId(r as unknown as Record<string, unknown>);
     if (sid) map.set(sid, (map.get(sid) ?? 0) + 1);
   }
   return map;

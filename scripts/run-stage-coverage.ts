@@ -70,11 +70,19 @@ async function main() {
   ];
   const nethackCoverage = computeCoverage("nethack", "bb2d375f5feea0baa2e24b7848786a6100b7504febb2419ba24b42df701b2b7f", nethackDims);
 
+  // === Dungeon Crawl Stone Soup ===
+  const crawlDims = [
+    makeDimension("monsters", "extractor_population", 680, 680, 680, "extractor_population", "All monster YAML files in dat/mons/ (excluding README and TEST*)"),
+    makeDimension("species", "extractor_population", 48, 48, 48, "extractor_population", "All species YAML files in dat/species/"),
+    makeDimension("jobs", "extractor_population", 26, 26, 26, "extractor_population", "All job YAML files in dat/jobs/"),
+  ];
+  const crawlCoverage = computeCoverage("crawl", "de8b21b4beb5654ebb656bdb6f8947d286bf5bf8f31729816e38074471b1ec4a", crawlDims);
+
   // Write coverage files directly to canonical
   const coverageDir = join(CANONICAL_ROOT, "coverage");
   mkdirSync(coverageDir, { recursive: true });
 
-  const coverages = [brogueceCoverage, catbnCoverage, nethackCoverage];
+  const coverages = [brogueceCoverage, catbnCoverage, nethackCoverage, crawlCoverage];
   for (const cov of coverages) {
     const filePath = join(coverageDir, `${cov.source_id}.jsonl`);
     writeFileSync(filePath, JSON.stringify(cov) + "\n");

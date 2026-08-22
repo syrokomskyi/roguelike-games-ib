@@ -70,9 +70,11 @@ const paths = [
 
   {stats && (
     <section class="border-b border-ib-border bg-ib-surface/60">
-      <div class="mx-auto grid max-w-[90rem] grid-cols-2 px-5 sm:grid-cols-4 lg:px-8">
+      <div class="mx-auto grid max-w-[90rem] grid-cols-2 px-5 sm:grid-cols-4 lg:grid-cols-6 lg:px-8">
         <div class="stat"><strong>{stats.sources}</strong><span>games mapped</span></div>
         <div class="stat"><strong>{stats.records.toLocaleString()}</strong><span>definitions</span></div>
+        <div class="stat"><strong>{stats.claims.toLocaleString()}</strong><span>claims</span></div>
+        <div class="stat"><strong>{stats.relations.toLocaleString()}</strong><span>relations</span></div>
         <div class="stat"><strong>{(stats.mechanics + stats.systems).toLocaleString()}</strong><span>mechanics + systems</span></div>
         <div class="stat"><strong>{stats.concepts.toLocaleString()}</strong><span>design concepts</span></div>
       </div>
