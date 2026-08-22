@@ -137,6 +137,127 @@ export function parseSpeciesYaml(text: string, path: string): SpeciesEntry | nul
   };
 }
 
+export interface FormEntry {
+  id: string;
+  enum: string | null;
+  name: string;
+  description: string | null;
+  equivalentMons: string | null;
+  shortName: string | null;
+  longName: string | null;
+  talisman: string | null;
+  skill: { min: number; max: number } | null;
+  melds: string[];
+  str: number | null;
+  dex: number | null;
+  size: string | null;
+  hpMod: number | null;
+  ac: Record<string, number> | null;
+  ev: Record<string, number> | null;
+  resists: Record<string, number> | null;
+  fakemuts: Array<[string, string]> | null;
+  badmuts: Array<[string, string]> | null;
+  canFly: boolean | string | null;
+  canSwim: boolean | string | null;
+  canCast: boolean | string | null;
+  isBadform: boolean | string | null;
+  changesAnatomy: boolean | string | null;
+  changesSubstance: boolean | string | null;
+  holiness: string | null;
+  hasBlood: boolean | string | null;
+  hasHair: boolean | string | null;
+  hasBones: boolean | string | null;
+  hasFeet: boolean | string | null;
+  hasEars: boolean | string | null;
+  unarmed: Record<string, unknown> | null;
+  unarmedColour: string | null;
+  unarmedName: string | null;
+  unarmedVerbs: string[] | string | null;
+  unarmedBrand: string | null;
+  shoutVerb: string | null;
+  shoutVolume: number | null;
+  handName: string | null;
+  footName: string | null;
+  prayerAction: string | null;
+  fleshName: string | null;
+  moveSpeed: number | null;
+  offhandPunch: boolean | string | null;
+  specialDamage: string | null;
+  specialDamageName: string | null;
+  bodyAcMult: Record<string, number> | null;
+  wizName: string | null;
+  path: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseFormYaml(text: string, path: string): FormEntry | null {
+  const data = parseYamlLenient(text);
+  if (!data || !data.enum) return null;
+
+  const range = computeLineRange(text);
+  const id = path.replace(/^forms\//, "").replace(/\.yaml$/, "");
+  const shortName =
+    typeof data.short_name === "string" && data.short_name.length > 0
+      ? data.short_name
+      : null;
+  const enumVal = data.enum as string;
+
+  return {
+    id,
+    enum: enumVal,
+    name: shortName ?? enumVal,
+    description: (data.description as string) ?? null,
+    equivalentMons: (data.equivalent_mons as string) ?? null,
+    shortName,
+    longName: (data.long_name as string) ?? null,
+    talisman: (data.talisman as string) ?? null,
+    skill: (data.skill as { min: number; max: number }) ?? null,
+    melds: Array.isArray(data.melds) ? (data.melds as string[]) : [],
+    str: (data.str as number) ?? null,
+    dex: (data.dex as number) ?? null,
+    size: (data.size as string) ?? null,
+    hpMod: (data.hp_mod as number) ?? null,
+    ac: (data.ac as Record<string, number>) ?? null,
+    ev: (data.ev as Record<string, number>) ?? null,
+    resists: (data.resists as Record<string, number>) ?? null,
+    fakemuts: (data.fakemuts as Array<[string, string]>) ?? null,
+    badmuts: (data.badmuts as Array<[string, string]>) ?? null,
+    canFly: (data.can_fly as boolean | string) ?? null,
+    canSwim: (data.can_swim as boolean | string) ?? null,
+    canCast: (data.can_cast as boolean | string) ?? null,
+    isBadform: (data.is_badform as boolean | string) ?? null,
+    changesAnatomy: (data.changes_anatomy as boolean | string) ?? null,
+    changesSubstance: (data.changes_substance as boolean | string) ?? null,
+    holiness: (data.holiness as string) ?? null,
+    hasBlood: (data.has_blood as boolean | string) ?? null,
+    hasHair: (data.has_hair as boolean | string) ?? null,
+    hasBones: (data.has_bones as boolean | string) ?? null,
+    hasFeet: (data.has_feet as boolean | string) ?? null,
+    hasEars: (data.has_ears as boolean | string) ?? null,
+    unarmed: (data.unarmed as Record<string, unknown>) ?? null,
+    unarmedColour: (data.unarmed_colour as string) ?? null,
+    unarmedName: (data.unarmed_name as string) ?? null,
+    unarmedVerbs: (data.unarmed_verbs as string[] | string) ?? null,
+    unarmedBrand: (data.unarmed_brand as string) ?? null,
+    shoutVerb: (data.shout_verb as string) ?? null,
+    shoutVolume: (data.shout_volume as number) ?? null,
+    handName: (data.hand_name as string) ?? null,
+    footName: (data.foot_name as string) ?? null,
+    prayerAction: (data.prayer_action as string) ?? null,
+    fleshName: (data.flesh_name as string) ?? null,
+    moveSpeed: (data.move_speed as number) ?? null,
+    offhandPunch: (data.offhand_punch as boolean | string) ?? null,
+    specialDamage: (data.special_damage as string) ?? null,
+    specialDamageName: (data.special_damage_name as string) ?? null,
+    bodyAcMult: (data.body_ac_mult as Record<string, number>) ?? null,
+    wizName: (data.wiz_name as string) ?? null,
+    path,
+    lineStart: range.lineStart,
+    lineEnd: range.lineEnd,
+  };
+}
+
 export function parseJobYaml(text: string, path: string): JobEntry | null {
   const data = parseYamlLenient(text);
   if (!data || !data.name) return null;

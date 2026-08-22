@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Crawl factual extractor — parses YAML data files, .des vault definitions, and C header files, emits creature, species, profession, vault, spell, branch, and sprite records with evidence anchors and population counts.</purpose>
+<purpose>Crawl factual extractor — parses YAML data files, .des vault definitions, and C header files, emits creature, species, profession, vault, spell, branch, form, and sprite records with evidence anchors and population counts.</purpose>
 <non-goals>
   <item>Does not compute design-space relations — factual extraction only.</item>
 </non-goals>
@@ -9,6 +9,7 @@
   <item>Initial creation: Crawl extractor with monster, species, job, and vault parsing.</item>
   <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
   <item>Added spell extraction (418 entries) from spl-data.h and branch extraction from branch-data.h via C struct parser with preprocessor directive handling.</item>
+  <item>Added form extraction (35 entries) from dat/forms/*.yaml as mutation records via YAML parser.</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -23,13 +24,15 @@ import {
   parseMonsterYaml,
   parseSpeciesYaml,
   parseJobYaml,
+  parseFormYaml,
   type MonsterEntry,
   type SpeciesEntry,
   type JobEntry,
+  type FormEntry,
 } from "./yaml-parser.ts";
 import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
 import { parseDesVaults, type VaultEntry } from "./des-parser.ts";
-import { parseSpellData, parseBranchData, type SpellEntry, type BranchEntry } from "./c-struct-parser.ts";
+import { parseSpellData, parseBranchData, parseAbilityTypes, type SpellEntry, type BranchEntry, type AbilityEntry } from "./c-struct-parser.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
@@ -39,7 +42,7 @@ const manifest: ExtractorManifest = {
   extractorId: "crawl-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "species", "profession", "vault", "spell", "branch"],
+  recordKinds: ["creature", "species", "profession", "vault", "spell", "branch", "mutation", "ability"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -78,6 +81,18 @@ const manifest: ExtractorManifest = {
       denominatorKind: "extractor_population",
       expected: 41,
       description: "All branch entries in branches[] array in branch-data.h (TAG_MAJOR_VERSION == 34, excluding > 34 conditional entries)",
+    },
+    {
+      dimension: "forms",
+      denominatorKind: "extractor_population",
+      expected: 35,
+      description: "All form YAML files in dat/forms/",
+    },
+    {
+      dimension: "abilities",
+      denominatorKind: "extractor_population",
+      expected: 216,
+      description: "All ABIL_* enum entries in ability-type.h (TAG_MAJOR_VERSION == 34, excluding aliases, sentinels, and WIZARD-only entries)",
     },
   ],
 };
@@ -310,6 +325,96 @@ function branchSpec(entries: BranchEntry[]): EntitySpec<BranchEntry> {
   };
 }
 
+function formSpec(entries: FormEntry[]): EntitySpec<FormEntry> {
+  return {
+    kind: "mutation",
+    entries,
+    adapter: {
+      nativeKind: "FORM",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: (e) => e.enum ?? e.id,
+      getSlug: (e) => (e.enum ?? e.id).replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `form:${e.enum ?? e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.enum ?? e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.enum ?? e.id,
+      getAttributes: (e) => ({
+        description: e.description,
+        equivalent_mons: e.equivalentMons,
+        short_name: e.shortName,
+        long_name: e.longName,
+        talisman: e.talisman,
+        skill: e.skill,
+        melds: e.melds,
+        str: e.str,
+        dex: e.dex,
+        size: e.size,
+        hp_mod: e.hpMod,
+        ac: e.ac,
+        ev: e.ev,
+        resists: e.resists,
+        fakemuts: e.fakemuts,
+        badmuts: e.badmuts,
+        can_fly: e.canFly,
+        can_swim: e.canSwim,
+        can_cast: e.canCast,
+        is_badform: e.isBadform,
+        changes_anatomy: e.changesAnatomy,
+        changes_substance: e.changesSubstance,
+        holiness: e.holiness,
+        has_blood: e.hasBlood,
+        has_hair: e.hasHair,
+        has_bones: e.hasBones,
+        has_feet: e.hasFeet,
+        has_ears: e.hasEars,
+        unarmed: e.unarmed,
+        unarmed_colour: e.unarmedColour,
+        unarmed_name: e.unarmedName,
+        unarmed_verbs: e.unarmedVerbs,
+        unarmed_brand: e.unarmedBrand,
+        shout_verb: e.shoutVerb,
+        shout_volume: e.shoutVolume,
+        hand_name: e.handName,
+        foot_name: e.footName,
+        prayer_action: e.prayerAction,
+        flesh_name: e.fleshName,
+        move_speed: e.moveSpeed,
+        offhand_punch: e.offhandPunch,
+        special_damage: e.specialDamage,
+        special_damage_name: e.specialDamageName,
+        body_ac_mult: e.bodyAcMult,
+        wiz_name: e.wizName,
+      }),
+      populationDimension: "forms",
+    },
+  };
+}
+
+function abilitySpec(entries: AbilityEntry[]): EntitySpec<AbilityEntry> {
+  return {
+    kind: "ability",
+    entries,
+    adapter: {
+      nativeKind: "ABILITY",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `ability:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: (e) => ({
+        value: e.value,
+      }),
+      populationDimension: "abilities",
+    },
+  };
+}
+
 export function createCrawlExtractor(): Extractor {
   return {
     manifest,
@@ -331,6 +436,11 @@ export function createCrawlExtractor(): Extractor {
         "jobs",
         parseJobYaml,
         /^jobs\/README/,
+      );
+      const formEntries = collectYamlFiles(
+        ctx,
+        "forms",
+        parseFormYaml,
       );
 
       const sourceRoot = ctx.source.getRoot();
@@ -378,6 +488,17 @@ export function createCrawlExtractor(): Extractor {
         console.warn(`[crawl-extractor] Failed to parse branch-data.h: ${err}`);
       }
 
+      const abilitySourcePath = resolve(sourceRoot, "../ability-type.h");
+      const abilityCopyPath = resolve(sourceRoot, "ability-type.h");
+      let abilityEntries: AbilityEntry[] = [];
+      try {
+        const abilitySource = readFileSync(abilitySourcePath, "utf-8");
+        writeFileSync(abilityCopyPath, abilitySource);
+        abilityEntries = parseAbilityTypes(abilitySource, "ability-type.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse ability-type.h: ${err}`);
+      }
+
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));
       if (speciesEntries.length > 0) specs.push(speciesSpec(speciesEntries));
@@ -385,6 +506,8 @@ export function createCrawlExtractor(): Extractor {
       if (allVaults.length > 0) specs.push(vaultSpec(allVaults));
       if (spellEntries.length > 0) specs.push(spellSpec(spellEntries));
       if (branchEntries.length > 0) specs.push(branchSpec(branchEntries));
+      if (formEntries.length > 0) specs.push(formSpec(formEntries));
+      if (abilityEntries.length > 0) specs.push(abilitySpec(abilityEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 

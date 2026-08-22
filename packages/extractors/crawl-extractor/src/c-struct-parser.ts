@@ -37,8 +37,8 @@ export interface BranchEntry {
 
 export interface AbilityEntry {
   nativeId: string;
-  flags: string;
-  hotkey: string;
+  name: string;
+  value: number | null;
   filePath: string;
   lineStart: number;
   lineEnd: number;
@@ -96,6 +96,15 @@ function preprocessCSource(source: string): string[] {
         active = true;
       }
 
+      condStack.push({ active, parentActive, seenElse: false });
+      continue;
+    }
+
+    if (trimmed.startsWith("#ifdef") || trimmed.startsWith("#ifndef")) {
+      const parentActive = currentlyActive();
+      const isIfdef = trimmed.startsWith("#ifdef");
+      // We don't define any preprocessor macros — #ifdef is false, #ifndef is true
+      const active = isIfdef ? false : true;
       condStack.push({ active, parentActive, seenElse: false });
       continue;
     }
@@ -272,44 +281,112 @@ export function parseBranchData(source: string, filePath: string): BranchEntry[]
 }
 
 export function parseAbilityTypes(source: string, filePath: string): AbilityEntry[] {
-  const lines = source.split("\n");
+  const rawLines = source.split("\n");
   const results: AbilityEntry[] = [];
 
-  const enumMatch = source.match(/enum\s+ability_type\s*\{([^}]+)\}/s);
-  if (!enumMatch) return results;
+  const condStack: Array<{ active: boolean; seenElse: boolean }> = [];
+  function currentlyActive(): boolean {
+    return condStack.every((c) => c.active);
+  }
 
-  const enumBody = enumMatch[1];
-  const enumLines = enumBody.split("\n");
+  let inEnum = false;
+  let foundEnumKeyword = false;
 
-  for (let i = 0; i < enumLines.length; i++) {
-    const line = enumLines[i].trim();
-    if (!line || line.startsWith("//") || line.startsWith("#")) continue;
+  for (let i = 0; i < rawLines.length; i++) {
+    const trimmed = rawLines[i].trim();
 
-    const entryMatch = line.match(/^(\w+)\s*=\s*(\d+)/);
+    // Handle preprocessor directives
+    if (/^#if[\s\(]/.test(trimmed) && !trimmed.startsWith("#ifdef") && !trimmed.startsWith("#ifndef")) {
+      let active = false;
+      if (trimmed.match(/^#if\s+TAG_MAJOR_VERSION\s*==\s*34/)) {
+        active = true;
+      } else if (trimmed.match(/^#if\s+TAG_MAJOR_VERSION\s*>\s*34/)) {
+        active = false;
+      } else {
+        active = true;
+      }
+      condStack.push({ active, seenElse: false });
+      continue;
+    }
+
+    if (trimmed.startsWith("#ifdef") || trimmed.startsWith("#ifndef")) {
+      const isIfdef = trimmed.startsWith("#ifdef");
+      condStack.push({ active: isIfdef ? false : true, seenElse: false });
+      continue;
+    }
+
+    if (trimmed === "#else") {
+      if (condStack.length > 0) {
+        const top = condStack[condStack.length - 1];
+        top.active = !top.active;
+        top.seenElse = true;
+      }
+      continue;
+    }
+
+    if (trimmed === "#endif") {
+      condStack.pop();
+      continue;
+    }
+
+    if (trimmed.startsWith("#")) continue;
+
+    if (!currentlyActive()) continue;
+
+    // Detect enum start (handle multi-line: "enum ability_type" then "{" on next line)
+    if (!inEnum) {
+      if (/enum\s+ability_type/.test(trimmed)) {
+        foundEnumKeyword = true;
+        if (trimmed.includes("{")) inEnum = true;
+      } else if (foundEnumKeyword && trimmed.startsWith("{")) {
+        inEnum = true;
+      }
+      continue;
+    }
+
+    // Detect enum end
+    if (trimmed === "};") break;
+
+    // Strip comments
+    const commentIdx = trimmed.indexOf("//");
+    const line = commentIdx >= 0 ? trimmed.substring(0, commentIdx).trim() : trimmed;
+    if (!line) continue;
+
+    // Match enum entries: ABIL_NAME or ABIL_NAME = value
+    // Skip aliases (value references another ABIL_*)
+    const entryMatch = line.match(/^(ABIL_\w+)\s*(?:=\s*(.+))?[,]?$/);
     if (!entryMatch) continue;
 
     const nativeId = entryMatch[1];
-    const lineNum = source.substring(0, source.indexOf(enumBody) + enumLines.slice(0, i + 1).join("\n").length).split("\n").length;
+    const valuePart = entryMatch[2]?.trim() ?? null;
 
-    let flags = "";
-    let hotkey = "";
+    // Skip aliases (value is a reference to another ABIL_*)
+    if (valuePart && /^ABIL_/.test(valuePart)) continue;
 
-    const commentMatch = line.match(/\/\/\s*(.+)$/);
-    if (commentMatch) {
-      const comment = commentMatch[1];
-      const flagsMatch = comment.match(/flags:\s*([^\s,]+)/);
-      if (flagsMatch) flags = flagsMatch[1];
-      const hotkeyMatch = comment.match(/hotkey:\s*([^\s,]+)/);
-      if (hotkeyMatch) hotkey = hotkeyMatch[1];
+    // Skip ABIL_NON_ABILITY sentinel
+    if (nativeId === "ABIL_NON_ABILITY") continue;
+
+    // Parse numeric value if present
+    let value: number | null = null;
+    if (valuePart) {
+      const numMatch = valuePart.match(/^-?\d+/);
+      if (numMatch) value = parseInt(numMatch[0], 10);
     }
+
+    // Derive display name from nativeId
+    const name = nativeId
+      .replace(/^ABIL_/, "")
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
 
     results.push({
       nativeId,
-      flags,
-      hotkey,
+      name,
+      value,
       filePath,
-      lineStart: lineNum,
-      lineEnd: lineNum,
+      lineStart: i + 1,
+      lineEnd: i + 1,
     });
   }
 
