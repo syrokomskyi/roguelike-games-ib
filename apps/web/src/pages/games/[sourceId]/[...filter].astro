@@ -80,7 +80,7 @@ for (const r of pageRecords) {
 }
 ---
 
-<Base title={sourceId ?? "Game"} metadata={meta} activeNav="games">
+<Base title={sourceId ?? "Game"} metadata={meta} activeNav="games" breadcrumbs={[{ label: "Atlas", href: "/" }, { label: "Games", href: "/games/" }, { label: sourceId }]}>
   <div class="space-y-6">
     {source && <SourceBindingPanel binding={source} />}
 

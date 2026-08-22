@@ -33,7 +33,7 @@ export async function getStaticPaths() {
 const { sourceId, kind, records, meta } = Astro.props;
 ---
 
-<Base title={`${kind} — ${sourceId}`} metadata={meta} activeNav="games">
+<Base title={`${kind} — ${sourceId}`} metadata={meta} activeNav="games" breadcrumbs={[{ label: "Atlas", href: "/" }, { label: "Games", href: "/games/" }, { label: sourceId, href: `/games/${sourceId}/` }, { label: `Definitions · ${kind}` }]}>
   <div class="space-y-6">
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-bold text-ib-text">Definitions: {kind}</h1>

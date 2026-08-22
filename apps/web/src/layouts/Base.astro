@@ -13,7 +13,13 @@
 */
 import { metadataToHtmlMeta } from "../lib/metadata";
 import type { PageMetadata } from "../lib/metadata";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 import "../styles/global.css";
+
+interface Breadcrumb {
+  label: string;
+  href?: string;
+}
 
 interface Props {
   title: string;
@@ -21,9 +27,10 @@ interface Props {
   activeNav?: string;
   fullWidth?: boolean;
   world?: "canonical" | "laboratory";
+  breadcrumbs?: Breadcrumb[];
 }
 
-const { title, metadata, activeNav, fullWidth = false, world = "canonical" } = Astro.props;
+const { title, metadata, activeNav, fullWidth = false, world = "canonical", breadcrumbs } = Astro.props;
 const navItems = [
   { href: "/search", label: "Explore", key: "search" },
   { href: "/games/", label: "Games", key: "games" },
@@ -69,6 +76,7 @@ const navItems = [
     </div>
   </nav>
   <main class={fullWidth ? "" : "mx-auto max-w-[90rem] px-5 py-10 lg:px-8 lg:py-14"}>
+    {breadcrumbs && breadcrumbs.length > 1 && <div class="mb-7"><Breadcrumbs items={breadcrumbs} /></div>}
     <slot />
   </main>
   <footer class="border-t border-ib-border bg-ib-bg py-8">

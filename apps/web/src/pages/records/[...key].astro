@@ -41,9 +41,13 @@ const ra = record as Record<string, unknown>;
 const spritePath = getSpritePath(ra);
 const recordSourceId = getSourceId(ra);
 const spriteUrl = spritePath && recordSourceId ? `/sprites/${encodeURIComponent(recordSourceId)}/${encodeURIComponent(spritePath.split("/").pop()!)}` : null;
+const recordTitle = typeof ra["title"] === "string" ? ra["title"] : record.key;
+const breadcrumbs = recordSourceId
+  ? [{ label: "Atlas", href: "/" }, { label: "Games", href: "/games/" }, { label: recordSourceId, href: `/games/${recordSourceId}/` }, { label: recordTitle }]
+  : [{ label: "Atlas", href: "/" }, { label: "Design Space", href: "/design/" }, { label: recordTitle }];
 ---
 
-<Base title={record.key} metadata={meta}>
+<Base title={record.key} metadata={meta} breadcrumbs={breadcrumbs}>
   <div class="space-y-12">
     <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
 

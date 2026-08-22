@@ -25,7 +25,7 @@ const evidence = ctx.store.evidence.filter((e) => e.source_id === recordId || e.
 const rendered = renderEvidence(evidence, ctx.store.sources);
 ---
 
-<Base title={`Evidence — ${recordId}`} metadata={meta}>
+<Base title={`Evidence — ${recordId}`} metadata={meta} breadcrumbs={[{ label: "Atlas", href: "/" }, { label: "Games", href: "/games/" }, { label: recordId, href: `/games/${recordId}/` }, { label: "Evidence" }]}>
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Evidence</h1>
     <div class="space-y-3">
