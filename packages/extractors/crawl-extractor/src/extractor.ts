@@ -5,6 +5,7 @@ import type {
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
 import { runEntityPipeline, PopulationCollector, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
+import { resolve, join } from "node:path";
 import {
   parseMonsterYaml,
   parseSpeciesYaml,
@@ -14,6 +15,8 @@ import {
   type JobEntry,
 } from "./yaml-parser.ts";
 import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
+
+const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
@@ -61,7 +64,8 @@ function collectYamlFiles<T>(
     try {
       const entry = parser(text, file);
       if (entry) result.push(entry);
-    } catch {
+    } catch (err) {
+      console.warn(`[crawl-extractor] Failed to parse ${file}: ${err}`);
       continue;
     }
   }
@@ -83,26 +87,29 @@ function monsterSpec(entries: MonsterEntry[], sprite: ReturnType<typeof createCr
       getOriginalName: (m) => m.id,
       getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
       getDataKey: (m) => m.id,
-      getAttributes: async (m) => ({
-        glyph: m.glyph,
-        tile: m.tile,
-        sprite_path: await sprite.extractSprite(m.tile ?? m.id, m.id.replace(/-/g, "_")),
-        tile_coords: { x: 0, y: 0, w: 32, h: 32 },
-        flags: m.flags,
-        exp: m.exp,
-        will: m.will,
-        holiness: m.holiness,
-        attacks: m.attacks,
-        hd: m.hd,
-        hp_10x: m.hp10x,
-        ac: m.ac,
-        ev: m.ev,
-        has_corpse: m.hasCorpse,
-        intelligence: m.intelligence,
-        speed: m.speed,
-        size: m.size,
-        shape: m.shape,
-      }),
+      getAttributes: async (m) => {
+        const spritePath = await sprite.extractSprite(m.tile ?? m.id, m.id.replace(/-/g, "_"));
+        return {
+          glyph: m.glyph,
+          tile: m.tile,
+          sprite_path: spritePath,
+          tile_coords: spritePath ? SPRITE_TILE_COORDS : null,
+          flags: m.flags,
+          exp: m.exp,
+          will: m.will,
+          holiness: m.holiness,
+          attacks: m.attacks,
+          hd: m.hd,
+          hp_10x: m.hp10x,
+          ac: m.ac,
+          ev: m.ev,
+          has_corpse: m.hasCorpse,
+          intelligence: m.intelligence,
+          speed: m.speed,
+          size: m.size,
+          shape: m.shape,
+        };
+      },
       populationDimension: "monsters",
     },
   };
@@ -196,7 +203,10 @@ export function createCrawlExtractor(): Extractor {
         /^jobs\/README/,
       );
 
-      const sprite = createCrawlSpritePipeline();
+      const sourceRoot = ctx.source.getRoot();
+      const rltilesRoot = resolve(sourceRoot, "../rltiles");
+      const spriteOutDir = join(process.cwd(), "knowledge/evidence/crawl/sprites");
+      const sprite = createCrawlSpritePipeline(rltilesRoot, spriteOutDir);
 
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));

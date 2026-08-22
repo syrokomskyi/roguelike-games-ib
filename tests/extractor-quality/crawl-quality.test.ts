@@ -1,3 +1,13 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Quality test for the Crawl extractor — runs the universal harness with sprite checks and coverage threshold.</purpose>
+<non-goals>
+  <item>Does not test semantic records — factual extraction only.</item>
+</non-goals>
+<CHANGE_SUMMARY>
+  <item>Initial creation: quality test for Crawl extractor with sprite checks enabled.</item>
+</CHANGE_SUMMARY>
+*/
 import { describe } from "vitest";
 import { resolve, join } from "node:path";
 import { mkdirSync } from "node:fs";

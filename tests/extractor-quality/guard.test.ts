@@ -1,3 +1,13 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Guard test — verifies every extractor package has a corresponding quality test file that imports runQualityChecks.</purpose>
+<non-goals>
+  <item>Does not run the quality checks itself — only verifies file existence and import.</item>
+</non-goals>
+<CHANGE_SUMMARY>
+  <item>Initial creation: guard test ensuring all extractors have quality test coverage.</item>
+</CHANGE_SUMMARY>
+*/
 import { describe, it, expect } from "vitest";
 import { readdirSync, existsSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";

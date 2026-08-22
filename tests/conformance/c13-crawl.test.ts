@@ -1,5 +1,15 @@
+/*
+<MODULE_CONTRACT>
+<purpose>C13 conformance test — validates Crawl extractor registration, source binding, determinism, population denominators, and runtime performance.</purpose>
+<non-goals>
+  <item>Does not test sprite extraction — covered by quality tests.</item>
+</non-goals>
+<CHANGE_SUMMARY>
+  <item>Initial creation: conformance test for Crawl extractor scale trial.</item>
+</CHANGE_SUMMARY>
+*/
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import {
@@ -26,55 +36,57 @@ const WORKSPACE = resolve(__dirname, "../..");
 const SOURCE_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/crawl/crawl-ref/source/dat");
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 
-function readJsonlDir(dir: string): any[] {
-  if (!existsSync(dir)) return [];
-  const records: any[] = [];
-  function walk(d: string) {
-    for (const entry of readdirSync(d, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        walk(join(d, entry.name));
-      } else if (entry.name.endsWith(".jsonl")) {
-        const text = readFileSync(join(d, entry.name), "utf-8");
-        for (const line of text.split("\n").filter(Boolean)) {
-          records.push(JSON.parse(line));
-        }
-      }
-    }
-  }
-  walk(dir);
-  return records;
+interface RegistrySource {
+  id: string;
+  kind: string;
+  unit_path: string;
+}
+
+interface RegistryYaml {
+  sources: RegistrySource[];
+}
+
+interface BindingEntry {
+  source_id: string;
+  declared_version: string;
+  fingerprint: { algorithm: string; value: string };
+  binding_digest: string;
+}
+
+interface BindingsYaml {
+  bindings: BindingEntry[];
 }
 
 describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
   it("source unit is registered in registry.yaml", () => {
     const registry = parseYaml(
       readFileSync(join(CANONICAL_ROOT, "sources", "registry.yaml"), "utf-8"),
-    );
-    const crawl = registry.sources.find((s: any) => s.id === "crawl");
+    ) as RegistryYaml;
+    const crawl = registry.sources.find((s) => s.id === "crawl");
     expect(crawl).toBeDefined();
-    expect(crawl.kind).toBe("game_repository");
-    expect(crawl.unit_path).toBe("crawl");
+    expect(crawl!.kind).toBe("game_repository");
+    expect(crawl!.unit_path).toBe("crawl");
   });
 
   it("source binding exists with valid fingerprint", () => {
     const bindings = parseYaml(
       readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8"),
-    );
-    const binding = bindings.bindings.find((b: any) => b.source_id === "crawl");
+    ) as BindingsYaml;
+    const binding = bindings.bindings.find((b) => b.source_id === "crawl");
     expect(binding).toBeDefined();
-    expect(binding.declared_version).toBe("0.32.0");
-    expect(binding.fingerprint.algorithm).toBe("sha256-tree-v1");
-    expect(binding.fingerprint.value).toMatch(/^[a-f0-9]{64}$/);
-    expect(binding.binding_digest).toMatch(/^[a-f0-9]{64}$/);
+    expect(binding!.declared_version).toBe("0.32.0");
+    expect(binding!.fingerprint.algorithm).toBe("sha256-tree-v1");
+    expect(binding!.fingerprint.value).toMatch(/^[a-f0-9]{64}$/);
+    expect(binding!.binding_digest).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("fingerprint matches actual source tree", () => {
     const fingerprint = computeSourceFingerprint(SOURCE_ROOT);
     const bindings = parseYaml(
       readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8"),
-    );
-    const binding = bindings.bindings.find((b: any) => b.source_id === "crawl");
-    expect(fingerprint).toBe(binding.fingerprint.value);
+    ) as BindingsYaml;
+    const binding = bindings.bindings.find((b) => b.source_id === "crawl");
+    expect(fingerprint).toBe(binding!.fingerprint.value);
   });
 
   it("extractor produces deterministic output", async () => {
