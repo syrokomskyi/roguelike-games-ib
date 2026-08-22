@@ -153,7 +153,7 @@ import SearchBox from "../components/SearchBox.astro";
         html += `
           <a href="/records/${encodeURIComponent(hit.key)}/" class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="flex items-center gap-2">
-              <img src="${spriteUrl}" alt="" loading="lazy" class="h-8 w-8 shrink-0 object-cover" onerror="this.style.visibility='hidden'" />
+              <img src="${spriteUrl}" alt="" loading="lazy" class="h-8 w-8 shrink-0 object-contain" onerror="this.style.visibility='hidden'" />
               <span class="font-mono text-xs text-ib-accent">${escapeHtml(hit.key)}</span>
               <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">${escapeHtml(hit.record_type)}</span>
               ${hit.source_id ? `<span class="text-xs text-ib-muted">${escapeHtml(hit.source_id)}</span>` : ""}
