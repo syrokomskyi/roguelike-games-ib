@@ -1,4 +1,16 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Root HTML layout for all pages — renders nav bar with active-section highlighting, GitHub link, search shortcut, footer, and slot for page content.</purpose>
+<non-goals>
+  <item>Does not fetch data — receives title and metadata as props.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: base layout with nav, footer, and keyboard search shortcut.</item>
+  <item>Added GitHub repository link icon to nav bar.</item>
+</CHANGE_SUMMARY>
+*/
 import { metadataToHtmlMeta } from "../lib/metadata";
 import type { PageMetadata } from "../lib/metadata";
 import "../styles/global.css";

@@ -1,4 +1,16 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Comparison table component — renders a sortable HTML table of CompareRow records with sprite icons, record key links, kind badges, claim/relation counts.</purpose>
+<non-goals>
+  <item>Does not filter or paginate rows — receives pre-paged rows from the page.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: comparison table with sprite icons, key links, and claim/relation counts.</item>
+  <item>Type column now displays kind (fallback record_type) instead of always showing 'definition'.</item>
+</CHANGE_SUMMARY>
+*/
 import type { CompareRow } from "../lib/page-data";
 import SpriteIcon from "./SpriteIcon.astro";
 

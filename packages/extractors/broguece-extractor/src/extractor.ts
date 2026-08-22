@@ -13,6 +13,7 @@
   <item>Extracted writeEntityRecord helper to deduplicate entity record creation.</item>
   <item>Deepened into Entity Pipeline + Sprite Pipeline: run() is now a declarative spec list, not a 390-line flat sequence.</item>
   <item>Replaced local makeRecordEnvelope with SDK createRecordEnvelope.</item>
+  <item>Updated expected population counts: mutations 16→8, dungeon_features 58→145, lights 63→60 after parser entryPattern fixes.</item>
 </CHANGE_SUMMARY>
 */
 import type {

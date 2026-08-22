@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: compare rows, source record lists, mechanics/systems helpers, stats.</item>
   <item>Added countRecordsBySource helper to deduplicate recordsBySource logic across pages.</item>
+  <item>Added kind field to CompareRow; kindsForSource and defRecordsForSourceKind now filter by kind (fallback record_type) so meaningful kind tabs appear instead of just 'definition'.</item>
 </CHANGE_SUMMARY>
 */
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";

@@ -11,6 +11,7 @@
   <item>Added variant item table glyphs (potion, scroll, wand, charm).</item>
   <item>Added parsers for dungeonFeatureCatalog, lightCatalog, mutationCatalog, monsterClassCatalog, statusEffectCatalog, monsterBehaviorCatalog, monsterAbilityCatalog.</item>
   <item>Deepened into Catalog Parser factory: shared scanCatalogEntries/scanArrayEntries infrastructure, parseEntryFields reused across all parsers.</item>
+  <item>Fixed entryPattern regexes: mutation/monster_class now require opening brace, dungeon_feature matches data entries not comments, light isComplete checks for closing brace. Corrected duplicate/false entry creation.</item>
 </CHANGE_SUMMARY>
 */
 
