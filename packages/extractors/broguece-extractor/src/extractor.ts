@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>BrogueCE factual extractor — parses C source files and emits creature, terrain, item, dungeon feature, light, mutation, monster class, status effect, monster behavior, monster ability, and image asset records with evidence anchors and population counts.</purpose>
+<purpose>BrogueCE factual extractor — parses C source files and emits creature, terrain, item, feature, mutation, spawn_table, status_effect, trait, ability, and other_definition records with evidence anchors and population counts.</purpose>
 <non-goals>
   <item>Does not parse JSON or YAML — BrogueCE source is C code only.</item>
   <item>Does not compute design-space relations — factual extraction only.</item>
