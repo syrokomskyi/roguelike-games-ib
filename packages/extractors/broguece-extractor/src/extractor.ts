@@ -43,8 +43,7 @@ import {
   type MonsterBehaviorEntry,
   type MonsterAbilityEntry,
 } from "./c-parser.ts";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";

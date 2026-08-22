@@ -7,7 +7,7 @@
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial creation: extractTileSprite and extractTileSpriteToBuffer utilities using sharp.</item>
+  <item>Initial creation: extractTileSprite utility using sharp.</item>
 </CHANGE_SUMMARY>
 */
 import sharp from "sharp";
@@ -39,23 +39,4 @@ export async function extractTileSprite(
   await sharp(tileSheetBuf)
     .extract({ left: coords.x, top: coords.y, width: coords.w, height: coords.h })
     .toFile(outPath);
-}
-
-/**
- * Extracts a rectangular region from a tile sheet image buffer and returns it as a Buffer.
- *
- * @param tileSheetBuf - Buffer containing the source tile sheet image
- * @param coords - Region to extract { x, y, w, h } in pixels
- * @param format - Output format (default: png)
- * @returns Promise resolving to the extracted image Buffer
- */
-export async function extractTileSpriteToBuffer(
-  tileSheetBuf: Buffer,
-  coords: TileCoords,
-  format: "png" | "webp" | "jpeg" = "png",
-): Promise<Buffer> {
-  return sharp(tileSheetBuf)
-    .extract({ left: coords.x, top: coords.y, width: coords.w, height: coords.h })
-    .toFormat(format)
-    .toBuffer();
 }

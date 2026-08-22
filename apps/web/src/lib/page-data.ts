@@ -13,6 +13,17 @@
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 
+export function getSpritePath(record: Record<string, unknown>): string | null {
+  const attrs = record["attributes"] as Record<string, unknown> | undefined;
+  return (attrs?.["sprite_path"] as string | null) ?? null;
+}
+
+export function getSourceId(record: Record<string, unknown>): string {
+  const si = record["source_identity"] as Record<string, unknown> | undefined;
+  const scope = record["scope"] as Record<string, unknown> | undefined;
+  return (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "";
+}
+
 export interface CompareRow {
   record_id: string;
   record_key: string;
@@ -31,10 +42,7 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
     const claims = claimsForRecord(store.claims, r.id);
     const { outgoing, incoming } = relationsForRecord(store.relations, r.id);
     const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const scope = ra["scope"] as Record<string, unknown> | undefined;
-    const source_id = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "all";
-    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
+    const source_id = getSourceId(ra) || "all";
     return {
       record_id: r.id,
       record_key: r.key,
@@ -45,7 +53,7 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
       outgoing_relation_count: outgoing.length,
       incoming_relation_count: incoming.length,
       source_id,
-      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
+      sprite_path: getSpritePath(ra),
     };
   });
 }
@@ -61,21 +69,15 @@ export interface GameRecord {
 export function recordsForSource(store: ProjectionStore, sourceId: string): GameRecord[] {
   return store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const scope = ra["scope"] as Record<string, unknown> | undefined;
-    const sid = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined);
-    return sid === sourceId;
+    return getSourceId(ra) === sourceId;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const scope = ra["scope"] as Record<string, unknown> | undefined;
-    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       id: r.id,
       key: r.key,
       record_type: r.record_type,
-      source_id: (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "",
-      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
+      source_id: getSourceId(ra),
+      sprite_path: getSpritePath(ra),
     };
   });
 }
@@ -92,17 +94,14 @@ export function mechanicsForSource(store: ProjectionStore, sourceId: string): Si
     const ra = r as Record<string, unknown>;
     const isMechanic = r.record_type === "mechanic" || (r.record_type === "semantic_record" && ra["semantic_type"] === "mechanic");
     if (!isMechanic) return false;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const scope = ra["scope"] as Record<string, unknown> | undefined;
-    return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+    return getSourceId(ra) === sourceId;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
-    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       key: r.key,
       title: ra["title"] as string | undefined,
       summary: ra["summary"] as string | undefined,
-      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
+      sprite_path: getSpritePath(ra),
     };
   });
 }
@@ -112,17 +111,14 @@ export function systemsForSource(store: ProjectionStore, sourceId: string): Simp
     const ra = r as Record<string, unknown>;
     const isSystem = r.record_type === "system" || (r.record_type === "semantic_record" && ra["semantic_type"] === "system");
     if (!isSystem) return false;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const scope = ra["scope"] as Record<string, unknown> | undefined;
-    return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
+    return getSourceId(ra) === sourceId;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
-    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       key: r.key,
       title: ra["title"] as string | undefined,
       summary: ra["summary"] as string | undefined,
-      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
+      sprite_path: getSpritePath(ra),
     };
   });
 }
@@ -130,20 +126,17 @@ export function systemsForSource(store: ProjectionStore, sourceId: string): Simp
 export function defRecordsForSourceKind(store: ProjectionStore, sourceId: string, kind: string): { key: string; sprite_path: string | null }[] {
   return store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    return si?.["source_id"] === sourceId && r.record_type === kind;
+    return getSourceId(ra) === sourceId && r.record_type === kind;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
-    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
-    return { key: r.key, sprite_path: (attrs?.["sprite_path"] as string | null) ?? null };
+    return { key: r.key, sprite_path: getSpritePath(ra) };
   });
 }
 
 export function kindsForSource(store: ProjectionStore, sourceId: string): string[] {
   const sourceRecords = store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    return si?.["source_id"] === sourceId;
+    return getSourceId(ra) === sourceId;
   });
   return [...new Set(sourceRecords.map((r) => r.record_type))].sort();
 }
@@ -180,9 +173,7 @@ export function getStats(store: ProjectionStore) {
 export function countRecordsBySource(store: ProjectionStore): Map<string, number> {
   const map = new Map<string, number>();
   for (const r of store.records) {
-    const ra = r as Record<string, unknown>;
-    const si = ra["source_identity"] as Record<string, unknown> | undefined;
-    const sid = si?.["source_id"] as string | undefined;
+    const sid = getSourceId(r as Record<string, unknown>);
     if (sid) map.set(sid, (map.get(sid) ?? 0) + 1);
   }
   return map;

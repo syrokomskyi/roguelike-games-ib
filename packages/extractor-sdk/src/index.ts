@@ -57,5 +57,5 @@ export {
 export type { DeterministicRunResult } from "./deterministic.ts";
 
 // Sprite extraction
-export { extractTileSprite, extractTileSpriteToBuffer } from "./sprite.ts";
+export { extractTileSprite } from "./sprite.ts";
 export type { TileCoords } from "./sprite.ts";

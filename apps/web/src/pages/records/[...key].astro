@@ -6,6 +6,7 @@ import { getPageMetadata } from "../../lib/metadata";
 import { evidenceForRecord } from "../../lib/evidence";
 import { claimsForRecord, claimsReferencingRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
+import { getSpritePath, getSourceId } from "../../lib/page-data";
 import RecordHeader from "../../components/RecordHeader.astro";
 import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
@@ -37,8 +38,9 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
 const isImageAsset = record.record_type === "image_asset" || (record as Record<string, unknown>)["kind"] === "image_asset";
 const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "asset" && e.media && e.github_url) : null;
 
-const spritePath = ((record as Record<string, unknown>)["attributes"] as Record<string, unknown> | undefined)?.["sprite_path"] as string | null | undefined;
-const recordSourceId = ((record as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined)?.["source_id"] as string | undefined;
+const ra = record as Record<string, unknown>;
+const spritePath = getSpritePath(ra);
+const recordSourceId = getSourceId(ra);
 const spriteUrl = spritePath && recordSourceId ? `/sprites/${encodeURIComponent(recordSourceId)}/${encodeURIComponent(spritePath.split("/").pop()!)}` : null;
 ---
 
@@ -125,9 +127,7 @@ const spriteUrl = spritePath && recordSourceId ? `/sprites/${encodeURIComponent(
       <h2 class="atlas-label mb-4 text-ib-muted">04 / Local relation graph</h2>
       <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => {
         const ra = r as Record<string, unknown>;
-        const attrs = ra["attributes"] as Record<string, unknown> | undefined;
-        const si = ra["source_identity"] as Record<string, unknown> | undefined;
-        return { id: r.id, key: r.key, record_type: r.record_type, sprite_path: (attrs?.["sprite_path"] as string | null) ?? null, source_id: (si?.["source_id"] as string | undefined) ?? "" };
+        return { id: r.id, key: r.key, record_type: r.record_type, sprite_path: getSpritePath(ra), source_id: getSourceId(ra) };
       })} />
     </section>
   </div>

@@ -1,5 +1,6 @@
 ---
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
+import { getSpritePath, getSourceId } from "../lib/page-data";
 import AuthorityBadge from "./AuthorityBadge.astro";
 import EpistemicBadge from "./EpistemicBadge.astro";
 import SpriteIcon from "./SpriteIcon.astro";
@@ -14,10 +15,8 @@ interface Props {
 const { record, authority = "canonical", assertionState, canonicalHash } = Astro.props;
 const title = (record as Record<string, unknown>)["title"] ?? record.key;
 const ra = record as Record<string, unknown>;
-const attrs = ra["attributes"] as Record<string, unknown> | undefined;
-const si = ra["source_identity"] as Record<string, unknown> | undefined;
-const spritePath = (attrs?.["sprite_path"] as string | null) ?? null;
-const sourceId = (si?.["source_id"] as string | undefined) ?? "";
+const spritePath = getSpritePath(ra);
+const sourceId = getSourceId(ra);
 ---
 
 <div class="border-b border-ib-text pb-10" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
