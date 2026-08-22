@@ -45,23 +45,39 @@ export function buildPathResolver(records: CanonicalRecord[]): PathResolver {
   const keyToPath = new Map<string, string>();
   const pathToId = new Map<string, string>();
 
+  const keySegments = (key: string): string[] => key.split("/");
+
   for (const record of records) {
     const scope = extractScope(record);
     const typeSlug = slugify(record.record_type);
-    const keySlug = slugify(record.key.split("/").pop() ?? record.key);
-    const notePath = `${scope}/${typeSlug}/${keySlug}.md`;
+    const segments = keySegments(record.key);
+    const notePath = buildDisambiguatedPath(scope, typeSlug, segments, pathToId);
 
-    if (pathToId.has(notePath)) {
-      const existingId = pathToId.get(notePath)!;
-      throw new Error(`Path collision: "${notePath}" mapped by both "${existingId}" and "${record.id}"`);
-    } else {
-      idToPath.set(record.id, notePath);
-      keyToPath.set(record.key, notePath);
-      pathToId.set(notePath, record.id);
-    }
+    idToPath.set(record.id, notePath);
+    keyToPath.set(record.key, notePath);
+    pathToId.set(notePath, record.id);
   }
 
   return { idToPath, keyToPath, pathToId };
+}
+
+function buildDisambiguatedPath(
+  scope: string,
+  typeSlug: string,
+  keySegments: string[],
+  pathToId: Map<string, string>,
+): string {
+  const depth = keySegments.length;
+  for (let take = 1; take <= depth; take++) {
+    const slugParts = keySegments.slice(depth - take);
+    const slug = slugify(slugParts.join("/"));
+    const notePath = `${scope}/${typeSlug}/${slug}.md`;
+    if (!pathToId.has(notePath)) {
+      return notePath;
+    }
+  }
+  const fallbackSlug = slugify(keySegments.join("/"));
+  return `${scope}/${typeSlug}/${fallbackSlug}.md`;
 }
 
 export function resolvePathById(resolver: PathResolver, id: string): string | undefined {
