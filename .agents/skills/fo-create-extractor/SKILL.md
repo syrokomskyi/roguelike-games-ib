@@ -30,6 +30,7 @@ Read declared knowledge files at the start of each run, in declaration order. Ap
 - The game source must be registered in `knowledge/sources/registry.yaml`
 - A source binding must exist in `knowledge/sources/bindings.yaml`
 - The `extractor-sdk` package must be up to date
+- Follow RFC-0001 (Extraction methodology for multi-game knowledge base) — the binding methodology for all extractors. Key principles: one source object = one record (P1), factual extraction without loss (P2), canonical kind mapping in manifest (P3), evidence anchors for every record (P4), population completeness contracts (P5), composite data stays in attributes (P6), one extractor per game (P7), taxonomy extension only when existing kinds are insufficient (P9).
 
 ## Process
 
