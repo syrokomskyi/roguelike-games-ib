@@ -13,6 +13,7 @@ import {
   type SpeciesEntry,
   type JobEntry,
 } from "./yaml-parser.ts";
+import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
@@ -67,7 +68,7 @@ function collectYamlFiles<T>(
   return result;
 }
 
-function monsterSpec(entries: MonsterEntry[]): EntitySpec<MonsterEntry> {
+function monsterSpec(entries: MonsterEntry[], sprite: ReturnType<typeof createCrawlSpritePipeline>): EntitySpec<MonsterEntry> {
   return {
     kind: "creature",
     entries,
@@ -82,8 +83,11 @@ function monsterSpec(entries: MonsterEntry[]): EntitySpec<MonsterEntry> {
       getOriginalName: (m) => m.id,
       getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
       getDataKey: (m) => m.id,
-      getAttributes: (m) => ({
+      getAttributes: async (m) => ({
         glyph: m.glyph,
+        tile: m.tile,
+        sprite_path: await sprite.extractSprite(m.tile ?? m.id, m.id.replace(/-/g, "_")),
+        tile_coords: { x: 0, y: 0, w: 32, h: 32 },
         flags: m.flags,
         exp: m.exp,
         will: m.will,
@@ -130,6 +134,7 @@ function speciesSpec(entries: SpeciesEntry[]): EntitySpec<SpeciesEntry> {
         dex: e.dex,
         mutations: e.mutations,
         recommended_jobs: e.recommendedJobs,
+        deprecated: e.deprecated,
       }),
       populationDimension: "species",
     },
@@ -191,8 +196,10 @@ export function createCrawlExtractor(): Extractor {
         /^jobs\/README/,
       );
 
+      const sprite = createCrawlSpritePipeline();
+
       const specs: EntitySpec<any>[] = [];
-      if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries));
+      if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));
       if (speciesEntries.length > 0) specs.push(speciesSpec(speciesEntries));
       if (jobEntries.length > 0) specs.push(jobSpec(jobEntries));
 

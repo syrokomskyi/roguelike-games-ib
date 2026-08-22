@@ -20,6 +20,8 @@ export interface QualityCheckOptions {
   timeBudgetMs?: number;
   recordLossThreshold?: number;
   spriteChecks?: boolean;
+  workspaceRoot?: () => string;
+  spriteCoverageThreshold?: number;
 }
 
 export type ContextFactory = () => ExtractorContext;
@@ -410,7 +412,7 @@ export function runQualityChecks(
 
   if (options.spriteChecks) {
     describe("Q-008: sprite coverage — records with glyph have sprite_path and tile_coords", () => {
-      it("all records with a glyph field have non-null sprite_path and tile_coords", async () => {
+      it(`at least ${Math.round((options.spriteCoverageThreshold ?? 1) * 100)}% of records with glyph have non-null sprite_path and tile_coords`, async () => {
         const ctx = createContext();
         await extractor.run(ctx);
         const records = ctx.output.getRecords();
@@ -431,28 +433,30 @@ export function runQualityChecks(
           (r) => (r.attributes as Record<string, unknown>).tile_coords == null,
         );
 
-        if (missingSprite.length > 0) {
+        const threshold = options.spriteCoverageThreshold ?? 1;
+        const coverage = 1 - (missingSprite.length / withGlyph.length);
+
+        if (coverage < threshold) {
           const details = missingSprite
             .slice(0, 10)
             .map((r) => `  ${r.key} (glyph=${(r.attributes as Record<string, unknown>).glyph})`)
             .join("\n");
           expect.fail(
-            `${missingSprite.length}/${withGlyph.length} records with glyph have null sprite_path:\n${details}`,
+            `${missingSprite.length}/${withGlyph.length} records with glyph have null sprite_path (coverage ${(coverage * 100).toFixed(1)}%, threshold ${(threshold * 100).toFixed(1)}%):\n${details}`,
           );
         }
 
-        if (missingCoords.length > 0) {
+        const coordsCoverage = 1 - (missingCoords.length / withGlyph.length);
+
+        if (coordsCoverage < threshold) {
           const details = missingCoords
             .slice(0, 10)
             .map((r) => `  ${r.key} (glyph=${(r.attributes as Record<string, unknown>).glyph})`)
             .join("\n");
           expect.fail(
-            `${missingCoords.length}/${withGlyph.length} records with glyph have null tile_coords:\n${details}`,
+            `${missingCoords.length}/${withGlyph.length} records with glyph have null tile_coords (coverage ${(coordsCoverage * 100).toFixed(1)}%, threshold ${(threshold * 100).toFixed(1)}%):\n${details}`,
           );
         }
-
-        expect(missingSprite).toHaveLength(0);
-        expect(missingCoords).toHaveLength(0);
       });
     });
 
@@ -531,7 +535,7 @@ export function runQualityChecks(
 
         if (withSprite.length === 0) return;
 
-        const workspaceRoot = resolve(options.sourceRoot(), "../..");
+        const workspaceRoot = options.workspaceRoot ? options.workspaceRoot() : resolve(options.sourceRoot(), "../..");
         const invalid: string[] = [];
 
         for (const r of withSprite) {

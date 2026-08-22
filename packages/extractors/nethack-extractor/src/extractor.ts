@@ -70,7 +70,7 @@ export function createNetHackExtractor(): Extractor {
           getSourcePath: () => MONSTERS_H,
           getSymbolName: () => "MON",
           getSlug: (m) => m.nativeId,
-          getNativeId: (m) => m.nativeId,
+          getNativeId: (m) => `creature:${m.nativeId}`,
           getCanonicalName: (m) => m.name,
           getOriginalName: (m) => m.name,
           getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),

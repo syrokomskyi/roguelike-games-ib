@@ -28,6 +28,7 @@ export interface MonsterEntry {
   speed: number;
   size: string;
   shape: string;
+  tile: string | null;
   path: string;
   lineStart: number;
   lineEnd: number;
@@ -46,6 +47,7 @@ export interface SpeciesEntry {
   dex: number;
   mutations: Record<string, Record<string, number>> | null;
   recommendedJobs: string[];
+  deprecated: boolean;
   path: string;
   lineStart: number;
   lineEnd: number;
@@ -102,6 +104,7 @@ export function parseMonsterYaml(text: string, path: string): MonsterEntry | nul
     speed: (data.speed as number) ?? 0,
     size: (data.size as string) ?? "",
     shape: (data.shape as string) ?? "",
+    tile: (data.tile as string) ?? null,
     path,
     lineStart: range.lineStart,
     lineEnd: range.lineEnd,
@@ -127,6 +130,7 @@ export function parseSpeciesYaml(text: string, path: string): SpeciesEntry | nul
     dex: (data.dex as number) ?? 0,
     mutations: (data.mutations as Record<string, Record<string, number>>) ?? null,
     recommendedJobs: (data.recommended_jobs as string[]) ?? [],
+    deprecated: path.startsWith("species/deprecated-"),
     path,
     lineStart: range.lineStart,
     lineEnd: range.lineEnd,

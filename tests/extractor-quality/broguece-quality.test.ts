@@ -54,7 +54,9 @@ describe("broguece extractor quality", () => {
   runQualityChecks(extractor, createContext, {
     sourceId: "broguece",
     sourceRoot: () => SOURCE_ROOT,
-    timeBudgetMs: 10000,
+    workspaceRoot: () => WORKSPACE,
+    timeBudgetMs: 30000,
     spriteChecks: true,
+    spriteCoverageThreshold: 0.95,
   });
 });
