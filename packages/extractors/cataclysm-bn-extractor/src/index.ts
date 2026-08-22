@@ -22,3 +22,18 @@ export {
   type ProfessionEntry,
   type JsonEntrySpec,
 } from "./json-parser.ts";
+export {
+  parseBionicJson,
+  parseTrapJson,
+  parseRecipeJson,
+  parseSkillJson,
+  parseEffectJson,
+  parseNpcFactionJson,
+  parseMonsterFactionJson,
+  type BionicEntry,
+  type TrapEntry as CBTrapEntry,
+  type RecipeEntry,
+  type SkillEntry as CBSkillEntry,
+  type EffectEntry,
+  type FactionEntry,
+} from "./extra-json-parsers.ts";

@@ -16,3 +16,17 @@ export {
   type MonsterEntry,
   type ObjectEntry,
 } from "./c-parser.ts";
+export {
+  parseArtifacts,
+  parseTraps,
+  parseRoles,
+  parseRaces,
+  parseDungeonBranches,
+  parseSkills,
+  type ArtifactEntry,
+  type TrapEntry,
+  type RoleEntry,
+  type RaceEntry,
+  type DungeonBranchEntry,
+  type SkillEntry,
+} from "./extra-parsers.ts";

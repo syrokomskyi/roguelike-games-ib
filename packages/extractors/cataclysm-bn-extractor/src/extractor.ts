@@ -30,13 +30,28 @@ import {
   type MutationEntry,
   type ProfessionEntry,
 } from "./json-parser.ts";
+import {
+  parseBionicJson,
+  parseTrapJson,
+  parseRecipeJson,
+  parseSkillJson,
+  parseEffectJson,
+  parseNpcFactionJson,
+  parseMonsterFactionJson,
+  type BionicEntry,
+  type TrapEntry as CBTrapEntry,
+  type RecipeEntry,
+  type SkillEntry as CBSkillEntry,
+  type EffectEntry,
+  type FactionEntry,
+} from "./extra-json-parsers.ts";
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
   extractorId: "cataclysm-bn-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "item", "mutation", "profession"],
+  recordKinds: ["creature", "item", "mutation", "profession", "ability", "trap", "recipe", "skill", "effect", "faction"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -63,6 +78,42 @@ const manifest: ExtractorManifest = {
       denominatorKind: "extractor_population",
       expected: 339,
       description: "All profession entries in professions.json",
+    },
+    {
+      dimension: "bionics",
+      denominatorKind: "extractor_population",
+      expected: 137,
+      description: "All bionic entries with type=bionic in data/json/bionics.json",
+    },
+    {
+      dimension: "cb_traps",
+      denominatorKind: "extractor_population",
+      expected: 50,
+      description: "All trap entries with type=trap in data/json/traps.json",
+    },
+    {
+      dimension: "recipes",
+      denominatorKind: "extractor_population",
+      expected: 3187,
+      description: "All recipe entries with type=recipe in data/json/recipes/**/*.json",
+    },
+    {
+      dimension: "cb_skills",
+      denominatorKind: "extractor_population",
+      expected: 28,
+      description: "All skill entries with type=skill in data/json/skills.json",
+    },
+    {
+      dimension: "effects",
+      denominatorKind: "extractor_population",
+      expected: 237,
+      description: "All effect entries with type=effect_type in data/json/effects.json",
+    },
+    {
+      dimension: "factions",
+      denominatorKind: "extractor_population",
+      expected: 71,
+      description: "All faction entries: 17 NPC factions (npcs/factions.json) + 54 monster factions (monster_factions.json)",
     },
   ],
 };
@@ -93,6 +144,13 @@ const MONSTER_DIRS = ["monsters"];
 const ITEM_DIRS = ["items"];
 const MUTATION_DIRS = ["mutations"];
 const PROFESSION_FILES = ["professions.json"];
+const BIONICS_FILE = "bionics.json";
+const TRAPS_FILE = "traps.json";
+const SKILLS_FILE = "skills.json";
+const EFFECTS_FILE = "effects.json";
+const NPC_FACTIONS_FILE = "npcs/factions.json";
+const MONSTER_FACTIONS_FILE = "monster_factions.json";
+const RECIPE_DIRS = ["recipes"];
 
 function walkJsonFiles(allFiles: string[], dir: string): string[] {
   return allFiles.filter((p) => p.startsWith(dir + "/") && p.endsWith(".json"));
@@ -133,6 +191,42 @@ function collectProfessionEntries(ctx: ExtractorContext): ProfessionEntry[] {
     }
   }
   return result;
+}
+
+function collectSingleFileEntries<E>(
+  ctx: ExtractorContext,
+  file: string,
+  parser: (text: string, path: string) => E[],
+): E[] {
+  const allFiles = ctx.source.walk();
+  if (!allFiles.includes(file)) return [];
+  try {
+    const text = ctx.source.readText(file);
+    return parser(text, file);
+  } catch {
+    return [];
+  }
+}
+
+function collectRecipeEntries(ctx: ExtractorContext): RecipeEntry[] {
+  const allFiles = ctx.source.walk();
+  const result: RecipeEntry[] = [];
+  const recipeFiles = allFiles.filter((p) => p.startsWith("recipes/") && p.endsWith(".json"));
+  for (const file of recipeFiles) {
+    try {
+      const text = ctx.source.readText(file);
+      result.push(...parseRecipeJson(text, file));
+    } catch {
+      continue;
+    }
+  }
+  return result;
+}
+
+function collectFactionEntries(ctx: ExtractorContext): FactionEntry[] {
+  const npcFactions = collectSingleFileEntries(ctx, NPC_FACTIONS_FILE, parseNpcFactionJson);
+  const monFactions = collectSingleFileEntries(ctx, MONSTER_FACTIONS_FILE, parseMonsterFactionJson);
+  return [...npcFactions, ...monFactions];
 }
 
 function monsterParser(text: string, file: string, _seenIds: Map<string, number>): MonsterEntry[] {
@@ -268,6 +362,199 @@ function professionSpec(entries: ProfessionEntry[]): EntitySpec<ProfessionEntry>
   };
 }
 
+function bionicSpec(entries: BionicEntry[]): EntitySpec<BionicEntry> {
+  return {
+    kind: "ability",
+    entries,
+    adapter: {
+      nativeKind: "bionic",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "bionic",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `bionic:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        act_cost: e.actCost,
+        react_cost: e.reactCost,
+        power_over_time: e.powerOverTime,
+        charge_time: e.chargeTime,
+        capacity: e.capacity,
+        difficulty: e.difficulty,
+        flags: e.flags,
+        occupied_bodyparts: e.occupiedBodyparts,
+      }),
+      populationDimension: "bionics",
+    },
+  };
+}
+
+function trapSpec(entries: CBTrapEntry[]): EntitySpec<CBTrapEntry> {
+  return {
+    kind: "trap",
+    entries,
+    adapter: {
+      nativeKind: "trap",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "trap",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `trap:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        color: e.color,
+        symbol: e.symbol,
+        visibility: e.visibility,
+        avoidance: e.avoidance,
+        difficulty: e.difficulty,
+        action: e.action,
+        bash_dmg: e.bashDmg,
+        flags: e.flags,
+      }),
+      populationDimension: "cb_traps",
+    },
+  };
+}
+
+function recipeSpec(entries: RecipeEntry[]): EntitySpec<RecipeEntry> {
+  const seenIds = new Map<string, number>();
+  return {
+    kind: "recipe",
+    entries: entries.map((e) => {
+      const seen = seenIds.get(e.id) ?? 0;
+      seenIds.set(e.id, seen + 1);
+      if (seen > 0) {
+        const suffix = e.path.replace("recipes/", "").replace(/\.json$/, "").replace(/\//g, "_");
+        return { ...e, id: `${e.id}__${suffix}__${seen}` };
+      }
+      return e;
+    }),
+    adapter: {
+      nativeKind: "recipe",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "recipe",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `recipe:${e.id}`,
+      getCanonicalName: (e) => e.result || e.id,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        result: e.result,
+        category: e.category,
+        subtype: e.subtype,
+        time: e.time,
+        difficulty: e.difficulty,
+        charges: e.charges,
+        flags: e.flags,
+      }),
+      populationDimension: "recipes",
+    },
+  };
+}
+
+function skillSpec(entries: CBSkillEntry[]): EntitySpec<CBSkillEntry> {
+  return {
+    kind: "skill",
+    entries,
+    adapter: {
+      nativeKind: "skill",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "skill",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `skill:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        display_category: e.displayCategory,
+        display_order: e.displayOrder,
+      }),
+      populationDimension: "cb_skills",
+    },
+  };
+}
+
+function effectSpec(entries: EffectEntry[]): EntitySpec<EffectEntry> {
+  return {
+    kind: "effect",
+    entries,
+    adapter: {
+      nativeKind: "effect_type",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "effect_type",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `effect:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        max_duration: e.maxDuration,
+        permanent: e.permanent,
+        flags: e.flags,
+      }),
+      populationDimension: "effects",
+    },
+  };
+}
+
+function factionSpec(entries: FactionEntry[]): EntitySpec<FactionEntry> {
+  const seenIds = new Map<string, number>();
+  const deduped = entries.map((e) => {
+    const key = `${e.type}:${e.id}`;
+    const seen = seenIds.get(key) ?? 0;
+    seenIds.set(key, seen + 1);
+    if (seen > 0) {
+      return { ...e, id: `${e.id}__${seen}` };
+    }
+    return e;
+  });
+  return {
+    kind: "faction",
+    entries: deduped,
+    adapter: {
+      nativeKind: entries[0]?.type ?? "faction",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: (e) => e.type,
+      getSlug: (e) => `${e.type}_${e.id}`.replace(/-/g, "_").toLowerCase(),
+      getNativeId: (e) => `faction:${e.type}:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => `${e.type}:${e.id}`,
+      getAttributes: (e) => ({
+        description: e.description,
+        likes_u: e.likesU,
+        respects_u: e.respectsU,
+        known_by_u: e.knownByU,
+        size: e.size,
+        power: e.power,
+        food_supply: e.foodSupply,
+        wealth: e.wealth,
+        currency: e.currency,
+        mon_faction: e.monFaction,
+        base_faction: e.baseFaction,
+        friendly: e.friendly,
+        neutral: e.neutral,
+        by_mood: e.byMood,
+      }),
+      populationDimension: "factions",
+    },
+  };
+}
+
 export function createCataclysmBNExtractor(): Extractor {
   return {
     manifest,
@@ -276,12 +563,24 @@ export function createCataclysmBNExtractor(): Extractor {
       const itemEntries = collectEntries(ctx, ITEM_DIRS, itemParser);
       const mutationEntries = collectEntries(ctx, MUTATION_DIRS, mutationParser);
       const professionEntries = collectProfessionEntries(ctx);
+      const bionicEntries = collectSingleFileEntries(ctx, BIONICS_FILE, parseBionicJson);
+      const trapEntries = collectSingleFileEntries(ctx, TRAPS_FILE, parseTrapJson);
+      const recipeEntries = collectRecipeEntries(ctx);
+      const skillEntries = collectSingleFileEntries(ctx, SKILLS_FILE, parseSkillJson);
+      const effectEntries = collectSingleFileEntries(ctx, EFFECTS_FILE, parseEffectJson);
+      const factionEntries = collectFactionEntries(ctx);
 
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries));
       if (itemEntries.length > 0) specs.push(itemSpec(itemEntries));
       if (mutationEntries.length > 0) specs.push(mutationSpec(mutationEntries));
       if (professionEntries.length > 0) specs.push(professionSpec(professionEntries));
+      if (bionicEntries.length > 0) specs.push(bionicSpec(bionicEntries));
+      if (trapEntries.length > 0) specs.push(trapSpec(trapEntries));
+      if (recipeEntries.length > 0) specs.push(recipeSpec(recipeEntries));
+      if (skillEntries.length > 0) specs.push(skillSpec(skillEntries));
+      if (effectEntries.length > 0) specs.push(effectSpec(effectEntries));
+      if (factionEntries.length > 0) specs.push(factionSpec(factionEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 

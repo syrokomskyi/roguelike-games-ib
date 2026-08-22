@@ -38,13 +38,13 @@ bindings:
     payload_path: include
     fingerprint:
       algorithm: sha256-tree-v1
-      value: b500ce40aaef968e7dd8d6b4ba423d754ab5cf9a2d142975a7a584fd65fb537b
+      value: 3644218fae3cfcd1eb58f3b908ddd323f66e02cc743bfff192a1505ced0d95d0
     vcs:
       repository: "https://github.com/NetHack/NetHack"
       commit: null
       clean: null
       default_branch: "NetHack-5.0"
-    binding_digest: bb2d375f5feea0baa2e24b7848786a6100b7504febb2419ba24b42df701b2b7f
+    binding_digest: 40dde88fe3b4529a92a27cce53ba855682346cdb9b3715383850f0bf1ec1fc78
   - source_id: crawl
     source_unit_path: crawl
     declared_version: "0.32.0"

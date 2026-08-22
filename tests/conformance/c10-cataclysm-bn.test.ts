@@ -8,6 +8,12 @@ import {
   parseItemJson,
   parseMutationJson,
   parseProfessionJson,
+  parseBionicJson,
+  parseTrapJson,
+  parseSkillJson,
+  parseEffectJson,
+  parseNpcFactionJson,
+  parseMonsterFactionJson,
 } from "@roguelike-games-ib/cataclysm-bn-extractor";
 import {
   ReadonlySourceReader,
@@ -173,6 +179,42 @@ describe("C10: Cataclysm-BN scale trial", () => {
     expect(professions.length).toBeGreaterThanOrEqual(300);
   });
 
+  it("extracts bionics with exact denominator", () => {
+    const text = readFileSync(join(SOURCE_ROOT, "bionics.json"), "utf-8");
+    const bionics = parseBionicJson(text, "bionics.json");
+    expect(bionics.length).toBe(137);
+  });
+
+  it("extracts traps with exact denominator", () => {
+    const text = readFileSync(join(SOURCE_ROOT, "traps.json"), "utf-8");
+    const traps = parseTrapJson(text, "traps.json");
+    expect(traps.length).toBe(50);
+  });
+
+  it("extracts skills with exact denominator", () => {
+    const text = readFileSync(join(SOURCE_ROOT, "skills.json"), "utf-8");
+    const skills = parseSkillJson(text, "skills.json");
+    expect(skills.length).toBe(28);
+  });
+
+  it("extracts effects with exact denominator", () => {
+    const text = readFileSync(join(SOURCE_ROOT, "effects.json"), "utf-8");
+    const effects = parseEffectJson(text, "effects.json");
+    expect(effects.length).toBe(237);
+  });
+
+  it("extracts factions with exact denominator", () => {
+    const npcText = readFileSync(join(SOURCE_ROOT, "npcs/factions.json"), "utf-8");
+    const npcFactions = parseNpcFactionJson(npcText, "npcs/factions.json");
+    expect(npcFactions.length).toBe(17);
+
+    const monText = readFileSync(join(SOURCE_ROOT, "monster_factions.json"), "utf-8");
+    const monFactions = parseMonsterFactionJson(monText, "monster_factions.json");
+    expect(monFactions.length).toBe(54);
+
+    expect(npcFactions.length + monFactions.length).toBe(71);
+  });
+
   it("canonical knowledge base has definition records for cataclysm-bn", () => {
     const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const catbnDefs = gameDefs.filter((r) => r.scope?.source_id === "cataclysm-bn");
@@ -235,6 +277,38 @@ describe("C10: Cataclysm-BN scale trial", () => {
     const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const catbnDefs = gameDefs.filter((r) => r.scope?.source_id === "cataclysm-bn");
     expect(catbnDefs.length).toBeGreaterThan(5000);
+  });
+
+  it("population counts match manifest declarations", async () => {
+    const binding = createSourceBinding(
+      "cataclysm-bn",
+      "Cataclysm-BN",
+      "0.7.1",
+      "semver",
+      "package_json",
+      computeSourceFingerprint(SOURCE_ROOT),
+      { repository: "https://github.com/cataclysmbnteam/Cataclysm-BN", commit: null, clean: null, default_branch: "main" },
+      "data/json",
+    );
+    const extractor = createCataclysmBNExtractor();
+    const stagingDir = join(WORKSPACE, "staging", "c10-pop");
+
+    const source = new ReadonlySourceReader(SOURCE_ROOT);
+    const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, source);
+    const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
+    const schemas = createNullSchemaFacade();
+    const output = new CandidateWriter(stagingDir, "pop-run", "cataclysm-bn", "cataclysm-bn-factual", "1.0.0");
+    const ctx = createExtractorContext(source, binding, schemas, evidence, ids, output);
+
+    const result = await extractor.run(ctx);
+    expect(result.populationCounts).toBeDefined();
+    const popMap = new Map(result.populationCounts!.map((p: any) => [p.dimension, p.extracted]));
+    expect(popMap.get("bionics")).toBe(137);
+    expect(popMap.get("cb_traps")).toBe(50);
+    expect(popMap.get("recipes")).toBe(3187);
+    expect(popMap.get("cb_skills")).toBe(28);
+    expect(popMap.get("effects")).toBe(237);
+    expect(popMap.get("factions")).toBe(71);
   });
 
   it("materialization produces valid SQLite for cataclysm-bn records", () => {

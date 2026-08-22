@@ -6,6 +6,12 @@ import {
   createNetHackExtractor,
   parseMonsters,
   parseObjects,
+  parseArtifacts,
+  parseTraps,
+  parseRoles,
+  parseRaces,
+  parseDungeonBranches,
+  parseSkills,
 } from "@roguelike-games-ib/nethack-extractor";
 import {
   ReadonlySourceReader,
@@ -124,6 +130,42 @@ describe("C12: NetHack scale trial", () => {
     expect(objects.length).toBeGreaterThanOrEqual(400);
   });
 
+  it("extracts artifacts with exact denominator", () => {
+    const artilistH = readFileSync(join(SOURCE_ROOT, "artilist.h"), "utf-8");
+    const artifacts = parseArtifacts(artilistH);
+    expect(artifacts.length).toBe(33);
+  });
+
+  it("extracts traps with exact denominator", () => {
+    const trapH = readFileSync(join(SOURCE_ROOT, "trap.h"), "utf-8");
+    const traps = parseTraps(trapH);
+    expect(traps.length).toBe(25);
+  });
+
+  it("extracts roles with exact denominator", () => {
+    const roleC = readFileSync(join(SOURCE_ROOT, "role.c"), "utf-8");
+    const roles = parseRoles(roleC);
+    expect(roles.length).toBe(13);
+  });
+
+  it("extracts races with exact denominator", () => {
+    const roleC = readFileSync(join(SOURCE_ROOT, "role.c"), "utf-8");
+    const races = parseRaces(roleC);
+    expect(races.length).toBe(5);
+  });
+
+  it("extracts dungeon branches with exact denominator", () => {
+    const dungeonLua = readFileSync(join(SOURCE_ROOT, "dungeon.lua"), "utf-8");
+    const branches = parseDungeonBranches(dungeonLua);
+    expect(branches.length).toBe(9);
+  });
+
+  it("extracts skills with exact denominator", () => {
+    const skillsH = readFileSync(join(SOURCE_ROOT, "skills.h"), "utf-8");
+    const skills = parseSkills(skillsH);
+    expect(skills.length).toBe(37);
+  });
+
   it("canonical knowledge base has definition records for nethack", () => {
     const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const nhDefs = gameDefs.filter((r) => r.scope?.source_id === "nethack");
@@ -182,6 +224,38 @@ describe("C12: NetHack scale trial", () => {
     const gameDefs = readJsonlDir(join(CANONICAL_ROOT, "definition"));
     const nhDefs = gameDefs.filter((r) => r.scope?.source_id === "nethack");
     expect(nhDefs.length).toBeGreaterThan(800);
+  });
+
+  it("population counts match manifest declarations", async () => {
+    const binding = createSourceBinding(
+      "nethack",
+      "NetHack",
+      "5.0.0",
+      "semver",
+      "package_json",
+      computeSourceFingerprint(SOURCE_ROOT),
+      { repository: "https://github.com/NetHack/NetHack", commit: null, clean: null, default_branch: "NetHack-5.0" },
+      "include",
+    );
+    const extractor = createNetHackExtractor();
+    const stagingDir = join(WORKSPACE, "staging", "c12-pop");
+
+    const source = new ReadonlySourceReader(SOURCE_ROOT);
+    const evidence = new EvidenceFactory("nethack", binding.binding_digest, source);
+    const ids = new RefreshIdentityResolver([], [], "nethack");
+    const schemas = createNullSchemaFacade();
+    const output = new CandidateWriter(stagingDir, "pop-run", "nethack", "nethack-factual", "1.0.0");
+    const ctx = createExtractorContext(source, binding, schemas, evidence, ids, output);
+
+    const result = await extractor.run(ctx);
+    expect(result.populationCounts).toBeDefined();
+    const popMap = new Map(result.populationCounts!.map((p: any) => [p.dimension, p.extracted]));
+    expect(popMap.get("artifacts")).toBe(33);
+    expect(popMap.get("traps")).toBe(25);
+    expect(popMap.get("roles")).toBe(13);
+    expect(popMap.get("races")).toBe(5);
+    expect(popMap.get("branches")).toBe(9);
+    expect(popMap.get("skills")).toBe(37);
   });
 
   it("materialization produces valid SQLite for nethack records", () => {
