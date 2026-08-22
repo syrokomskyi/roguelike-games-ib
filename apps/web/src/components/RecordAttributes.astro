@@ -33,8 +33,8 @@ const entries = Object.entries(record as Record<string, unknown>)
 
 {entries.length > 0 && (
   <section>
-    <h2 class="mb-3 text-lg font-semibold text-ib-text">Attributes</h2>
-    <div class="overflow-hidden rounded-xl border border-ib-border bg-ib-surface">
+    <h2 class="atlas-label mb-4 text-ib-muted">01 / Anatomy</h2>
+    <div class="overflow-hidden border-y border-ib-border bg-ib-surface/60">
       <table class="w-full text-sm">
         <tbody>
           {entries.map(([key, value], i) => (

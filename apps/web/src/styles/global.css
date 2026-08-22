@@ -1,64 +1,105 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Defines the global CSS theme with custom color variables, base typography, link styles, and scrollbar styling for the web application.</purpose>
+<purpose>Defines the Design Cartography visual language shared by the canonical atlas and laboratory.</purpose>
 <non-goals>
-  <item>Does not define component styles — global theme and base elements only.</item>
+  <item>Does not encode record-specific layout or epistemic business rules.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
-  <item>Initial creation: global CSS with Tailwind import, IB color theme, base styles, and scrollbar styling.</item>
+  <item>Replaced the dark violet UI with a warm cartographic canvas, semantic epistemic colors, and laboratory theme.</item>
 </CHANGE_SUMMARY>
 */
 @import "tailwindcss";
 
 @theme {
-  --color-ib-bg: #0f0f17;
-  --color-ib-surface: #1a1a2e;
-  --color-ib-surface2: #222238;
-  --color-ib-border: #2d2d4a;
-  --color-ib-text: #e0e0ec;
-  --color-ib-muted: #8888a8;
-  --color-ib-accent: #7c5cfc;
-  --color-ib-accent2: #c084fc;
-  --color-ib-green: #4ade80;
-  --color-ib-amber: #fbbf24;
-  --color-ib-red: #f87171;
-  --color-ib-blue: #60a5fa;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --color-ib-bg: #f3f1ea;
+  --color-ib-surface: #fbfaf6;
+  --color-ib-surface2: #ebe8df;
+  --color-ib-border: #d7d4cb;
+  --color-ib-text: #17191d;
+  --color-ib-muted: #6b6c70;
+  --color-ib-accent: #16766f;
+  --color-ib-accent2: #7357d9;
+  --color-ib-green: #16766f;
+  --color-ib-amber: #a96b16;
+  --color-ib-red: #b84232;
+  --color-ib-blue: #426da9;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 }
 
-html {
-  background-color: var(--color-ib-bg);
+:root {
+  color-scheme: light;
+  font-family: var(--font-sans);
+  background: var(--color-ib-bg);
   color: var(--color-ib-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-synthesis: none;
+  --atlas-grid: rgba(23, 25, 29, 0.045);
 }
+
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
   min-height: 100vh;
+  color: var(--color-ib-text);
+  background:
+    linear-gradient(var(--atlas-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--atlas-grid) 1px, transparent 1px),
+    var(--color-ib-bg);
+  background-size: 40px 40px;
 }
 
-a {
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-a[class*="rounded"]:hover {
-  text-decoration: none;
+body.laboratory-world {
+  color-scheme: dark;
+  --color-ib-bg: #17151f;
+  --color-ib-surface: #201d2b;
+  --color-ib-surface2: #2b2639;
+  --color-ib-border: #454051;
+  --color-ib-text: #f0edf5;
+  --color-ib-muted: #aaa4b5;
+  --color-ib-accent: #a993ff;
+  --color-ib-accent2: #c5b8ff;
+  --atlas-grid: rgba(197, 184, 255, 0.05);
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+::selection { color: #fff; background: var(--color-ib-accent); }
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+a[class*="rounded"]:hover { text-decoration: none; }
+
+button, input, select, textarea { font: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--color-ib-accent);
+  outline-offset: 3px;
 }
-::-webkit-scrollbar-track {
-  background: var(--color-ib-bg);
+
+.atlas-label {
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--color-ib-border);
-  border-radius: 4px;
+
+.atlas-rule { border-color: var(--color-ib-border); }
+
+.atlas-coordinate {
+  color: var(--color-ib-muted);
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  letter-spacing: .08em;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ib-muted);
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-ib-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-ib-border); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ib-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

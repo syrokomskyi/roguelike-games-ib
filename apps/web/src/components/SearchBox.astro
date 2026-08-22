@@ -9,9 +9,10 @@ interface Props {
 const { placeholder = "Search records...", value = "", source, recordType } = Astro.props;
 ---
 
-<form class="flex gap-2" action="/search" method="get">
-  <input type="text" name="q" value={value} placeholder={placeholder} class="flex-1 rounded-lg border border-ib-border bg-ib-surface2 px-4 py-2 text-ib-text placeholder-ib-muted focus:border-ib-accent focus:outline-none" />
+<form class="group flex border border-ib-text bg-ib-surface shadow-[5px_5px_0_var(--color-ib-border)] transition-shadow focus-within:shadow-[8px_8px_0_var(--color-ib-accent)]" action="/search" method="get">
+  <span aria-hidden="true" class="grid w-12 place-items-center border-r border-ib-border font-mono text-lg text-ib-accent">&gt;</span>
+  <input type="text" name="q" value={value} placeholder={placeholder} class="min-w-0 flex-1 bg-transparent px-4 py-4 text-ib-text placeholder-ib-muted focus:outline-none" />
   {source && <input type="hidden" name="source" value={source} />}
   {recordType && <input type="hidden" name="type" value={recordType} />}
-  <button type="submit" class="rounded-lg bg-ib-accent px-4 py-2 font-medium text-white hover:bg-ib-accent2">Search</button>
+  <button type="submit" aria-label="Explore" class="border-l border-ib-border px-5 font-mono text-lg text-ib-accent transition-colors hover:bg-ib-accent hover:text-white">↵</button>
 </form>

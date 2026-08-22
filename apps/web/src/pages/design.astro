@@ -12,15 +12,18 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
 ---
 
 <Base title="Design Explorer" metadata={meta} activeNav="design">
-  <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-ib-text">Design Space Explorer</h1>
+  <div class="space-y-14">
+    <header class="grid gap-8 border-b border-ib-text pb-12 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div><p class="atlas-label text-ib-blue">Derived layer</p><h1 class="mt-5 text-5xl font-medium tracking-[-.045em] sm:text-7xl">Design Space.</h1><p class="mt-5 max-w-2xl text-lg text-ib-muted">Cross-game concepts and primitives derived from observed structures. This is a computed map, not canonical source topology.</p></div>
+      <div class="border border-ib-blue px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-ib-blue">Derived similarity projection</div>
+    </header>
 
-    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Cross-Game Concepts <span class="text-sm font-normal text-ib-muted">({concepts.length})</span></h2>
+    <section>
+      <h2 class="atlas-label mb-5 text-ib-muted">01 / Cross-game concepts <span>({concepts.length})</span></h2>
       {concepts.length > 0 ? (
         <div class="grid gap-3 sm:grid-cols-2">
           {conceptCards.map((c) => (
-            <a href={`/records/${c.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 transition-colors hover:border-ib-accent">
+            <a href={`/records/${c.key}/`} class="block border-l-2 border-ib-blue bg-ib-surface p-5 transition-colors hover:bg-ib-surface2">
               <div class="font-semibold text-ib-text">{c.title}</div>
               {c.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.definition}</p>}
               {c.sourceGames.length > 0 && (
@@ -46,12 +49,12 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
       )}
     </section>
 
-    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Primitives <span class="text-sm font-normal text-ib-muted">({primitives.length})</span></h2>
+    <section>
+      <h2 class="atlas-label mb-5 text-ib-muted">02 / Design primitives <span>({primitives.length})</span></h2>
       {primitives.length > 0 ? (
         <div class="grid gap-3 sm:grid-cols-2">
           {primitiveCards.map((p) => (
-            <a href={`/records/${p.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface2 p-4 transition-colors hover:border-ib-accent">
+            <a href={`/records/${p.key}/`} class="block border-l-2 border-ib-accent bg-ib-surface p-5 transition-colors hover:bg-ib-surface2">
               <div class="font-semibold text-ib-text">{p.title}</div>
               {p.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{p.definition}</p>}
               {p.sourceGames.length > 0 && (
@@ -77,12 +80,12 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
       )}
     </section>
 
-    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Design Relations <span class="text-sm font-normal text-ib-muted">({designRelationCards.length})</span></h2>
+    <section>
+      <h2 class="atlas-label mb-5 text-ib-muted">03 / Design relations <span>({designRelationCards.length})</span></h2>
       {designRelationCards.length > 0 ? (
         <ul class="space-y-2">
           {designRelationCards.map((rel) => (
-            <li class="rounded-lg border border-ib-border bg-ib-surface2 p-3">
+            <li class="border-t border-ib-border py-4">
               <div class="text-sm">
                 <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
                 <span class="text-ib-accent2"> —{rel.relationType}→ </span>
@@ -97,12 +100,12 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
       )}
     </section>
 
-    <section class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Cross-Game Realizations <span class="text-sm font-normal text-ib-muted">({realizesCards.length})</span></h2>
+    <section>
+      <h2 class="atlas-label mb-5 text-ib-muted">04 / Cross-game realizations <span>({realizesCards.length})</span></h2>
       {realizesCards.length > 0 ? (
         <ul class="space-y-2">
           {realizesCards.map((rel) => (
-            <li class="rounded-lg border border-ib-border bg-ib-surface2 p-3">
+            <li class="border-t border-ib-border py-4">
               <div class="text-sm">
                 <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
                 <span class="text-ib-accent2"> realizes → </span>

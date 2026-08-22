@@ -8,6 +8,6 @@ interface Props {
 const { authority } = Astro.props;
 ---
 
-<span class={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${authority === "canonical" ? "bg-ib-green/15 text-ib-green" : "bg-ib-amber/15 text-ib-amber"}`} data-authority={authority}>
-  {authority === "canonical" ? "✓ Canonical" : "⚠ Laboratory"}
+<span class={`inline-flex items-center gap-1 border px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider ${authority === "canonical" ? "border-ib-green/40 text-ib-green" : "border-ib-accent2/50 text-ib-accent2"}`} data-authority={authority}>
+  {authority === "canonical" ? "● Canonical" : "* Laboratory"}
 </span>

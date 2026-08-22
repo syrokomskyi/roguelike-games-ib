@@ -26,31 +26,27 @@ const sortedSources = [...sources].sort((a, b) =>
 ---
 
 <Base title="Games" metadata={meta} activeNav="games">
-  <h1 class="text-2xl font-bold text-ib-text">All Games</h1>
-  <p class="mt-2 text-ib-muted">{sources.length} registered sources</p>
-  <div class="mt-6 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <header class="grid gap-8 border-b border-ib-text pb-12 lg:grid-cols-[1fr_auto] lg:items-end">
+    <div><p class="atlas-label text-ib-accent">Game Atlas</p><h1 class="mt-5 text-5xl font-medium tracking-[-.045em] sm:text-7xl">Mapped territories.</h1><p class="mt-5 max-w-2xl text-lg text-ib-muted">Games are not endpoints. Enter through a source and trace its definitions, mechanics, systems, and evidence.</p></div>
+    <p class="font-mono text-xs uppercase tracking-widest text-ib-muted">{sources.length} registered sources</p>
+  </header>
+  <div class="border-b border-ib-text">
     {sortedSources.map((s) => {
       const total = recordsBySource.get(s.source_id) ?? 0;
       const typeMap = typesBySource.get(s.source_id);
       const types = typeMap ? [...typeMap.entries()].sort(([a], [b]) => a.localeCompare(b)) : [];
       return (
-        <div class="relative rounded-xl border border-ib-border bg-ib-surface p-5 transition hover:border-ib-accent hover:bg-ib-surface2">
+        <div class="group relative grid gap-5 border-b border-ib-border py-8 transition-colors last:border-b-0 hover:bg-ib-surface/50 sm:grid-cols-[1.1fr_.6fr_1.3fr_auto] sm:items-center sm:px-4">
           <a href={`/games/${s.source_id}/`} class="absolute inset-0" aria-label={s.source_id}></a>
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-ib-text">{s.source_id}</h2>
-            <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{s.declared_version}</span>
-          </div>
-          <div class="mt-3 flex items-center gap-3 text-sm text-ib-muted">
-            <span>{total} records</span>
-            {s.vcs?.repository && <a href={s.vcs.repository} class="relative text-xs text-ib-accent hover:text-ib-accent2">repo →</a>}
-          </div>
+          <div><span class="font-mono text-lg text-ib-accent">@</span><h2 class="mt-2 text-2xl font-medium text-ib-text">{s.source_id}</h2><span class="font-mono text-xs text-ib-muted">v{s.declared_version}</span></div>
+          <div><strong class="text-2xl font-medium">{total}</strong><small class="block font-mono text-xs uppercase tracking-wider text-ib-muted">records</small></div>
           {types.length > 1 && (
-            <div class="mt-3 flex flex-wrap gap-1.5">
+            <div class="flex flex-wrap gap-x-4 gap-y-2">
               {types.map(([type, count]) => (
-                <span class="rounded bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{type} · {count}</span>
+                <span class="font-mono text-xs text-ib-muted">{type} <b class="text-ib-text">{count}</b></span>
               ))}
             </div>
-          )}
+          )}<span class="text-2xl text-ib-muted transition-transform group-hover:translate-x-2 group-hover:text-ib-accent">→</span>
         </div>
       );
     })}

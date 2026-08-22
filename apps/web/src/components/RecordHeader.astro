@@ -14,11 +14,12 @@ const { record, authority = "canonical", assertionState, canonicalHash } = Astro
 const title = (record as Record<string, unknown>)["title"] ?? record.key;
 ---
 
-<div class="rounded-xl border border-ib-border bg-ib-surface p-6" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
-  <h1 class="text-2xl font-bold text-ib-text">{title as string}</h1>
-  <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-ib-muted">
-    <span class="rounded-md bg-ib-surface2 px-2 py-1 font-mono text-xs">{record.key}</span>
-    <span class="rounded-md bg-ib-accent/15 px-2 py-1 text-xs font-medium text-ib-accent">{record.record_type}</span>
+<div class="border-b border-ib-text pb-10" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
+  <p class="atlas-label text-ib-accent">Record / {record.record_type}</p>
+  <h1 class="mt-5 max-w-5xl text-4xl font-medium leading-tight tracking-[-.035em] text-ib-text sm:text-6xl">{title as string}</h1>
+  <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-ib-muted">
+    <span class="border-l-2 border-ib-accent pl-3 font-mono text-xs">{record.key}</span>
+    <span class="font-mono text-xs font-medium uppercase tracking-wider text-ib-accent">{record.record_type}</span>
     <AuthorityBadge authority={authority} />
     <EpistemicBadge assertionState={assertionState} />
   </div>

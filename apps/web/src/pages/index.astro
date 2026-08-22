@@ -2,431 +2,136 @@
 import Base from "../layouts/Base.astro";
 import SearchBox from "../components/SearchBox.astro";
 import { createWebContext } from "../lib/context";
-import { getStats, countRecordsBySource } from "../lib/page-data";
+import { getStats } from "../lib/page-data";
 
 const distDir = Astro.locals.distDir ?? "";
-let stats = null;
-let games = [];
-
 const ctx = await createWebContext(distDir);
-stats = getStats(ctx.store);
-games = ctx.store.sources;
-const recordsBySource = countRecordsBySource(ctx.store);
+const stats = getStats(ctx.store);
 
-const exampleQuestions = [
-  "How do games create fear without sanity?",
-  "What turns information into a resource?",
-  "Which mechanics change space instead of HP?",
-  "How do you create pressure without a timer?",
-  "What makes exploration dangerous without hunger or durability?",
+const examples = [
+  "Create dread without darkness",
+  "Pressure without timers",
+  "Mechanics that alter space",
+  "Information as a resource",
 ];
 
-const pipelineSteps = [
-  { label: "Source Code", icon: "{}", color: "text-ib-blue" },
-  { label: "Facts", icon: "◆", color: "text-ib-green" },
-  { label: "Mechanics & Systems", icon: "⚙", color: "text-ib-accent" },
-  { label: "Connections", icon: "⇄", color: "text-ib-accent2" },
-  { label: "Design Structures", icon: "◇", color: "text-ib-amber" },
-  { label: "New Directions", icon: "→", color: "text-ib-accent" },
-];
-
-const features = [
-  {
-    title: "Game Atlas",
-    description:
-      "Not just monsters, items, and spells. Explore systems, mechanics, generation, AI, interactions, unusual constraints — and the behavior that emerges from them.",
-    href: "/games/",
-    cta: "Browse games",
-    icon: "◈",
-    accent: "text-ib-accent",
-    border: "hover:border-ib-accent",
-  },
-  {
-    title: "Mechanic Anatomy",
-    description:
-      "Dissect a mechanic down to its causes. What the player sees. Which rules operate beneath the surface. What triggers the system. What constrains it. What it interacts with. Where it's implemented.",
-    href: "/games/",
-    cta: "Explore mechanics",
-    icon: "⚙",
-    accent: "text-ib-green",
-    border: "hover:border-ib-green",
-  },
-  {
-    title: "Compare Lab",
-    description:
-      "Compare not names — but approaches to a problem. See how different games create uncertainty, risk, exploration, pressure, or freedom through entirely different means.",
-    href: "/compare/",
-    cta: "Compare games",
-    icon: "⇄",
-    accent: "text-ib-blue",
-    border: "hover:border-ib-blue",
-  },
-  {
-    title: "Inspiration Lab",
-    description:
-      "Don't ask \"what should I copy?\" Tell us what effect you want to achieve and what you'd rather avoid. The base will help you find fitting structures, unexpected connections, and directions to transform them.",
-    href: "/inspiration",
-    cta: "Find a direction",
-    icon: "◇",
-    accent: "text-ib-accent2",
-    border: "hover:border-ib-accent2",
-  },
+const paths = [
+  { index: "01", glyph: "@", title: "Explore games", copy: "Follow source → mechanic → evidence", href: "/games/", tone: "canonical" },
+  { index: "02", glyph: "#", title: "Explore design space", copy: "Compare structures across games", href: "/design/", tone: "derived" },
+  { index: "03", glyph: "*", title: "Enter laboratory", copy: "Turn known structures into possibilities", href: "/inspiration", tone: "laboratory" },
 ];
 ---
 
-<Base title="Home" fullWidth>
-  <div class="home-page space-y-0">
+<Base title="Design Space Atlas" fullWidth>
+  <section class="relative overflow-hidden border-b border-ib-border">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <svg class="absolute right-[-8rem] top-[-5rem] h-[44rem] w-[52rem] opacity-70" viewBox="0 0 800 700" fill="none">
+        <path d="M713 127C607 43 457 51 346 124c-89 58-138 159-114 256 25 102 130 188 252 185 128-4 242-106 254-227 7-73-31-154-96-188-74-39-183-19-225 52-38 64-8 153 58 186 55 27 133 10 161-44 23-45 2-105-42-125-37-17-84-1-100 34" stroke="var(--color-ib-border)"/>
+        <path d="M755 90C619-21 423-10 283 87 164 170 102 307 139 436c39 137 183 242 341 237 166-5 316-132 333-287" stroke="var(--color-ib-border)"/>
+        <path d="M666 171C586 111 477 119 397 169c-67 42-106 116-91 189 15 76 92 143 183 145 95 2 188-70 204-157" stroke="var(--color-ib-accent)" stroke-opacity=".32"/>
+        <circle cx="444" cy="253" r="5" fill="var(--color-ib-accent)"/><circle cx="586" cy="344" r="4" fill="var(--color-ib-blue)"/><circle cx="306" cy="358" r="4" fill="var(--color-ib-amber)"/>
+      </svg>
+    </div>
 
-    {/* ──────────────────────────────── HERO ──────────────────────────────── */}
-    <section class="hero-section relative overflow-hidden border-b border-ib-border">
-      <div class="hero-glow"></div>
-      <div class="relative mx-auto max-w-4xl px-4 py-20 text-center sm:py-28">
-        <p class="mb-6 text-sm font-medium uppercase tracking-[0.3em] text-ib-muted">Roguelike Inspiration Base</p>
-        <h1 class="text-5xl font-bold leading-tight text-ib-text sm:text-6xl">
-          Don't copy the mechanic.
-          <br />
-          <span class="bg-gradient-to-r from-ib-accent via-ib-accent2 to-ib-accent bg-clip-text text-transparent">
-            Understand why it works.
-          </span>
+    <div class="relative mx-auto grid min-h-[720px] max-w-[90rem] items-center gap-16 px-5 py-20 lg:grid-cols-[1.15fr_.85fr] lg:px-8">
+      <div class="max-w-3xl">
+        <div class="mb-8 flex items-center gap-4"><span class="atlas-label text-ib-accent">Design Space Atlas</span><span class="h-px w-16 bg-ib-border"></span><span class="atlas-coordinate">52.5200° N · 13.4050° E</span></div>
+        <h1 class="max-w-3xl text-5xl font-medium leading-[.94] tracking-[-.055em] text-ib-text sm:text-7xl lg:text-[6.4rem]">
+          Map how<br />roguelikes work.
         </h1>
-        <p class="mx-auto mt-6 max-w-2xl text-lg text-ib-muted sm:text-xl">
-          Explore roguelike games from the inside: their rules, systems, interactions, and design decisions.
-          Not to find a ready-made idea — but to discover <span class="text-ib-text">new directions for your own</span>.
+        <p class="mt-8 max-w-2xl text-lg leading-8 text-ib-muted sm:text-xl">
+          Trace design from source code to mechanic, from mechanic to structure — and from known structures to <span class="text-ib-text">new possibilities.</span>
         </p>
 
-        <div class="mx-auto mt-10 max-w-xl">
-          <SearchBox placeholder="What do you want to understand or invent?" />
-          <p class="mt-3 text-sm text-ib-muted/70">
-            e.g. how to create pressure on the player without a timer?
-          </p>
-        </div>
-
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
-          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Games</a>
-          <span class="text-ib-border">·</span>
-          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Mechanics</a>
-          <span class="text-ib-border">·</span>
-          <a href="/compare/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Comparisons</a>
-          <span class="text-ib-border">·</span>
-          <a href="/inspiration" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Inspiration Lab</a>
+        <div class="mt-12 max-w-2xl">
+          <p class="atlas-label mb-3 text-ib-muted">Ask the design space</p>
+          <SearchBox placeholder="What are you trying to design?" />
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+            {examples.map((example) => <a class="text-sm text-ib-muted transition-colors hover:text-ib-accent" href={`/search?q=${encodeURIComponent(example)}`}>{example} <span aria-hidden="true">→</span></a>)}
+          </div>
         </div>
       </div>
+
+      <div class="relative hidden min-h-[34rem] lg:block" aria-label="Knowledge path from source to possible design">
+        <div class="absolute left-10 top-9 font-mono text-xs text-ib-muted">SOURCE WORLD</div>
+        <div class="map-node absolute left-4 top-20 border-ib-text"><b>&#123; &#125;</b><span>source</span><small>verified</small></div>
+        <div class="map-line absolute left-[9.5rem] top-[8.9rem] w-32 rotate-[8deg]"></div>
+        <div class="map-note absolute left-44 top-20">supports</div>
+        <div class="map-node absolute right-12 top-32 border-ib-accent"><b>!</b><span>mechanic</span><small>canonical</small></div>
+        <div class="map-line absolute right-28 top-[14.2rem] h-28 w-px rotate-[20deg]"></div>
+        <div class="map-note absolute right-3 top-[17rem]">abstracts to</div>
+        <div class="map-node absolute bottom-28 left-32 border-ib-blue"><b>#</b><span>primitive</span><small>derived</small></div>
+        <div class="map-line absolute bottom-[10.5rem] left-[17rem] w-36 -rotate-[16deg]"></div>
+        <div class="map-note absolute bottom-[7.2rem] left-[22rem]">mutation</div>
+        <div class="map-node absolute bottom-6 right-0 border-ib-accent2"><b>*</b><span>possibility</span><small>laboratory</small></div>
+      </div>
+    </div>
+  </section>
+
+  {stats && (
+    <section class="border-b border-ib-border bg-ib-surface/60">
+      <div class="mx-auto grid max-w-[90rem] grid-cols-2 px-5 sm:grid-cols-4 lg:px-8">
+        <div class="stat"><strong>{stats.sources}</strong><span>games mapped</span></div>
+        <div class="stat"><strong>{stats.records.toLocaleString()}</strong><span>definitions</span></div>
+        <div class="stat"><strong>{(stats.mechanics + stats.systems).toLocaleString()}</strong><span>mechanics + systems</span></div>
+        <div class="stat"><strong>{stats.concepts.toLocaleString()}</strong><span>design concepts</span></div>
+      </div>
     </section>
+  )}
 
-    {/* ──────────────────────── SEARCH BY MEANING ──────────────────────── */}
-    <section class="border-b border-ib-border bg-ib-surface/30 px-4 py-20">
-      <div class="mx-auto max-w-4xl">
-        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
-          Search not by names.
-          <span class="text-ib-muted"> Search by meaning.</span>
-        </h2>
-
-        <div class="mt-10 space-y-3">
-          {exampleQuestions.map((q, i) => (
-            <a
-              href={`/search?q=${encodeURIComponent(q)}`}
-              class="question-card group flex items-center gap-4 rounded-xl border border-ib-border bg-ib-surface px-6 py-4 transition-all hover:border-ib-accent hover:bg-ib-surface2"
-              style={`--delay: ${i * 60}ms`}
-            >
-              <span class="text-lg text-ib-accent transition-transform group-hover:scale-125">?</span>
-              <span class="flex-1 text-base text-ib-text sm:text-lg">{q}</span>
-              <span class="text-ib-muted opacity-0 transition-opacity group-hover:opacity-100">→</span>
-            </a>
-          ))}
-        </div>
-
-        <div class="mt-10 text-center">
-          <a
-            href="/search"
-            class="inline-block rounded-xl bg-gradient-to-r from-ib-accent to-ib-accent2 px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
-          >
-            Ask your own question →
+  <section class="mx-auto max-w-[90rem] px-5 py-24 lg:px-8 lg:py-32">
+    <div class="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
+      <div>
+        <p class="atlas-label text-ib-accent">Choose a bearing</p>
+        <h2 class="mt-5 max-w-md text-4xl font-medium leading-tight tracking-[-.035em] sm:text-5xl">Three ways into the territory.</h2>
+        <p class="mt-6 max-w-sm leading-7 text-ib-muted">Start with what exists, move through the structures beneath it, or cross the boundary into what could exist.</p>
+      </div>
+      <div class="border-t border-ib-text">
+        {paths.map((path) => (
+          <a href={path.href} class={`path-row path-${path.tone} group grid grid-cols-[3rem_3rem_1fr_auto] items-center gap-3 border-b border-ib-border py-7 hover:no-underline`}>
+            <span class="font-mono text-xs text-ib-muted">{path.index}</span><span class="font-mono text-2xl">{path.glyph}</span>
+            <span><b class="block text-xl font-medium capitalize">{path.title}</b><small class="mt-1 block text-sm text-ib-muted">{path.copy}</small></span>
+            <span class="text-2xl transition-transform group-hover:translate-x-2">→</span>
           </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-y border-ib-border bg-ib-surface">
+    <div class="mx-auto grid max-w-[90rem] lg:grid-cols-2">
+      <div class="border-b border-ib-border px-5 py-20 lg:border-b-0 lg:border-r lg:px-16 lg:py-28">
+        <p class="atlas-label text-ib-accent">Canonical / known</p>
+        <h2 class="mt-5 text-4xl font-medium tracking-[-.035em]">Knowledge with a way down.</h2>
+        <p class="mt-6 max-w-xl leading-7 text-ib-muted">Every assertion can be followed through claim and evidence to its exact source. Provenance is not footnote furniture; it is part of the instrument.</p>
+        <div class="mt-12 border-l-2 border-ib-accent pl-6 font-mono text-sm">
+          <div class="text-ib-text">hidden spatial field</div><div class="my-2 text-ib-muted">↓ REALIZED_BY</div><div class="text-ib-text">scent propagation</div><div class="my-2 text-ib-muted">↓ SUPPORTED_BY</div><div class="text-ib-accent">src/…/updateScent()</div>
         </div>
       </div>
-    </section>
-
-    {/* ──────────────────────── LOOK DEEPER ──────────────────────── */}
-    <section class="px-4 py-20">
-      <div class="mx-auto max-w-6xl">
-        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
-          Look deeper into the game
-        </h2>
-        <p class="mx-auto mt-3 max-w-2xl text-center text-ib-muted">
-          Four ways into the design space — start from whichever angle interests you.
-        </p>
-
-        <div class="mt-12 grid gap-5 sm:grid-cols-2">
-          {features.map((f) => (
-            <a
-              href={f.href}
-              class={`feature-card group rounded-2xl border border-ib-border bg-ib-surface p-7 transition-all hover:bg-ib-surface2 ${f.border}`}
-            >
-              <div class="flex items-start gap-4">
-                <span class={`text-3xl ${f.accent}`}>{f.icon}</span>
-                <div class="flex-1">
-                  <h3 class="text-xl font-semibold text-ib-text">{f.title}</h3>
-                  <p class="mt-2 text-sm leading-relaxed text-ib-muted">{f.description}</p>
-                  <span class={`mt-4 inline-block text-sm font-medium ${f.accent} opacity-70 transition-opacity group-hover:opacity-100`}>
-                    {f.cta} →
-                  </span>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
+      <div class="relative overflow-hidden bg-[#211d2c] px-5 py-20 text-[#f0edf5] lg:px-16 lg:py-28">
+        <div class="absolute right-8 top-8 font-mono text-8xl text-[#7357d9]/15">*</div>
+        <p class="atlas-label text-[#a993ff]">Laboratory / possible</p>
+        <h2 class="mt-5 text-4xl font-medium tracking-[-.035em]">Ideas with visible ancestry.</h2>
+        <p class="mt-6 max-w-xl leading-7 text-[#aaa4b5]">Creative mutations live in a different atmosphere and never impersonate facts. Every seed keeps the structures and constraints that caused it.</p>
+        <a href="/inspiration" class="mt-10 inline-flex border-b border-[#a993ff] pb-2 font-mono text-sm uppercase tracking-wider text-[#c5b8ff]">Cross into Laboratory →</a>
       </div>
-    </section>
-
-    {/* ──────────────────────── STUCK? ──────────────────────── */}
-    <section class="border-y border-ib-border bg-gradient-to-br from-ib-surface/50 to-ib-bg px-4 py-20">
-      <div class="mx-auto max-w-3xl">
-        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">Stuck?</h2>
-
-        <div class="mt-8 rounded-2xl border border-ib-border bg-ib-surface p-8">
-          <p class="text-center text-ib-muted">Say you need:</p>
-          <blockquote class="mt-4 border-l-2 border-ib-accent pl-5 text-lg italic text-ib-text sm:text-xl">
-            A cave-exploration mechanic that creates anxiety —
-            without darkness, sanity, hunger, or durability.
-          </blockquote>
-        </div>
-
-        <div class="mt-8 space-y-4">
-          <p class="text-center text-ib-muted">Don't look for one similar mechanic. Look for:</p>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
-              <span class="text-ib-accent">→</span>
-              <span class="ml-2 text-ib-text">Which structures create the feeling you need</span>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
-              <span class="text-ib-green">→</span>
-              <span class="ml-2 text-ib-text">How they work across different games</span>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
-              <span class="text-ib-blue">→</span>
-              <span class="ml-2 text-ib-text">What you can change inside them</span>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface/50 px-5 py-4">
-              <span class="text-ib-accent2">→</span>
-              <span class="ml-2 text-ib-text">What can be unexpectedly combined</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-10 text-center">
-          <a
-            href="/inspiration"
-            class="inline-block rounded-xl border border-ib-accent bg-ib-accent/10 px-6 py-3 font-medium text-ib-accent transition-colors hover:bg-ib-accent/20"
-          >
-            Try Inspiration Lab →
-          </a>
-        </div>
-      </div>
-    </section>
-
-    {/* ──────────────────── NOT A LIST OF AI IDEAS ──────────────────── */}
-    <section class="px-4 py-20">
-      <div class="mx-auto max-w-3xl">
-        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
-          Not a list of AI ideas
-        </h2>
-
-        <div class="mt-10 grid gap-5 sm:grid-cols-2">
-          <div class="rounded-2xl border border-ib-green/30 bg-ib-green/5 p-6">
-            <div class="mb-3 flex items-center gap-2">
-              <span class="text-xl text-ib-green">✓</span>
-              <h3 class="font-semibold text-ib-text">Verified knowledge</h3>
-            </div>
-            <p class="text-sm leading-relaxed text-ib-muted">
-              What a game <span class="text-ib-text">actually does</span> — extracted from source code, traceable to evidence.
-              These are facts.
-            </p>
-          </div>
-          <div class="rounded-2xl border border-ib-accent2/30 bg-ib-accent2/5 p-6">
-            <div class="mb-3 flex items-center gap-2">
-              <span class="text-xl text-ib-accent2">✦</span>
-              <h3 class="font-semibold text-ib-text">Creative hypotheses</h3>
-            </div>
-            <p class="text-sm leading-relaxed text-ib-muted">
-              New combinations based on what you've studied. These are <span class="text-ib-text">possibilities</span> —
-              and you can always trace the path between the two.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {/* ──────────────────────── PIPELINE ──────────────────────── */}
-    <section class="border-y border-ib-border bg-ib-surface/30 px-4 py-20">
-      <div class="mx-auto max-w-4xl">
-        <h2 class="text-center text-3xl font-bold text-ib-text sm:text-4xl">
-          From source to idea
-        </h2>
-
-        <div class="mt-12 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-0">
-          {pipelineSteps.map((step, i) => (
-            <>
-              <div class="pipeline-step flex flex-col items-center gap-2 rounded-xl border border-ib-border bg-ib-surface px-4 py-3 sm:px-5">
-                <span class={`text-xl ${step.color}`}>{step.icon}</span>
-                <span class="text-xs font-medium text-ib-text sm:text-sm">{step.label}</span>
-              </div>
-              {i < pipelineSteps.length - 1 && (
-                <span class="hidden text-ib-muted sm:mx-1 sm:inline">→</span>
-              )}
-            </>
-          ))}
-        </div>
-
-        <p class="mt-8 text-center text-ib-muted">
-          You can trace any conclusion back down — all the way to the source it's built on.
-        </p>
-
-        <div class="mt-8 text-center">
-          <a
-            href="/about/method/"
-            class="inline-block rounded-xl border border-ib-border bg-ib-surface px-6 py-3 text-sm font-medium text-ib-text transition-colors hover:border-ib-accent"
-          >
-            How the base works →
-          </a>
-        </div>
-      </div>
-    </section>
-
-    {/* ──────────────────────── STATS ──────────────────────── */}
-    {stats && (
-      <section class="px-4 py-16">
-        <div class="mx-auto max-w-4xl">
-          <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-              <div class="text-3xl font-bold text-ib-accent">{stats.records}</div>
-              <div class="mt-1 text-sm text-ib-muted">Records</div>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-              <div class="text-3xl font-bold text-ib-green">{stats.sources}</div>
-              <div class="mt-1 text-sm text-ib-muted">Games</div>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-              <div class="text-3xl font-bold text-ib-blue">{stats.mechanics + stats.systems}</div>
-              <div class="mt-1 text-sm text-ib-muted">Mechanics & Systems</div>
-            </div>
-            <div class="rounded-xl border border-ib-border bg-ib-surface p-5 text-center transition-colors hover:border-ib-accent">
-              <div class="text-3xl font-bold text-ib-accent2">{stats.concepts}</div>
-              <div class="mt-1 text-sm text-ib-muted">Design Concepts</div>
-            </div>
-          </div>
-        </div>
-      </section>
-    )}
-
-    {/* ──────────────────────── GAMES ──────────────────────── */}
-    {games.length > 0 && (
-      <section class="px-4 pb-16">
-        <div class="mx-auto max-w-4xl">
-          <h2 class="mb-4 text-xl font-semibold text-ib-text">Games in the base</h2>
-          <div class="grid gap-4 sm:grid-cols-3">
-            {games.map((g) => (
-              <a href={`/games/${g.source_id}/`} class="block rounded-xl border border-ib-border bg-ib-surface p-5 transition-colors hover:border-ib-accent hover:bg-ib-surface2">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-ib-text">{g.source_id}</h3>
-                  <span class="rounded-md bg-ib-surface2 px-2 py-1 text-xs text-ib-muted">v{g.declared_version}</span>
-                </div>
-                <div class="mt-2 flex items-center gap-3 text-sm text-ib-muted">
-                  <span>{recordsBySource.get(g.source_id) ?? 0} records</span>
-                  <span>→</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-
-    {/* ──────────────────────── FINAL CTA ──────────────────────── */}
-    <section class="hero-section relative overflow-hidden border-t border-ib-border">
-      <div class="hero-glow"></div>
-      <div class="relative mx-auto max-w-3xl px-4 py-20 text-center sm:py-24">
-        <h2 class="text-3xl font-bold text-ib-text sm:text-4xl">
-          Explore the roguelike design space
-        </h2>
-        <p class="mx-auto mt-4 max-w-xl text-lg text-ib-muted">
-          Start from a game. From a mechanic. From a feeling you want to create.
-          Or simply from a question.
-        </p>
-
-        <div class="mx-auto mt-8 max-w-xl">
-          <SearchBox placeholder="What are you looking for?" />
-        </div>
-
-        <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
-          <a href="/games/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">All games</a>
-          <span class="text-ib-border">·</span>
-          <a href="/design/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Design Space</a>
-          <span class="text-ib-border">·</span>
-          <a href="/dataset/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Dataset</a>
-          <span class="text-ib-border">·</span>
-          <a href="/about/method/" class="rounded-full border border-ib-border bg-ib-surface/50 px-4 py-1.5 text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-text">Method</a>
-        </div>
-      </div>
-    </section>
-
-  </div>
+    </div>
+  </section>
 </Base>
 
 <style>
-  .hero-section {
-    background: linear-gradient(180deg, var(--color-ib-surface) 0%, var(--color-ib-bg) 100%);
-  }
-
-  .hero-glow {
-    position: absolute;
-    top: -50%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(124, 92, 252, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .question-card {
-    animation: fade-in-up 0.5s ease-out backwards;
-    animation-delay: var(--delay, 0ms);
-  }
-
-  .feature-card {
-    animation: fade-in-up 0.5s ease-out backwards;
-  }
-  .feature-card:nth-child(1) { animation-delay: 0ms; }
-  .feature-card:nth-child(2) { animation-delay: 80ms; }
-  .feature-card:nth-child(3) { animation-delay: 160ms; }
-  .feature-card:nth-child(4) { animation-delay: 240ms; }
-
-  .pipeline-step {
-    animation: fade-in-up 0.4s ease-out backwards;
-  }
-  .pipeline-step:nth-child(1) { animation-delay: 0ms; }
-  .pipeline-step:nth-child(3) { animation-delay: 100ms; }
-  .pipeline-step:nth-child(5) { animation-delay: 200ms; }
-  .pipeline-step:nth-child(7) { animation-delay: 300ms; }
-  .pipeline-step:nth-child(9) { animation-delay: 400ms; }
-  .pipeline-step:nth-child(11) { animation-delay: 500ms; }
-
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .question-card,
-    .feature-card,
-    .pipeline-step {
-      animation: none;
-    }
-  }
+  .map-node { width: 10rem; height: 8rem; display: flex; flex-direction: column; justify-content: center; border-width: 1px; background: color-mix(in srgb, var(--color-ib-surface) 90%, transparent); padding: 1.25rem; box-shadow: 7px 7px 0 var(--color-ib-border); }
+  .map-node b { font-family: var(--font-mono); font-size: 1.45rem; font-weight: 500; }
+  .map-node span { margin-top: .65rem; font-size: .9rem; }
+  .map-node small, .map-note { color: var(--color-ib-muted); font-family: var(--font-mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; }
+  .map-node small { margin-top: .2rem; }
+  .map-line { border-top: 1px solid var(--color-ib-border); transform-origin: left; }
+  .stat { display: flex; min-height: 8rem; flex-direction: column; justify-content: center; border-right: 1px solid var(--color-ib-border); padding: 1.5rem; }
+  .stat:last-child { border-right: 0; }
+  .stat strong { font-size: 1.8rem; font-weight: 500; letter-spacing: -.04em; }
+  .stat span { margin-top: .35rem; color: var(--color-ib-muted); font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+  .path-canonical:hover { color: var(--color-ib-accent); }
+  .path-derived:hover { color: var(--color-ib-blue); }
+  .path-laboratory:hover { color: var(--color-ib-accent2); }
+  @media (max-width: 639px) { .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--color-ib-border); } }
 </style>
