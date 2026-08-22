@@ -1,26 +1,41 @@
 ---
 import Base from "../layouts/Base.astro";
-import AuthorityBadge from "../components/AuthorityBadge.astro";
 
-const meta = {
-  canonicalHash: "laboratory",
-  datasetId: "",
-  datasetVersion: "",
-  modelVersion: "",
-  license: "CC-BY-4.0",
-  authority: "laboratory" as const,
-};
+const meta = { canonicalHash: "laboratory", datasetId: "", datasetVersion: "", modelVersion: "", license: "CC-BY-4.0", authority: "laboratory" as const };
+const ancestry = ["information scarcity", "spatial commitment", "selective perception"];
 ---
 
-<Base title="Inspiration" metadata={meta}>
-  <div class="space-y-6">
-    <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-bold text-ib-text">Inspiration Lab</h1>
-      <AuthorityBadge authority="laboratory" />
+<Base title="Laboratory" metadata={meta} activeNav="laboratory" world="laboratory">
+  <header class="grid gap-10 border-b border-ib-border pb-14 lg:grid-cols-[1fr_auto] lg:items-end">
+    <div>
+      <div class="flex items-center gap-3"><span class="atlas-label text-ib-accent">Laboratory</span><span class="border border-ib-accent px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ib-accent">Non-canonical</span></div>
+      <h1 class="mt-6 max-w-4xl text-5xl font-medium leading-[1.02] tracking-[-.045em] sm:text-7xl">Leave the mapped territory.</h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-ib-muted">Set a desired sensation, a context, and the familiar devices you refuse to use. Begin with a grounded dossier, then carry its visible ancestry into future mutations.</p>
     </div>
-    <div class="rounded-xl border border-ib-amber/30 bg-ib-amber/10 p-5">
-      <p class="text-sm text-ib-amber">⚠ Laboratory content is non-authoritative. It may not be presented as "what the game does".</p>
+    <div class="font-mono text-8xl text-ib-accent/30">*</div>
+  </header>
+
+  <section class="grid border-b border-ib-border lg:grid-cols-[.7fr_1.3fr]">
+    <div class="border-b border-ib-border py-10 lg:border-b-0 lg:border-r lg:pr-10">
+      <p class="atlas-label text-ib-muted">Your constraints</p>
+      <dl class="mt-8 space-y-7">
+        <div><dt class="font-mono text-xs uppercase text-ib-muted">Sensation</dt><dd class="mt-2 text-xl">Dread</dd></div>
+        <div><dt class="font-mono text-xs uppercase text-ib-muted">Context</dt><dd class="mt-2 text-xl">Cave exploration</dd></div>
+        <div><dt class="font-mono text-xs uppercase text-ib-muted">Excluded</dt><dd class="mt-3 flex flex-wrap gap-2">{["darkness", "hunger", "sanity", "durability"].map((term) => <span class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-muted"><s>{term}</s></span>)}</dd></div>
+      </dl>
     </div>
-    <p class="text-ib-muted">The Inspiration Lab is a space for generating and exploring experimental game design ideas derived from canonical knowledge. Content here is explicitly marked as laboratory output.</p>
-  </div>
+    <form action="/ask" class="py-10 lg:pl-12">
+      <label for="laboratory-query" class="atlas-label text-ib-accent">Expedition brief</label>
+      <textarea id="laboratory-query" name="q" rows="5" class="mt-5 w-full resize-y border border-ib-border bg-ib-surface p-5 text-lg leading-8 text-ib-text placeholder-ib-muted focus:outline-none" placeholder="I need cave exploration pressure that creates dread but does not use…"></textarea>
+      <div class="mt-5 flex items-center justify-between gap-4"><p class="font-mono text-xs text-ib-muted">This build creates a grounded dossier; it does not generate a design seed.</p><button class="border border-ib-accent bg-ib-accent px-5 py-3 font-mono text-xs uppercase tracking-wider text-white transition-colors hover:bg-transparent hover:text-ib-accent">Find source structures →</button></div>
+    </form>
+  </section>
+
+  <section class="py-14">
+    <div class="flex items-center justify-between"><p class="atlas-label text-ib-muted">How ideas are formed</p><span class="atlas-coordinate">LINEAGE / 01</span></div>
+    <div class="mt-10 grid items-center gap-5 lg:grid-cols-[1fr_auto_1fr_auto_1fr]">
+      {ancestry.map((item, index) => <Fragment><div class="border border-ib-border bg-ib-surface p-5"><span class="font-mono text-xs text-ib-accent">0{index + 1}</span><p class="mt-4 text-lg capitalize">{item}</p><small class="mt-2 block font-mono text-xs text-ib-muted">canonical structure</small></div>{index < ancestry.length - 1 && <span class="hidden font-mono text-ib-accent lg:block">+</span>}</Fragment>)}
+    </div>
+    <div class="mt-8 border-l-2 border-ib-accent pl-6"><p class="atlas-label text-ib-accent">Why this exists</p><p class="mt-3 max-w-3xl text-ib-muted">Each design seed exposes this trail: source structures → mutation operation → resulting possibility. The boundary between evidence and invention stays visible.</p></div>
+  </section>
 </Base>

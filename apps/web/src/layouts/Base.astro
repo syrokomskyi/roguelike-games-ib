@@ -8,18 +8,16 @@ interface Props {
   metadata?: PageMetadata;
   activeNav?: string;
   fullWidth?: boolean;
+  world?: "canonical" | "laboratory";
 }
 
-const { title, metadata, activeNav, fullWidth = false } = Astro.props;
+const { title, metadata, activeNav, fullWidth = false, world = "canonical" } = Astro.props;
 const navItems = [
-  { href: "/search", label: "Search", key: "search" },
-  { href: "/ask", label: "Ask", key: "ask" },
-  { href: "/inspiration", label: "Create", key: "create" },
+  { href: "/search", label: "Explore", key: "search" },
   { href: "/games/", label: "Games", key: "games" },
+  { href: "/design/", label: "Design Space", key: "design" },
   { href: "/compare/", label: "Compare", key: "compare" },
-  { href: "/design/", label: "Design", key: "design" },
-  { href: "/dataset/", label: "Dataset", key: "dataset" },
-  { href: "/about/method/", label: "Method", key: "method" },
+  { href: "/inspiration", label: "Laboratory", key: "laboratory" },
 ];
 ---
 
@@ -29,32 +27,40 @@ const navItems = [
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title} — Roguelike Inspiration Base</title>
+  <meta name="theme-color" content={world === "laboratory" ? "#17151f" : "#F3F1EA"} />
   {metadata && <Fragment set:html={metadataToHtmlMeta(metadata)} />}
 </head>
-<body>
-  <nav class="sticky top-0 z-50 border-b border-ib-border bg-ib-surface/95 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
-      <a href="/" class="flex items-center gap-2 text-lg font-bold text-ib-text hover:no-underline">
-        <span class="text-ib-accent">◈</span> Roguelike IB
+<body class={world === "laboratory" ? "laboratory-world" : "canonical-world"}>
+  <nav class="sticky top-0 z-50 border-b border-ib-border bg-ib-bg/92 backdrop-blur-md">
+    <div class="mx-auto flex min-h-16 max-w-[90rem] items-center gap-7 px-5 lg:px-8">
+      <a href="/" class="mr-auto flex items-center gap-3 text-ib-text hover:no-underline">
+        <span class="grid size-8 place-items-center border border-ib-text font-mono text-sm font-semibold text-ib-accent">@</span>
+        <span class="hidden leading-none sm:block"><b class="block text-sm tracking-[.12em]">RIB</b><small class="mt-1 block font-mono text-[9px] uppercase tracking-[.15em] text-ib-muted">Design Space Atlas</small></span>
       </a>
-      <div class="flex items-center gap-4 text-sm">
+      <div class="hidden items-center gap-5 text-sm md:flex">
         {navItems.map((item) => (
-          <a href={item.href} class={`transition-colors hover:text-ib-text ${activeNav === item.key ? "text-ib-accent font-medium" : "text-ib-muted"}`}>{item.label}</a>
+          <a href={item.href} class={`relative py-5 transition-colors hover:text-ib-text hover:no-underline ${activeNav === item.key ? "text-ib-text after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:bg-ib-accent" : "text-ib-muted"}`}>{item.label}</a>
         ))}
       </div>
+      <details class="relative md:hidden">
+        <summary class="cursor-pointer border border-ib-border px-3 py-2 font-mono text-xs text-ib-muted marker:content-none">Map</summary>
+        <div class="absolute right-0 top-[calc(100%+.75rem)] z-10 w-52 border border-ib-border bg-ib-surface p-2 shadow-[5px_5px_0_var(--color-ib-border)]">
+          {navItems.map((item) => (
+            <a href={item.href} class={`block px-3 py-2.5 text-sm hover:bg-ib-surface2 hover:no-underline ${activeNav === item.key ? "text-ib-accent" : "text-ib-text"}`}>{item.label}</a>
+          ))}
+        </div>
+      </details>
+      <a href="/search" aria-label="Search the atlas" class="ml-1 flex items-center gap-3 border-l border-ib-border pl-5 font-mono text-xs text-ib-muted hover:text-ib-text hover:no-underline"><span>Search</span><kbd class="border border-ib-border px-1.5 py-1 text-[10px]">⌘K</kbd></a>
     </div>
   </nav>
-  <main class={fullWidth ? "" : "mx-auto max-w-7xl px-4 py-8"}>
+  <main class={fullWidth ? "" : "mx-auto max-w-[90rem] px-5 py-10 lg:px-8 lg:py-14"}>
     <slot />
   </main>
-  <footer class="border-t border-ib-border py-6">
-    <div class="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 sm:flex-row sm:justify-between">
-      <p class="text-sm text-ib-muted">Roguelike Inspiration Base — CC-BY-4.0</p>
+  <footer class="border-t border-ib-border bg-ib-bg py-8">
+    <div class="mx-auto flex max-w-[90rem] flex-col gap-5 px-5 sm:flex-row sm:items-end sm:justify-between lg:px-8">
+      <div><p class="atlas-label text-ib-text">Roguelike Inspiration Base</p><p class="mt-2 text-sm text-ib-muted">A cartographer's instrument for unexplored design space.</p></div>
       <div class="flex items-center gap-4 text-sm">
-        <a href="/games/" class="text-ib-muted transition-colors hover:text-ib-text">Games</a>
-        <a href="/search" class="text-ib-muted transition-colors hover:text-ib-text">Search</a>
-        <a href="/compare/" class="text-ib-muted transition-colors hover:text-ib-text">Compare</a>
-        <a href="/dataset/" class="text-ib-muted transition-colors hover:text-ib-text">Dataset</a>
+        <a href="/about/method/" class="text-ib-muted">Method</a><a href="/dataset/" class="text-ib-muted">Dataset</a><span class="font-mono text-xs text-ib-muted">CC-BY-4.0</span>
       </div>
     </div>
   </footer>
