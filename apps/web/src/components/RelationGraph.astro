@@ -2,6 +2,7 @@
 import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import { groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
 import SpriteIcon from "./SpriteIcon.astro";
+import CollapsibleSection from "./CollapsibleSection.astro";
 
 interface Props {
   relations: RelationRecord[];
@@ -15,8 +16,7 @@ const recordMap = new Map(records.map((r) => [r.id, r]));
 
 <div class="space-y-4">
   {[...byType.entries()].map(([type, rels]) => (
-    <div class="border-t border-ib-border py-4">
-      <h4 class="atlas-label mb-3 text-ib-blue">{type}</h4>
+    <CollapsibleSection title={`${type} (${rels.length})`} open={type !== "PART_OF"}>
       <div class="flex flex-col gap-2">
         {rels.map((rel) => {
           const source = recordMap.get(rel.source_record_id);
@@ -32,7 +32,7 @@ const recordMap = new Map(records.map((r) => [r.id, r]));
           );
         })}
       </div>
-    </div>
+    </CollapsibleSection>
   ))}
   {relations.length === 0 && <p class="text-sm text-ib-muted">No relations found.</p>}
 </div>

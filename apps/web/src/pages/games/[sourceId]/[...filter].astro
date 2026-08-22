@@ -7,6 +7,7 @@ import CoveragePanel from "../../../components/CoveragePanel.astro";
 import { recordsForSource } from "../../../lib/page-data";
 import { evidenceForRecord } from "../../../lib/evidence";
 import SpriteIcon from "../../../components/SpriteIcon.astro";
+import CollapsibleSection from "../../../components/CollapsibleSection.astro";
 import { resolve } from "node:path";
 
 export async function getStaticPaths() {
@@ -91,8 +92,7 @@ for (const r of pageRecords) {
       ))}
     </div>
 
-    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
-      <h2 class="mb-4 text-lg font-semibold text-ib-text">Records ({filteredCount})</h2>
+    <CollapsibleSection title={`Records (${filteredCount})`}>
       <div class="grid gap-2 sm:grid-cols-2">
         {pageRecords.map((r) => (
           <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm transition-colors hover:border-ib-accent">
@@ -107,7 +107,7 @@ for (const r of pageRecords) {
           </a>
         ))}
       </div>
-    </div>
+    </CollapsibleSection>
 
     {totalPages > 1 && (
       <div class="flex items-center justify-center gap-2">
@@ -121,10 +121,9 @@ for (const r of pageRecords) {
       </div>
     )}
 
-    <div>
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Coverage</h2>
+    <CollapsibleSection title="Coverage">
       <CoveragePanel coverage={coverage} />
-    </div>
+    </CollapsibleSection>
 
     <div class="flex gap-4">
       <a href={`/games/${sourceId}/mechanics/`} class="rounded-lg border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-text transition-colors hover:border-ib-accent">Mechanics</a>

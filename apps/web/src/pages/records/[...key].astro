@@ -10,6 +10,7 @@ import RecordHeader from "../../components/RecordHeader.astro";
 import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
 import RelationGraph from "../../components/RelationGraph.astro";
+import CollapsibleSection from "../../components/CollapsibleSection.astro";
 
 const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
 
@@ -52,8 +53,7 @@ const breadcrumbs = recordSourceId
     <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
 
     {imageEvidence && (
-      <section>
-        <h2 class="atlas-label mb-4 text-ib-muted">00 / Image</h2>
+      <CollapsibleSection title="00 / Image">
         <div class="h-48 w-48 overflow-hidden rounded-xl border border-ib-border bg-ib-surface">
           <img
             src={imageEvidence.github_url}
@@ -68,12 +68,11 @@ const breadcrumbs = recordSourceId
             {imageEvidence.media.width && imageEvidence.media.height && ` · ${imageEvidence.media.width}×${imageEvidence.media.height}px`}
           </p>
         )}
-      </section>
+      </CollapsibleSection>
     )}
 
     {spriteUrl && (
-      <section>
-        <h2 class="atlas-label mb-4 text-ib-muted">00 / Sprite</h2>
+      <CollapsibleSection title="00 / Sprite">
         <div class="overflow-hidden rounded-xl border border-ib-border" style="height:192px;width:fit-content">
           <img
             src={spriteUrl}
@@ -82,13 +81,12 @@ const breadcrumbs = recordSourceId
             class="h-full w-auto"
           />
         </div>
-      </section>
+      </CollapsibleSection>
     )}
 
     <RecordAttributes record={record} />
 
-    <section>
-      <h2 class="atlas-label mb-4 text-ib-muted">02 / Claims <span>({claims.length})</span></h2>
+    <CollapsibleSection title={`02 / Claims (${claims.length})`}>
       {claims.length > 0 ? (
         <div class="space-y-2">
           {claims.map((c) => (
@@ -119,19 +117,17 @@ const breadcrumbs = recordSourceId
           ))}
         </div>
       )}
-    </section>
+    </CollapsibleSection>
 
-    <section>
-      <h2 class="atlas-label mb-4 text-ib-muted">03 / Evidence inspector</h2>
+    <CollapsibleSection title="03 / Evidence inspector">
       <EvidenceList evidence={evidence} />
-    </section>
+    </CollapsibleSection>
 
-    <section>
-      <h2 class="atlas-label mb-4 text-ib-muted">04 / Local relation graph</h2>
+    <CollapsibleSection title="04 / Local relation graph">
       <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => {
         const ra = r as Record<string, unknown>;
         return { id: r.id, key: r.key, record_type: r.record_type, sprite_path: getSpritePath(ra), source_id: getSourceId(ra) };
       })} />
-    </section>
+    </CollapsibleSection>
   </div>
 </Base>

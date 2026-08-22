@@ -25,7 +25,7 @@ const paths = [
 <Base title="Design Space Atlas" fullWidth>
   <section class="relative overflow-hidden border-b border-ib-border">
     <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <svg class="absolute right-[-8rem] top-[-5rem] h-[44rem] w-[52rem] opacity-70" viewBox="0 0 800 700" fill="none">
+      <svg class="atlas-hero-contours absolute right-[-8rem] top-[-5rem] h-[44rem] w-[52rem] opacity-70" viewBox="0 0 800 700" fill="none">
         <path d="M713 127C607 43 457 51 346 124c-89 58-138 159-114 256 25 102 130 188 252 185 128-4 242-106 254-227 7-73-31-154-96-188-74-39-183-19-225 52-38 64-8 153 58 186 55 27 133 10 161-44 23-45 2-105-42-125-37-17-84-1-100 34" stroke="var(--color-ib-border)"/>
         <path d="M755 90C619-21 423-10 283 87 164 170 102 307 139 436c39 137 183 242 341 237 166-5 316-132 333-287" stroke="var(--color-ib-border)"/>
         <path d="M666 171C586 111 477 119 397 169c-67 42-106 116-91 189 15 76 92 143 183 145 95 2 188-70 204-157" stroke="var(--color-ib-accent)" stroke-opacity=".32"/>
@@ -122,6 +122,8 @@ const paths = [
 </Base>
 
 <style>
+  .atlas-hero-contours { animation: contour-drift 18s ease-in-out infinite alternate; transform-origin: center; will-change: transform; }
+  @keyframes contour-drift { from { transform: translate3d(-10px, -6px, 0) rotate(.3deg); } to { transform: translate3d(12px, 8px, 0) rotate(-.45deg); } }
   .map-node { width: 10rem; height: 8rem; display: flex; flex-direction: column; justify-content: center; border-width: 1px; background: color-mix(in srgb, var(--color-ib-surface) 90%, transparent); padding: 1.25rem; box-shadow: 7px 7px 0 var(--color-ib-border); }
   .map-node b { font-family: var(--font-mono); font-size: 1.45rem; font-weight: 500; }
   .map-node span { margin-top: .65rem; font-size: .9rem; }
@@ -136,4 +138,5 @@ const paths = [
   .path-derived:hover { color: var(--color-ib-blue); }
   .path-laboratory:hover { color: var(--color-ib-accent2); }
   @media (max-width: 639px) { .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--color-ib-border); } }
+  @media (prefers-reduced-motion: reduce) { .atlas-hero-contours { animation: none; } }
 </style>

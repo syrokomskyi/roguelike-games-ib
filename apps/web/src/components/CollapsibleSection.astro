@@ -1,0 +1,24 @@
+---
+interface Props {
+  title: string;
+  open?: boolean;
+}
+
+const { title, open = true } = Astro.props;
+---
+
+<details class="atlas-disclosure border-y border-ib-border bg-ib-surface/40" open={open}>
+  <summary class="atlas-disclosure__summary flex cursor-pointer list-none items-center gap-2 px-1 py-3 text-ib-muted transition-colors hover:text-ib-text">
+    <span role="heading" aria-level="2" class="atlas-label">{title}</span>
+    <span aria-hidden="true" class="atlas-disclosure__indicator relative -top-px text-xs leading-none text-ib-accent">▸</span>
+  </summary>
+  <div class="px-1 pb-5 pt-1">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .atlas-disclosure__summary::-webkit-details-marker { display: none; }
+  .atlas-disclosure__indicator { transition: transform 160ms ease; }
+  .atlas-disclosure[open] .atlas-disclosure__indicator { transform: rotate(90deg); }
+</style>

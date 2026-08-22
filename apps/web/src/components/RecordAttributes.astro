@@ -1,5 +1,6 @@
 ---
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
+import CollapsibleSection from "./CollapsibleSection.astro";
 
 interface Props {
   record: CanonicalRecord;
@@ -36,8 +37,7 @@ const entries = Object.entries(record as Record<string, unknown>)
 ---
 
 {entries.length > 0 && (
-  <section>
-    <h2 class="atlas-label mb-4 text-ib-muted">01 / Anatomy</h2>
+  <CollapsibleSection title="01 / Anatomy">
     <div class="overflow-hidden border-y border-ib-border bg-ib-surface/60">
       <table class="w-full text-sm">
         <tbody>
@@ -65,5 +65,5 @@ const entries = Object.entries(record as Record<string, unknown>)
         </tbody>
       </table>
     </div>
-  </section>
+  </CollapsibleSection>
 )}
