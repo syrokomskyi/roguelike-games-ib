@@ -4,7 +4,7 @@ date: 2026-08-22
 reviewer:
   skill: fo-review
   model: unknown
-verdict: needs-revision
+verdict: approved
 diffRange: f7ec272...HEAD
 filesReviewed:
   - packages/extractors/broguece-extractor/src/extractor.ts
@@ -13,9 +13,9 @@ filesReviewed:
 
 # Code Review: f7ec272...HEAD
 
-### Verdict: Needs revision
+### Verdict: Approved
 
-One finding on Axis E — the MODULE_CONTRACT purpose in `extractor.ts` lists old non-canonical kind names that no longer match the actual record kinds emitted after the ADR-0007 remapping.
+Finding E-1 fixed in commit 762a177 — MODULE_CONTRACT purpose now lists canonical kind names. All axes pass.
 
 ### Mechanical floor
 
@@ -39,7 +39,7 @@ No issues. Old kind names are directly replaced — no dual-paths, no compatibil
 
 ### Axis E — Agent-facing clarity
 
-**Finding E-1 (minor):** `packages/extractors/broguece-extractor/src/extractor.ts:3` — MODULE_CONTRACT `<purpose>` lists old non-canonical kind names: "dungeon feature, light, mutation, monster class, status effect, monster behavior, monster ability, and image asset records". After ADR-0007 remapping, the actual kinds are: feature, mutation, spawn_table, status_effect, trait, ability, other_definition. The purpose should reflect the canonical kind names.
+**Finding E-1 (fixed):** `packages/extractors/broguece-extractor/src/extractor.ts:3` — MODULE_CONTRACT `<purpose>` previously listed old non-canonical kind names. Fixed in commit 762a177 — purpose now lists canonical kind names: feature, mutation, spawn_table, status_effect, trait, ability, other_definition.
 
 ### Axis F — Pragmatism
 
