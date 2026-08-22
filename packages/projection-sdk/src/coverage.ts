@@ -1,12 +1,14 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Reads coverage records from materialized output and filters coverage by source ID.</purpose>
+<purpose>Reads coverage records from materialized output.</purpose>
 <non-goals>
-  <item>Does not compute coverage — reading and querying only.</item>
+  <item>Does not compute coverage — reading only.</item>
+  <item>Does not provide query helpers — use ProjectionStore.coverageForSource.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: readCoverage, coverageForSource.</item>
+  <item>Removed coverageForSource — use ProjectionStore.coverageForSource.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync, existsSync } from "node:fs";
@@ -20,8 +22,4 @@ export function readCoverage(distDir: string): CoverageRecord[] {
   const raw = readFileSync(path, "utf-8");
   const parsed = canonicalJsonParse(raw) as { records: CoverageRecord[] };
   return parsed.records;
-}
-
-export function coverageForSource(coverage: CoverageRecord[], sourceId: string): CoverageRecord[] {
-  return coverage.filter((c) => c.source_id === sourceId);
 }

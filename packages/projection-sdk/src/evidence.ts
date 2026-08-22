@@ -1,12 +1,14 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Reads public evidence from materialized output, filters evidence by claim references, and builds GitHub URLs for evidence artifacts.</purpose>
+<purpose>Reads public evidence from materialized output and provides publication-policy check and GitHub URL building.</purpose>
 <non-goals>
   <item>Does not redact evidence — reading and URL building only.</item>
+  <item>Does not provide claim-based filtering — use ProjectionStore.evidenceForClaim.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: readPublicEvidence, evidenceForClaim, isRestricted, buildEvidenceUrl.</item>
+  <item>Removed evidenceForClaim — use ProjectionStore.evidenceForClaim.</item>
 </CHANGE_SUMMARY>
 */
 import { readJsonlFile } from "@roguelike-games-ib/materializer";
@@ -16,11 +18,6 @@ import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";
 
 export function readPublicEvidence(distDir: string): PublicEvidence[] {
   return readJsonlFile(join(distDir, "evidence.public.jsonl")) as unknown as PublicEvidence[];
-}
-
-export function evidenceForClaim(evidence: PublicEvidence[], evidenceRefs: string[]): PublicEvidence[] {
-  const refSet = new Set(evidenceRefs);
-  return evidence.filter((e) => refSet.has(e.id));
 }
 
 export function isRestricted(evidence: PublicEvidence): boolean {

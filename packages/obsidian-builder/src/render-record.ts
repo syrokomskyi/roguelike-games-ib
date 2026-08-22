@@ -14,8 +14,8 @@ import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { ClaimRecord, RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
-import { claimsForRecord, claimsReferencingRecord, evidenceForClaim, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
-import { relationsForRecord, groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
+import { buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
+import { groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
 import { createFrontmatter, serializeFrontmatter } from "./frontmatter.ts";
 import type { PathResolver } from "./paths.ts";
 import { makeWikiLink } from "./links.ts";
@@ -51,7 +51,7 @@ function renderRelations(
   aliasMap: AliasMap,
   recordId: string,
 ): string {
-  const { outgoing, incoming } = relationsForRecord(store.relations, recordId);
+  const { outgoing, incoming } = store.relationsForRecord(recordId);
   if (outgoing.length === 0 && incoming.length === 0) return "";
 
   const lines: string[] = ["## Relations"];
@@ -86,8 +86,8 @@ function renderClaims(
   aliasMap: AliasMap,
   recordId: string,
 ): string {
-  const claims = claimsForRecord(store.claims, recordId);
-  const refClaims = claimsReferencingRecord(store.claims, recordId);
+  const claims = store.claimsForRecord(recordId);
+  const refClaims = store.claimsReferencingRecord(recordId);
   if (claims.length === 0 && refClaims.length === 0) return "";
 
   const lines: string[] = ["## Claims"];
@@ -102,7 +102,7 @@ function renderClaims(
     }
     lines.push(`- **${claim.predicate}**: ${valueStr}${state}`);
 
-    const ev = evidenceForClaim(store.evidence, claim.evidence_refs);
+    const ev = store.evidenceForClaim(claim.evidence_refs);
     if (ev.length > 0) {
       for (const e of ev) {
         const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
@@ -122,11 +122,11 @@ function renderEvidence(
   record: CanonicalRecord,
 ): string {
   const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
-  const claimEvidenceRefs = claimsForRecord(store.claims, record.id).flatMap((c) => c.evidence_refs);
+  const claimEvidenceRefs = store.claimsForRecord(record.id).flatMap((c) => c.evidence_refs);
   const allRefs = [...recordEvidenceRefs, ...claimEvidenceRefs];
   if (allRefs.length === 0) return "";
 
-  const ev = evidenceForClaim(store.evidence, allRefs);
+  const ev = store.evidenceForClaim(allRefs);
   if (ev.length === 0) return "";
 
   const lines: string[] = ["## Evidence"];

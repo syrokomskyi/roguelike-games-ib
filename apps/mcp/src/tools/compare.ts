@@ -11,9 +11,6 @@
 */
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
-import { resolveRecordById } from "@roguelike-games-ib/projection-sdk";
-import { claimsForRecord } from "@roguelike-games-ib/projection-sdk";
-import { relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError, ValidationError } from "../errors.ts";
 
 export function compareRecords(
@@ -26,12 +23,12 @@ export function compareRecords(
 
   const records = [];
   for (const id of input.record_ids) {
-    const record = resolveRecordById(ctx.store, id);
+    const record = ctx.store.resolveRecordById(id);
     if (!record) {
       throw new NotFoundError(`Record not found: ${id}`);
     }
-    const claims = claimsForRecord(ctx.store.claims, id);
-    const { outgoing, incoming } = relationsForRecord(ctx.store.relations, id);
+    const claims = ctx.store.claimsForRecord(id);
+    const { outgoing, incoming } = ctx.store.relationsForRecord(id);
     records.push({
       record_id: record.id,
       record_key: record.key,
@@ -57,7 +54,7 @@ export function compareGames(
 
   const games = [];
   for (const sourceId of input.source_ids) {
-    const source = ctx.store.sources.find((s) => s.source_id === sourceId);
+    const source = ctx.store.findSourceById(sourceId);
     if (!source) {
       throw new NotFoundError(`Source not found: ${sourceId}`);
     }

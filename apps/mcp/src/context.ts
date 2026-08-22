@@ -13,7 +13,6 @@
 import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { buildSearchIndex, type SearchIndex } from "@roguelike-games-ib/search";
 import type { MaterializationManifest } from "@roguelike-games-ib/materializer";
-import { readManifest } from "@roguelike-games-ib/projection-sdk";
 import { join } from "node:path";
 
 export interface McpContext {
@@ -29,8 +28,8 @@ export interface McpContext {
 }
 
 export async function createMcpContext(distDir: string): Promise<McpContext> {
-  const manifest = readManifest(distDir);
   const store = openProjection(distDir);
+  const manifest = store.manifest;
   const dbPath = join(distDir, "knowledge.sqlite");
   const searchIndex = await buildSearchIndex({
     dbPath,

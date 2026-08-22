@@ -12,8 +12,6 @@
 */
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
-import { relationsForRecord, groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
-import { resolveRecordById } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError, ValidationError } from "../errors.ts";
 
 const MAX_DEPTH = 3;
@@ -28,7 +26,7 @@ export function traverseRelations(
     limit?: number;
   },
 ) {
-  const record = resolveRecordById(ctx.store, input.record_id);
+  const record = ctx.store.resolveRecordById(input.record_id);
   if (!record) {
     throw new NotFoundError(`Record not found: ${input.record_id}`);
   }
@@ -57,7 +55,7 @@ export function traverseRelations(
     const { id, depth: currentDepth } = queue.shift()!;
     if (currentDepth >= depth) continue;
 
-    const { outgoing, incoming } = relationsForRecord(ctx.store.relations, id);
+    const { outgoing, incoming } = ctx.store.relationsForRecord(id);
 
     const filterByType = (rels: typeof outgoing) =>
       input.relation_types
@@ -69,7 +67,7 @@ export function traverseRelations(
         if (edges.length >= limit) break;
         if (visited.has(rel.target_record_id)) continue;
         visited.add(rel.target_record_id);
-        const target = resolveRecordById(ctx.store, rel.target_record_id);
+        const target = ctx.store.resolveRecordById(rel.target_record_id);
         edges.push({
           relation_type: rel.relation_type,
           direction: "outgoing",
@@ -87,7 +85,7 @@ export function traverseRelations(
         if (edges.length >= limit) break;
         if (visited.has(rel.source_record_id)) continue;
         visited.add(rel.source_record_id);
-        const source = resolveRecordById(ctx.store, rel.source_record_id);
+        const source = ctx.store.resolveRecordById(rel.source_record_id);
         edges.push({
           relation_type: rel.relation_type,
           direction: "incoming",

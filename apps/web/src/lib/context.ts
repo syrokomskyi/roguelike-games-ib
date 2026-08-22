@@ -12,7 +12,6 @@
 import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { buildSearchIndex, type SearchIndex } from "@roguelike-games-ib/search";
 import type { MaterializationManifest } from "@roguelike-games-ib/materializer";
-import { readManifest, isManifestSupported, SUPPORTED_MANIFEST_SCHEMA } from "@roguelike-games-ib/projection-sdk";
 import { join } from "node:path";
 
 export interface WebContext {
@@ -34,14 +33,8 @@ export async function createWebContext(distDir: string): Promise<WebContext> {
   if (_cachedDistDir === distDir && _cachedPromise) return _cachedPromise;
   _cachedDistDir = distDir;
   _cachedPromise = (async () => {
-    const manifest = readManifest(distDir);
-    if (!isManifestSupported(manifest)) {
-      throw new Error(
-        `Unsupported materialization manifest schema: ${manifest.schema}. Expected ${SUPPORTED_MANIFEST_SCHEMA}.`,
-      );
-    }
-
     const store = openProjection(distDir);
+    const manifest = store.manifest;
     const dbPath = join(distDir, "knowledge.sqlite");
     const searchIndex = await buildSearchIndex({
       dbPath,

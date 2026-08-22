@@ -11,7 +11,7 @@
 */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readManifest, isManifestSupported } from "@roguelike-games-ib/projection-sdk";
+import { openProjection } from "@roguelike-games-ib/projection-sdk";
 
 export interface VerificationResult {
   ok: boolean;
@@ -27,20 +27,13 @@ export function verifyMaterialization(distDir: string): VerificationResult {
     };
   }
 
-  let manifest;
+  let store;
   try {
-    manifest = readManifest(distDir);
+    store = openProjection(distDir);
   } catch (e) {
     return {
       ok: false,
       error: `Failed to read materialization manifest: ${(e as Error).message}`,
-    };
-  }
-
-  if (!isManifestSupported(manifest)) {
-    return {
-      ok: false,
-      error: `Unsupported manifest schema: ${manifest.schema}`,
     };
   }
 

@@ -11,7 +11,6 @@
 </CHANGE_SUMMARY>
 */
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
-import { claimsForRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
 
 export function getSpritePath(record: Record<string, unknown>): string | null {
   const attrs = record["attributes"] as Record<string, unknown> | undefined;
@@ -39,8 +38,8 @@ export interface CompareRow {
 
 export function buildCompareRows(store: ProjectionStore): CompareRow[] {
   return store.records.map((r) => {
-    const claims = claimsForRecord(store.claims, r.id);
-    const { outgoing, incoming } = relationsForRecord(store.relations, r.id);
+    const claims = store.claimsForRecord(r.id);
+    const { outgoing, incoming } = store.relationsForRecord(r.id);
     const ra = r as Record<string, unknown>;
     const source_id = getSourceId(ra) || "all";
     return {

@@ -1,12 +1,14 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Reads relations from materialized output and provides query helpers for finding relations by record and grouping by type.</purpose>
+<purpose>Reads relations from materialized output and provides grouping utility.</purpose>
 <non-goals>
-  <item>Does not validate relations — reading and querying only.</item>
+  <item>Does not validate relations — reading only.</item>
+  <item>Does not provide per-record query helpers — use ProjectionStore.relationsForRecord.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: readRelations, relationsForRecord, groupRelationsByType.</item>
+  <item>Removed relationsForRecord — use ProjectionStore.relationsForRecord.</item>
 </CHANGE_SUMMARY>
 */
 import { readJsonlFile } from "@roguelike-games-ib/materializer";
@@ -15,15 +17,6 @@ import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";
 
 export function readRelations(distDir: string): RelationRecord[] {
   return readJsonlFile(join(distDir, "relations.jsonl")) as unknown as RelationRecord[];
-}
-
-export function relationsForRecord(relations: RelationRecord[], recordId: string): {
-  outgoing: RelationRecord[];
-  incoming: RelationRecord[];
-} {
-  const outgoing = relations.filter((r) => r.source_record_id === recordId);
-  const incoming = relations.filter((r) => r.target_record_id === recordId);
-  return { outgoing, incoming };
 }
 
 export function groupRelationsByType(relations: RelationRecord[]): Map<string, RelationRecord[]> {

@@ -11,7 +11,6 @@
 */
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
-import { resolveRecord, resolveRecordById, resolveRecordByKey, resolveRecordByAlias } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError, ValidationError } from "../errors.ts";
 
 export function getRecord(
@@ -27,9 +26,9 @@ export function getRecord(
 
   let record;
   if (input.id) {
-    record = resolveRecordById(ctx.store, input.id);
+    record = ctx.store.resolveRecordById(input.id);
   } else {
-    record = resolveRecordByKey(ctx.store, input.key!);
+    record = ctx.store.resolveRecordByKey(input.key!);
   }
 
   if (!record) {
@@ -48,13 +47,13 @@ export function resolveKey(
   ctx: McpContext,
   input: { key_or_alias: string },
 ) {
-  const record = resolveRecord(ctx.store, input.key_or_alias);
+  const record = ctx.store.resolveRecord(input.key_or_alias);
   if (!record) {
     throw new NotFoundError(`Cannot resolve: ${input.key_or_alias}`);
   }
 
-  const isAlias = !resolveRecordByKey(ctx.store, input.key_or_alias)
-    && !resolveRecordById(ctx.store, input.key_or_alias);
+  const isAlias = !ctx.store.resolveRecordByKey(input.key_or_alias)
+    && !ctx.store.resolveRecordById(input.key_or_alias);
 
   return envelope(ctx, {
     record_id: record.id,

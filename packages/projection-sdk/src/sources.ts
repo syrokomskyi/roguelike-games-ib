@@ -1,12 +1,14 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Reads source bindings from materialized output and finds sources by ID.</purpose>
+<purpose>Reads source bindings from materialized output.</purpose>
 <non-goals>
-  <item>Does not create bindings — reading and querying only.</item>
+  <item>Does not create bindings — reading only.</item>
+  <item>Does not provide query helpers — use ProjectionStore.findSourceById.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: readSources, findSourceById.</item>
+  <item>Removed findSourceById — use ProjectionStore.findSourceById.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync, existsSync } from "node:fs";
@@ -20,8 +22,4 @@ export function readSources(distDir: string): SourceBinding[] {
   const raw = readFileSync(path, "utf-8");
   const parsed = canonicalJsonParse(raw) as { sources: SourceBinding[] };
   return parsed.sources;
-}
-
-export function findSourceById(sources: SourceBinding[], sourceId: string): SourceBinding | undefined {
-  return sources.find((s) => s.source_id === sourceId);
 }

@@ -12,22 +12,20 @@
 */
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
-import { claimsForRecord } from "@roguelike-games-ib/projection-sdk";
-import { resolveRecordById } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError } from "../errors.ts";
 
 export function getClaims(
   ctx: McpContext,
   input: { record_id: string; predicate?: string; cursor?: string; limit?: number },
 ) {
-  const record = resolveRecordById(ctx.store, input.record_id);
+  const record = ctx.store.resolveRecordById(input.record_id);
   if (!record) {
     throw new NotFoundError(`Record not found: ${input.record_id}`);
   }
 
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
 
-  let claims = claimsForRecord(ctx.store.claims, input.record_id);
+  let claims = ctx.store.claimsForRecord(input.record_id);
   if (input.predicate) {
     claims = claims.filter((c) => c.predicate === input.predicate);
   }
