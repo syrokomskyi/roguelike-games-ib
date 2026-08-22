@@ -95,7 +95,7 @@ for (const r of pageRecords) {
       <div class="grid gap-2 sm:grid-cols-2">
         {pageRecords.map((r) => (
           <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm transition-colors hover:border-ib-accent">
-            <img src={keyToSpriteUrl(r.key)} alt="" loading="lazy" class="h-8 w-8 shrink-0 object-contain" onerror="this.style.display='none'" />
+            <img src={keyToSpriteUrl(r.key)} alt="" loading="lazy" class="h-8 w-8 shrink-0 object-cover" onerror="this.style.display='none'" />
             {imageUrlMap.has(r.id) && (
               <img src={imageUrlMap.get(r.id)} alt={r.key} loading="lazy" class="h-10 w-10 shrink-0 rounded object-cover" />
             )}

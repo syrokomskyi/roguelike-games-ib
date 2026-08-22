@@ -23,10 +23,10 @@ const recordMap = new Map(records.map((r) => [r.id, r]));
           const target = recordMap.get(rel.target_record_id);
           return (
             <div class="flex items-center gap-2 text-sm">
-              <img src={keyToSpriteUrl(source?.key ?? "")} alt="" loading="lazy" class="h-5 w-5 shrink-0 object-contain" onerror="this.style.display='none'" />
+              <img src={keyToSpriteUrl(source?.key ?? "")} alt="" loading="lazy" class="h-5 w-5 shrink-0 object-cover" onerror="this.style.display='none'" />
               <a href={`/records/${source?.key ?? rel.source_record_id}/`} class="border-b border-ib-border py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{source?.key ?? rel.source_record_id}</a>
               <span class="font-mono text-xs text-ib-blue">— {type} →</span>
-              <img src={keyToSpriteUrl(target?.key ?? "")} alt="" loading="lazy" class="h-5 w-5 shrink-0 object-contain" onerror="this.style.display='none'" />
+              <img src={keyToSpriteUrl(target?.key ?? "")} alt="" loading="lazy" class="h-5 w-5 shrink-0 object-cover" onerror="this.style.display='none'" />
               <a href={`/records/${target?.key ?? rel.target_record_id}/`} class="border-b border-ib-border py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{target?.key ?? rel.target_record_id}</a>
             </div>
           );
