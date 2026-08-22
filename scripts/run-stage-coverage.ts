@@ -75,6 +75,7 @@ async function main() {
     makeDimension("monsters", "extractor_population", 680, 680, 680, "extractor_population", "All monster YAML files in dat/mons/ (excluding README and TEST*)"),
     makeDimension("species", "extractor_population", 48, 48, 48, "extractor_population", "All species YAML files in dat/species/"),
     makeDimension("jobs", "extractor_population", 26, 26, 26, "extractor_population", "All job YAML files in dat/jobs/"),
+    makeDimension("vaults", "extractor_population", 6246, 6246, 6246, "extractor_population", "All NAME: blocks in .des files under dat/des/ (excluding test/)"),
   ];
   const crawlCoverage = computeCoverage("crawl", "de8b21b4beb5654ebb656bdb6f8947d286bf5bf8f31729816e38074471b1ec4a", crawlDims);
 

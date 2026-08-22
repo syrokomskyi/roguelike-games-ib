@@ -1,7 +1,7 @@
 ---
 id: PLAN-001
 title: First methodology-compliant extraction — Crawl vaults
-status: accepted
+status: implemented
 scope: project-wide
 decider: architecture
 reviewers:
@@ -11,7 +11,7 @@ related:
   - ADR-0005
 created: 2026-08-22
 accepted: 2026-08-22
-implementedAt:
+implementedAt: 2026-08-22
 closedAt: null
 ---
 
