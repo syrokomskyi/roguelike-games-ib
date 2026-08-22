@@ -20,7 +20,7 @@
     "build:mcp": "tsx scripts/run-materialize.ts && pnpm --filter @roguelike-games-ib/mcp run build:check",
     "build": "pnpm exec turbo run build",
     "coverage": "pnpm exec turbo run coverage",
-    "test": "pnpm exec vitest",
+    "test": "pnpm exec vitest run",
     "test:unit": "pnpm exec vitest run --project unit 2>/dev/null || pnpm exec vitest run",
     "test:integration": "pnpm exec vitest run --project integration 2>/dev/null || echo 'no integration project'",
     "test:conformance": "pnpm exec vitest run tests/conformance/",
