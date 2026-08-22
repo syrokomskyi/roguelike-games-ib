@@ -127,7 +127,7 @@ export function systemsForSource(store: ProjectionStore, sourceId: string): Simp
 export function defRecordsForSourceKind(store: ProjectionStore, sourceId: string, kind: string): { key: string; sprite_path: string | null }[] {
   return store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
-    return getSourceId(ra) === sourceId && r.record_type === kind;
+    return getSourceId(ra) === sourceId && (ra["kind"] as string | null ?? r.record_type) === kind;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
     return { key: r.key, sprite_path: getSpritePath(ra) };
@@ -139,7 +139,10 @@ export function kindsForSource(store: ProjectionStore, sourceId: string): string
     const ra = r as Record<string, unknown>;
     return getSourceId(ra) === sourceId;
   });
-  return [...new Set(sourceRecords.map((r) => r.record_type))].sort();
+  return [...new Set(sourceRecords.map((r) => {
+    const ra = r as Record<string, unknown>;
+    return (ra["kind"] as string | null) ?? r.record_type;
+  }))].sort();
 }
 
 export interface AncestryNode {
