@@ -67,6 +67,7 @@ body.laboratory-world {
 
 a { color: inherit; text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+a.no-underline, a.no-underline:hover { text-decoration: none; }
 a[class*="rounded"]:hover { text-decoration: none; }
 
 button, input, select, textarea { font: inherit; }
