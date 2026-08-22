@@ -16,6 +16,7 @@
     "search-api:deploy": "pnpm --filter @roguelike-games-ib/search-api run deploy",
     "build:obsidian": "tsx scripts/run-build-obsidian.ts",
     "build:web": "tsx scripts/run-materialize.ts && pnpm --filter @roguelike-games-ib/web run build:web",
+    "dev:web": "tsx scripts/run-pipeline.ts && pnpm --filter @roguelike-games-ib/web exec astro dev",
     "build:mcp": "tsx scripts/run-materialize.ts && pnpm --filter @roguelike-games-ib/mcp run build:check",
     "build": "pnpm exec turbo run build",
     "coverage": "pnpm exec turbo run coverage",
