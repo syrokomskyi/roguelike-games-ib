@@ -96,7 +96,7 @@ for (const r of pageRecords) {
       <div class="grid gap-2 sm:grid-cols-2">
         {pageRecords.map((r) => (
           <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm transition-colors hover:border-ib-accent">
-            <SpriteIcon recordKey={r.key} size={32} />
+            <SpriteIcon spritePath={r.sprite_path} sourceId={r.source_id} size={32} />
             {imageUrlMap.has(r.id) && (
               <img src={imageUrlMap.get(r.id)} alt={r.key} loading="lazy" class="h-10 w-10 shrink-0 rounded object-cover" />
             )}

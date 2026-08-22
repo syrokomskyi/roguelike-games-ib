@@ -5,7 +5,7 @@ import SpriteIcon from "./SpriteIcon.astro";
 
 interface Props {
   relations: RelationRecord[];
-  records: { id: string; key: string; record_type: string }[];
+  records: { id: string; key: string; record_type: string; sprite_path?: string | null; source_id?: string }[];
 }
 
 const { relations, records } = Astro.props;
@@ -23,10 +23,10 @@ const recordMap = new Map(records.map((r) => [r.id, r]));
           const target = recordMap.get(rel.target_record_id);
           return (
             <div class="flex items-center gap-2 text-sm">
-              <SpriteIcon recordKey={source?.key ?? ""} size={20} />
+              <SpriteIcon spritePath={source?.sprite_path ?? null} sourceId={source?.source_id ?? ""} size={20} />
               <a href={`/records/${source?.key ?? rel.source_record_id}/`} class="border-b border-ib-border py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{source?.key ?? rel.source_record_id}</a>
               <span class="font-mono text-xs text-ib-blue">— {type} →</span>
-              <SpriteIcon recordKey={target?.key ?? ""} size={20} />
+              <SpriteIcon spritePath={target?.sprite_path ?? null} sourceId={target?.source_id ?? ""} size={20} />
               <a href={`/records/${target?.key ?? rel.target_record_id}/`} class="border-b border-ib-border py-1 font-mono text-xs text-ib-text hover:text-ib-accent">{target?.key ?? rel.target_record_id}</a>
             </div>
           );

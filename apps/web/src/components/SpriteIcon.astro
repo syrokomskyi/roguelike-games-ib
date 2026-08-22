@@ -1,14 +1,15 @@
 ---
-import { keyToSpriteUrl, spriteExists } from "../lib/sprite";
+import { spritePathToUrl, spriteExists } from "../lib/sprite";
 
 interface Props {
-  recordKey: string;
+  spritePath: string | null;
+  sourceId: string;
   size?: number;
 }
 
-const { recordKey, size = 24 } = Astro.props;
-const url = keyToSpriteUrl(recordKey);
-const hasSprite = spriteExists(recordKey);
+const { spritePath, sourceId, size = 24 } = Astro.props;
+const url = spritePath ? spritePathToUrl(spritePath, sourceId) : "";
+const hasSprite = spritePath ? spriteExists(spritePath, sourceId) : false;
 ---
 
 <span class="shrink-0" style={`display:inline-block;height:${size}px;min-width:${size}px`}>

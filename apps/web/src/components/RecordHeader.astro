@@ -13,12 +13,17 @@ interface Props {
 
 const { record, authority = "canonical", assertionState, canonicalHash } = Astro.props;
 const title = (record as Record<string, unknown>)["title"] ?? record.key;
+const ra = record as Record<string, unknown>;
+const attrs = ra["attributes"] as Record<string, unknown> | undefined;
+const si = ra["source_identity"] as Record<string, unknown> | undefined;
+const spritePath = (attrs?.["sprite_path"] as string | null) ?? null;
+const sourceId = (si?.["source_id"] as string | undefined) ?? "";
 ---
 
 <div class="border-b border-ib-text pb-10" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
   <p class="atlas-label text-ib-accent">Record / {record.record_type}</p>
   <div class="mt-5 flex items-center gap-4">
-    <SpriteIcon recordKey={record.key} size={64} />
+    <SpriteIcon spritePath={spritePath} sourceId={sourceId} size={64} />
     <h1 class="max-w-5xl text-4xl font-medium leading-tight tracking-[-.035em] text-ib-text sm:text-6xl">{title as string}</h1>
   </div>
   <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-ib-muted">

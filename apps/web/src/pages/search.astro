@@ -83,17 +83,6 @@ import SearchBox from "../components/SearchBox.astro";
         });
     }
 
-    function keyToSpriteUrl(key: string): string {
-      const parts = key.split("/");
-      if (parts.length < 2) return "";
-      const source = parts[0];
-      const type = parts[1];
-      const rest = type === "creature"
-        ? parts[parts.length - 1]
-        : parts.slice(1).join("-");
-      return `/sprites/${source}/${rest}.png`;
-    }
-
     function renderResults(
       container: HTMLElement,
       data: ApiResponse,
@@ -149,11 +138,10 @@ import SearchBox from "../components/SearchBox.astro";
 
       html += `<div class="space-y-3">`;
       for (const hit of hits.slice(0, DISPLAY_LIMIT)) {
-        const spriteUrl = keyToSpriteUrl(hit.key);
         html += `
           <a href="/records/${encodeURIComponent(hit.key)}/" class="block rounded-xl border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
             <div class="flex items-center gap-2">
-              <img src="${spriteUrl}" alt="" loading="lazy" class="h-8 w-auto shrink-0" onerror="this.style.visibility='hidden'" />
+              <span class="inline-block h-8 w-8 shrink-0"></span>
               <span class="font-mono text-xs text-ib-accent">${escapeHtml(hit.key)}</span>
               <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">${escapeHtml(hit.record_type)}</span>
               ${hit.source_id ? `<span class="text-xs text-ib-muted">${escapeHtml(hit.source_id)}</span>` : ""}

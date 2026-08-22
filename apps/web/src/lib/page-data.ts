@@ -23,6 +23,7 @@ export interface CompareRow {
   outgoing_relation_count: number;
   incoming_relation_count: number;
   source_id: string;
+  sprite_path: string | null;
 }
 
 export function buildCompareRows(store: ProjectionStore): CompareRow[] {
@@ -33,6 +34,7 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
     const si = ra["source_identity"] as Record<string, unknown> | undefined;
     const scope = ra["scope"] as Record<string, unknown> | undefined;
     const source_id = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "all";
+    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       record_id: r.id,
       record_key: r.key,
@@ -43,6 +45,7 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
       outgoing_relation_count: outgoing.length,
       incoming_relation_count: incoming.length,
       source_id,
+      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
     };
   });
 }
@@ -52,6 +55,7 @@ export interface GameRecord {
   key: string;
   record_type: string;
   source_id: string;
+  sprite_path: string | null;
 }
 
 export function recordsForSource(store: ProjectionStore, sourceId: string): GameRecord[] {
@@ -65,11 +69,13 @@ export function recordsForSource(store: ProjectionStore, sourceId: string): Game
     const ra = r as Record<string, unknown>;
     const si = ra["source_identity"] as Record<string, unknown> | undefined;
     const scope = ra["scope"] as Record<string, unknown> | undefined;
+    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       id: r.id,
       key: r.key,
       record_type: r.record_type,
       source_id: (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "",
+      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
     };
   });
 }
@@ -78,6 +84,7 @@ export interface SimpleRecord {
   key: string;
   title: string | undefined;
   summary: string | undefined;
+  sprite_path: string | null;
 }
 
 export function mechanicsForSource(store: ProjectionStore, sourceId: string): SimpleRecord[] {
@@ -90,10 +97,12 @@ export function mechanicsForSource(store: ProjectionStore, sourceId: string): Si
     return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
+    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       key: r.key,
       title: ra["title"] as string | undefined,
       summary: ra["summary"] as string | undefined,
+      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
     };
   });
 }
@@ -108,20 +117,26 @@ export function systemsForSource(store: ProjectionStore, sourceId: string): Simp
     return si?.["source_id"] === sourceId || scope?.["source_id"] === sourceId;
   }).map((r) => {
     const ra = r as Record<string, unknown>;
+    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
     return {
       key: r.key,
       title: ra["title"] as string | undefined,
       summary: ra["summary"] as string | undefined,
+      sprite_path: (attrs?.["sprite_path"] as string | null) ?? null,
     };
   });
 }
 
-export function defRecordsForSourceKind(store: ProjectionStore, sourceId: string, kind: string): { key: string }[] {
+export function defRecordsForSourceKind(store: ProjectionStore, sourceId: string, kind: string): { key: string; sprite_path: string | null }[] {
   return store.records.filter((r) => {
     const ra = r as Record<string, unknown>;
     const si = ra["source_identity"] as Record<string, unknown> | undefined;
     return si?.["source_id"] === sourceId && r.record_type === kind;
-  }).map((r) => ({ key: r.key }));
+  }).map((r) => {
+    const ra = r as Record<string, unknown>;
+    const attrs = ra["attributes"] as Record<string, unknown> | undefined;
+    return { key: r.key, sprite_path: (attrs?.["sprite_path"] as string | null) ?? null };
+  });
 }
 
 export function kindsForSource(store: ProjectionStore, sourceId: string): string[] {
@@ -139,6 +154,8 @@ export interface AncestryNode {
   record_type: string;
   title: string | null;
   depth: number;
+  sprite_path: string | null;
+  source_id: string;
 }
 
 export function getStats(store: ProjectionStore) {

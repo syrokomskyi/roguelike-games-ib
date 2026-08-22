@@ -35,7 +35,7 @@ const { sourceId, records, meta } = Astro.props;
       <div class="grid gap-3 sm:grid-cols-2">
         {records.map((r) => (
           <a href={`/records/${r.key}/`} class="flex items-start gap-2 rounded-lg border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
-            <SpriteIcon recordKey={r.key} size={32} />
+            <SpriteIcon spritePath={r.sprite_path} sourceId={sourceId} size={32} />
             <div class="min-w-0">
               <div class="font-mono text-xs text-ib-accent">{r.key}</div>
               {r.title && <div class="mt-1 text-sm text-ib-text">{r.title}</div>}

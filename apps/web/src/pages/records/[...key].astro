@@ -38,7 +38,8 @@ const isImageAsset = record.record_type === "image_asset" || (record as Record<s
 const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "asset" && e.media && e.github_url) : null;
 
 const spritePath = ((record as Record<string, unknown>)["attributes"] as Record<string, unknown> | undefined)?.["sprite_path"] as string | null | undefined;
-const spriteUrl = spritePath ? `/sprites/broguece/${spritePath.split("/").pop()}` : null;
+const recordSourceId = ((record as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined)?.["source_id"] as string | undefined;
+const spriteUrl = spritePath && recordSourceId ? `/sprites/${encodeURIComponent(recordSourceId)}/${encodeURIComponent(spritePath.split("/").pop()!)}` : null;
 ---
 
 <Base title={record.key} metadata={meta}>
@@ -122,7 +123,12 @@ const spriteUrl = spritePath ? `/sprites/broguece/${spritePath.split("/").pop()}
 
     <section>
       <h2 class="atlas-label mb-4 text-ib-muted">04 / Local relation graph</h2>
-      <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => ({ id: r.id, key: r.key, record_type: r.record_type }))} />
+      <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => {
+        const ra = r as Record<string, unknown>;
+        const attrs = ra["attributes"] as Record<string, unknown> | undefined;
+        const si = ra["source_identity"] as Record<string, unknown> | undefined;
+        return { id: r.id, key: r.key, record_type: r.record_type, sprite_path: (attrs?.["sprite_path"] as string | null) ?? null, source_id: (si?.["source_id"] as string | undefined) ?? "" };
+      })} />
     </section>
   </div>
 </Base>

@@ -19,6 +19,7 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
+import { extractTileSprite } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseEnum,
   parseMonsterCatalog,
@@ -42,7 +43,6 @@ import {
   type MonsterBehaviorEntry,
   type MonsterAbilityEntry,
 } from "./c-parser.ts";
-import sharp from "sharp";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 
@@ -122,10 +122,7 @@ async function extractSprite(
   const outPath = join(outDir, fileName);
   const relPath = `${relPrefix}/${fileName}`;
 
-  mkdirSync(outDir, { recursive: true });
-  await sharp(tilesPngBuf)
-    .extract({ left: coords.x, top: coords.y, width: coords.w, height: coords.h })
-    .toFile(outPath);
+  await extractTileSprite(tilesPngBuf, coords, outPath);
 
   return relPath;
 }
