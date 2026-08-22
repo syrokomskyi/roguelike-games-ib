@@ -3,7 +3,7 @@ import Base from "../../../../layouts/Base.astro";
 import { createWebContext } from "../../../../lib/context";
 import { getPageMetadata } from "../../../../lib/metadata";
 import { defRecordsForSourceKind, kindsForSource } from "../../../../lib/page-data";
-import { keyToSpriteUrl } from "../../../../lib/sprite";
+import SpriteIcon from "../../../../components/SpriteIcon.astro";
 import { resolve } from "node:path";
 
 export async function getStaticPaths() {
@@ -43,7 +43,7 @@ const { sourceId, kind, records, meta } = Astro.props;
     <div class="grid gap-2 sm:grid-cols-2">
       {records.map((r) => (
         <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface p-3 transition-colors hover:border-ib-accent">
-          <img src={keyToSpriteUrl(r.key)} alt="" loading="lazy" class="h-8 w-8 shrink-0 object-cover" onerror="this.style.display='none'" />
+          <SpriteIcon recordKey={r.key} size={32} />
           <div class="font-mono text-xs text-ib-accent">{r.key}</div>
         </a>
       ))}

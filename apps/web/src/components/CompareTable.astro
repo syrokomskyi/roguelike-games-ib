@@ -1,6 +1,6 @@
 ---
 import type { CompareRow } from "../lib/page-data";
-import { keyToSpriteUrl } from "../lib/sprite";
+import SpriteIcon from "./SpriteIcon.astro";
 
 interface Props {
   rows: CompareRow[];
@@ -26,7 +26,7 @@ const { rows } = Astro.props;
         <tr class={`border-t border-ib-border hover:bg-ib-surface2/50 ${i % 2 === 1 ? "bg-ib-surface2/30" : ""}`}>
           <td class="px-3 py-2">
             <div class="flex items-center gap-2">
-              <img src={keyToSpriteUrl(row.record_key)} alt="" loading="lazy" class="h-6 w-6 shrink-0 object-cover" onerror="this.style.display='none'" />
+              <SpriteIcon recordKey={row.record_key} size={24} />
               <a href={`/records/${row.record_key}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{row.record_key}</a>
             </div>
           </td>

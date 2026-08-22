@@ -2,7 +2,7 @@
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import AuthorityBadge from "./AuthorityBadge.astro";
 import EpistemicBadge from "./EpistemicBadge.astro";
-import { keyToSpriteUrl } from "../lib/sprite";
+import SpriteIcon from "./SpriteIcon.astro";
 
 interface Props {
   record: CanonicalRecord;
@@ -13,13 +13,12 @@ interface Props {
 
 const { record, authority = "canonical", assertionState, canonicalHash } = Astro.props;
 const title = (record as Record<string, unknown>)["title"] ?? record.key;
-const spriteUrl = keyToSpriteUrl(record.key);
 ---
 
 <div class="border-b border-ib-text pb-10" data-record-id={record.id} data-record-key={record.key} data-canonical-hash={canonicalHash}>
   <p class="atlas-label text-ib-accent">Record / {record.record_type}</p>
   <div class="mt-5 flex items-center gap-4">
-    <img src={spriteUrl} alt="" loading="lazy" class="h-16 w-16 shrink-0 object-cover" onerror="this.style.display='none'" />
+    <SpriteIcon recordKey={record.key} size={64} />
     <h1 class="max-w-5xl text-4xl font-medium leading-tight tracking-[-.035em] text-ib-text sm:text-6xl">{title as string}</h1>
   </div>
   <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-ib-muted">
