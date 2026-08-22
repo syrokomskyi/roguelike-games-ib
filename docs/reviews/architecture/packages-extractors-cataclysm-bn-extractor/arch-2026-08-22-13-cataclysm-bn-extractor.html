@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — cataclysm-bn-extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              cataclysm-bn-extractor
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 &middot; packages/extractors/cataclysm-bn-extractor
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">631</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines of source
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">4</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              entity kinds extracted
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">280</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines in run() method
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">0</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              parser unit tests
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">&rarr;</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="entity-pipeline"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen the run() method into an Entity Pipeline
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >proven in broguece</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts (lines
+              98&ndash;383)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; flat 280-line run() method
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  C[ctx] --> R["run() — 280 lines"]
+                  subgraph RI["flat sequence"]
+                    M1["monsters block\n(walk dirs → parse → resolve → envelope → record → evidence)"]
+                    M2["items block\n(walk dirs → parse → namespaceDedup → resolve → envelope → record → evidence)"]
+                    M3["mutations block\n(walk dirs → parse → namespaceDedup → resolve → envelope → record → evidence)"]
+                    M4["professions block\n(read file → parse → resolve → envelope → record → evidence)"]
+                    M5["population counts\n(hard-coded expected numbers)"]
+                    M1 --> M2 --> M3 --> M4 --> M5
+                  end
+                  R -.contains.-> RI
+                  ND["namespaceDuplicateId\n(module-level, only for items + mutations)"] -.leak.-> M2
+                  ND -.leak.-> M3
+                  CE["createRecordEnvelope\n(SDK import, called 4× inline)"] -.leak.-> M1
+                  CE -.leak.-> M2
+                  CE -.leak.-> M3
+                  CE -.leak.-> M4
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class ND,CE,M1,M2,M3,M4 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep Entity Pipeline module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  C[ctx] -->|small seam| P[Entity Pipeline]
+                  subgraph PI["deep implementation"]
+                    S["entity specs\n(declarative per-kind)"]
+                    R["resolve + envelope\n(unified for all kinds)"]
+                    A["attribute mapper\n(per-kind function)"]
+                    E["evidence builder\n(unified for all kinds)"]
+                    N["population collector\n(from specs)"]
+                    S --> R --> A --> E --> N
+                  end
+                  P -.contains.-> PI
+                  P --> O["records + evidence + populations"]
+                  class P,PI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The run() method is a 280-line flat sequence of 4 entity-kind
+                blocks. Each block walks files, reads text, parses JSON,
+                iterates entries, resolves IDs, creates envelopes, builds
+                records, writes records, creates evidence, writes evidence, and
+                increments a counter. The blocks differ only in: directory
+                list, parser function, record kind, slug strategy, attribute
+                mapping, and whether <code>namespaceDuplicateId</code> is
+                applied. Adding a new entity kind means appending another
+                60-line block and touching the population section.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep Entity Pipeline module that owns the
+                parse&rarr;resolve&rarr;envelope&rarr;attributes&rarr;evidence&rarr;count
+                flow. Each entity kind becomes a declarative specification
+                (directory list, parser function, record kind, slug strategy,
+                attribute mapper, dedup flag, evidence symbol). The pipeline
+                iterates over specs, unifying all 4 blocks into one flow.
+                Population counts are derived from specs, not hard-coded. The
+                <code>namespaceDuplicateId</code> decision becomes a spec flag
+                (<code>dedup: true</code>), not an inline call. This pattern is
+                already proven in the broguece extractor's
+                <code>entity-pipeline.ts</code> &mdash; see Candidate 03 for
+                lifting it into the SDK.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all entity flow in one module</li>
+              <li>depth: run() becomes a spec list + pipeline call</li>
+              <li>leverage: new entity kinds are specs, not 60-line blocks</li>
+              <li>tests: each spec testable in isolation</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="compute-line-range"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Fix computeLineRange &mdash; broken, shallow, and unused
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800"
+                >bug</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/cataclysm-bn-extractor/src/json-parser.ts:93&ndash;107
+              (computeLineRange) &middot; lines 116, 155, 183, 208 (call sites)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; broken line ranges, all identical
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  T["JSON text"] --> CLR["computeLineRange(text, 0, text.length)"]
+                  subgraph BUG["bug: index always 0"]
+                    I0["index = 0\n(always first element)"]
+                    TOT["total = text.length\n(never used)"]
+                    CLR --> I0
+                    CLR --> TOT
+                  end
+                  CLR --> LR["lineStart = 1\nlineEnd = 6\n(for every entry in every file)"]
+                  P1[parseMonsterJson] -->|"calls with index=0"| CLR
+                  P2[parseItemJson] -->|"calls with index=0"| CLR
+                  P3[parseMutationJson] -->|"calls with index=0"| CLR
+                  P4[parseProfessionJson] -->|"calls with index=0"| CLR
+                  LR -. "wrong evidence anchors" .-> E1["evidence.locator.line_start\n= 1 for all entries"]
+                  LR -. "wrong evidence anchors" .-> E2["evidence.locator.line_end\n= 6 for all entries"]
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class CLR,LR,E1,E2 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; per-entry line ranges via JSON offset tracking
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  T["JSON text"] -->|small seam| JR["JSON offset tracker"]
+                  subgraph JRI["deep implementation"]
+                    P["JSON.parse with reviver\nor manual scanner"]
+                    O["offset map\n(entry index → char range)"]
+                    L["line resolver\n(char offset → line number)"]
+                    P --> O --> L
+                  end
+                  JR -.contains.-> JRI
+                  JR -->|"per-entry\n{lineStart, lineEnd}"| P1[parseMonsterJson]
+                  JR -->|"per-entry\n{lineStart, lineEnd}"| P2[parseItemJson]
+                  JR -->|"per-entry\n{lineStart, lineEnd}"| P3[parseMutationJson]
+                  JR -->|"per-entry\n{lineStart, lineEnd}"| P4[parseProfessionJson]
+                  class JR,JRI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>computeLineRange(text, index, total)</code> accepts an
+                <code>index</code> parameter, but every call site passes
+                <code>0</code> &mdash; meaning every entry in a JSON array gets
+                the same line range (lines 1&ndash;6 of the file). The
+                <code>total</code> parameter is never used. Evidence anchors
+                point to the wrong lines for all entries except the first. The
+                function is also shallow: its interface (text, index, total
+                &rarr; line range) is nearly as complex as its implementation
+                (14 lines), and the real complexity &mdash; finding where a
+                specific JSON array element starts and ends in the source text
+                &mdash; is not implemented at all.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Replace <code>computeLineRange</code> with a JSON offset
+                tracker that maps each array element to its character range in
+                the source text, then resolves those to line numbers. This can
+                be done by scanning the raw text for object boundaries (brace
+                counting) or by using a JSON parser that reports source
+                positions. The tracker becomes a deep module: callers pass the
+                text and receive per-entry line ranges through a small seam.
+                All 4 parsers call it instead of the broken
+                <code>computeLineRange</code>. Evidence anchors will point to
+                the correct lines for every entry, not just the first.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: offset-to-line logic in one module</li>
+              <li>depth: callers pass text, receive correct ranges</li>
+              <li>leverage: all 4 parsers get correct evidence anchors</li>
+              <li>tests: synthetic JSON with known line offsets</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="lift-pipeline-to-sdk"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Lift the Entity Pipeline pattern into the extractor SDK
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >cross-package</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/entity-pipeline.ts
+              (106 lines) &middot;
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts
+              &middot; packages/extractors/nethack-extractor/src/extractor.ts
+              &middot; packages/extractor-sdk/src/index.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; pattern trapped in broguece, re-invented
+                elsewhere
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\ntypes + builders only"]
+                  BE["broguece\nentity-pipeline.ts\n(EntitySpec + runEntityPipeline)"]
+                  CB["cataclysm-bn\nextractor.ts\n(280-line flat run)"]
+                  NH["nethack\nextractor.ts\n(140-line flat run)"]
+                  BE -. "pattern not shared" .-> CB
+                  BE -. "pattern not shared" .-> NH
+                  CB -->|"same 4-block\ncopy-paste pattern"| NH
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class CB,NH leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; SDK owns the Entity Pipeline seam
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\nEntitySpec + runEntityPipeline"]
+                  BE[broguece extractor]
+                  CB[cataclysm-bn extractor]
+                  NH[nethack extractor]
+                  SDK -->|small seam| BE
+                  SDK -->|small seam| CB
+                  SDK -->|small seam| NH
+                  class SDK deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The broguece extractor invented the
+                <code>EntitySpec</code> + <code>runEntityPipeline</code>
+                pattern to solve the flat-run() problem. But that pattern lives
+                in <code>broguece-extractor/src/entity-pipeline.ts</code>
+                &mdash; it has no leverage beyond broguece. The cataclysm-bn
+                and nethack extractors face the same problem but cannot reuse
+                the solution. Each must either re-invent the pipeline or stay
+                flat. The SDK defines the <code>Extractor</code> interface but
+                provides no pipeline scaffolding, so the pattern is not
+                shared.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Move <code>EntitySpec</code> and <code>runEntityPipeline</code>
+                into the extractor SDK. Generalize the
+                <code>originActorId</code> (currently hard-coded as
+                <code>"broguece-factual"</code>) to a spec or context
+                parameter. The broguece, cataclysm-bn, and nethack extractors
+                all import from the SDK. Each extractor's run() becomes a spec
+                list + pipeline call. The SDK becomes the single source of
+                truth for the entity flow pattern. This is a prerequisite for
+                Candidate 01 &mdash; cataclysm-bn should not copy the pipeline
+                a second time.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: entity flow pattern in one SDK module</li>
+              <li>depth: SDK hides the parse&rarr;record&rarr;evidence loop</li>
+              <li>leverage: all 3 extractors benefit from pipeline fixes</li>
+              <li>tests: one pipeline test suite, not three</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="json-parser-factory"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen json-parser.ts into a generic JSON entry parser
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/cataclysm-bn-extractor/src/json-parser.ts (221
+              lines, 4 parsers)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 4 copy-paste parsers
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S["JSON text"] --> P1["parseMonsterJson\n37 lines"]
+                  S --> P2["parseItemJson\n26 lines"]
+                  S --> P3["parseMutationJson\n24 lines"]
+                  S --> P4["parseProfessionJson\n20 lines"]
+                  D1["duplicated:\nJSON.parse + isArray check\n+ for-of loop + id check"] -.leak.-> P1
+                  D1 -.leak.-> P2
+                  D1 -.leak.-> P3
+                  D1 -.leak.-> P4
+                  D2["duplicated:\nextractName call\n+ ?? defaults"] -.leak.-> P1
+                  D2 -.leak.-> P2
+                  D2 -.leak.-> P3
+                  D2 -.leak.-> P4
+                  D3["duplicated:\ncomputeLineRange(text, 0, text.length)\n(broken — see Candidate 02)"] -.leak.-> P1
+                  D3 -.leak.-> P2
+                  D3 -.leak.-> P3
+                  D3 -.leak.-> P4
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class D1,D2,D3 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep JSON entry parser
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S["JSON text"] -->|small seam| JP["JSON Entry Parser"]
+                  subgraph JPI["deep implementation"]
+                    P["JSON.parse\n+ array validation"]
+                    F["entry filter\n(predicate per spec)"]
+                    E["field extractor\n(field map per spec)"]
+                    N["name extractor\n(shared extractName)"]
+                    L["line range tracker\n(from Candidate 02)"]
+                    P --> F --> E
+                    N --> E
+                    L --> E
+                  end
+                  JP -.contains.-> JPI
+                  JP -->|"typed entries[]"| O1[monster entries]
+                  JP -->|"typed entries[]"| O2[item entries]
+                  JP -->|"typed entries[]"| O3[mutation entries]
+                  JP -->|"typed entries[]"| O4[profession entries]
+                  SP1["monster spec\ntype=MONSTER + 18 fields"] -.-> JP
+                  SP2["item spec\nid check + 10 fields"] -.-> JP
+                  SP3["mutation spec\nid check + 6 fields"] -.-> JP
+                  SP4["profession spec\nid check + 3 fields"] -.-> JP
+                  class JP,JPI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                221 lines with 4 parsers, all following the same pattern:
+                <code>JSON.parse</code>, check if array, loop elements, check
+                <code>id</code> field, extract fields with <code>??</code>
+                defaults, call <code>extractName</code>, call
+                <code>computeLineRange</code>, return entries. The variation is
+                only in which fields are extracted and the entry filter
+                (monsters check <code>type === "MONSTER"</code>, others just
+                check <code>id</code>). The shared scaffolding is duplicated 4
+                times. The <code>extractName</code> helper is shared but the
+                rest is copy-paste.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a generic <code>parseJsonEntries&lt;T&gt;</code> function
+                that accepts a text, a predicate (entry filter), and a field
+                extractor (maps a raw JSON object to a typed entry). Each
+                parser becomes a spec: monster spec passes
+                <code>(o) =&gt; o.type === "MONSTER"</code> and a 18-field
+                extractor; item spec passes <code>(o) =&gt; o.id</code> and a
+                10-field extractor. The generic parser handles JSON.parse,
+                array validation, iteration, name extraction, and line range
+                computation. This pairs naturally with Candidate 02 &mdash;
+                the line range tracker plugs into the generic parser as a
+                shared concern.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: JSON parsing scaffolding in one function</li>
+              <li>depth: each entity kind is a spec, not a parser</li>
+              <li>leverage: new entity kinds are specs, not 30-line functions</li>
+              <li>tests: spec-level tests with synthetic JSON fragments</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="population-denominators"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 05
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Derive population denominators from the manifest, not hard-coded
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                >Speculative</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts:39&ndash;64
+              (manifest) &middot; lines 364&ndash;379 (writePopulation +
+              populationCounts)
+            </p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The manifest declares <code>expected: 597</code> for monsters.
+                The <code>run()</code> method calls
+                <code>ctx.output.writePopulation("monsters", 597, monsterCount)</code>
+                &mdash; the same number is hard-coded in two places. Same for
+                items (5886), mutations (625), and professions (339). If the
+                manifest's expected count changes, the run() method must be
+                updated separately. This is not a deepening opportunity per se,
+                but it is a friction point that disappears if population
+                counts are derived from the manifest's
+                <code>exhaustivePopulations</code> array.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                At the end of <code>run()</code>, iterate over
+                <code>manifest.exhaustivePopulations</code> to call
+                <code>writePopulation</code> and build the
+                <code>populationCounts</code> array. The mapping from spec to
+                population dimension is already implicit in the spec list
+                (Candidate 01). This is a one-loop change that eliminates 8
+                hard-coded numbers and keeps the manifest as the single source
+                of truth for expected counts.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: expected counts in manifest only</li>
+              <li>leverage: no drift between manifest and run()</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#entity-pipeline"
+            >Deepen run() into an Entity Pipeline first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          The 280-line run() method is the single largest source of friction.
+          It forces every reader to hold 4 nearly-identical entity-kind blocks
+          in their head simultaneously, with the
+          <code>namespaceDuplicateId</code> decision scattered across two of
+          them. The broguece extractor already proved this pattern works
+          &mdash; <code>EntitySpec</code> + <code>runEntityPipeline</code>
+          turned a 390-line flat sequence into a declarative spec list. But
+          that pattern is trapped in the broguece package (Candidate 03).
+          Deepening cataclysm-bn's run() creates the immediate pressure to
+          lift the pipeline into the SDK, which in turn benefits nethack.
+          Candidate 02 (fixing <code>computeLineRange</code>) should follow
+          immediately after &mdash; the broken line ranges produce incorrect
+          evidence anchors for every entry except the first in each file.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> Declarative entity specs
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> Unified record writing
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> Fix evidence line ranges
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> Lift pipeline to SDK
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from extractor.ts (387 lines), json-parser.ts (221
+        lines), index.ts (23 lines), extractor-sdk/src/* (11 modules),
+        broguece-extractor (entity-pipeline.ts, sprite-pipeline.ts, extractor.ts),
+        nethack-extractor, ADR-0004, and the quality test harness on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>

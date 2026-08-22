@@ -50,7 +50,7 @@ import {
   readPngDimensions,
   type SpritePipeline,
 } from "./sprite-pipeline.ts";
-import { runEntityPipeline, type EntitySpec } from "./entity-pipeline.ts";
+import { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
 import { join } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
@@ -120,9 +120,10 @@ function creatureSpec(
   return {
     kind: "creature",
     nativeKind: "monster",
-    sourcePath,
-    symbolName: "monsterCatalog",
+    originActorId: "broguece-factual",
     entries: monsters,
+    getSourcePath: () => sourcePath,
+    getSymbolName: () => "monsterCatalog",
     skip: (m) => m.name === "you",
     getSlug: (m) => m.nativeId,
     getNativeId: (m) => m.nativeId,
@@ -157,9 +158,10 @@ function terrainSpec(
   return {
     kind: "terrain",
     nativeKind: "tileType",
-    sourcePath,
-    symbolName: "tileCatalog",
+    originActorId: "broguece-factual",
     entries: tiles,
+    getSourcePath: () => sourcePath,
+    getSymbolName: () => "tileCatalog",
     getSlug: (t) => t.nativeId.toLowerCase(),
     getNativeId: (t) => t.nativeId,
     getCanonicalName: (t) => t.description || t.nativeId,
@@ -188,9 +190,10 @@ function itemSpec(
   return {
     kind: "item",
     nativeKind: tableName,
-    sourcePath,
-    symbolName: arrayName,
+    originActorId: "broguece-factual",
     entries: items,
+    getSourcePath: () => sourcePath,
+    getSymbolName: () => arrayName,
     getSlug: (item) => `${tableName}/${item.nativeId}`,
     getNativeId: (item) => `${tableName}:${item.nativeId}`,
     getCanonicalName: (item) => item.name,
@@ -230,9 +233,10 @@ function simpleSpec<E>(
   return {
     kind,
     nativeKind,
-    sourcePath,
-    symbolName,
+    originActorId: "broguece-factual",
     entries,
+    getSourcePath: () => sourcePath,
+    getSymbolName: () => symbolName,
     getSlug: opts.getSlug,
     getNativeId: opts.getNativeId,
     getCanonicalName: opts.getCanonicalName,
@@ -367,7 +371,7 @@ export function createBrogueCEExtractor(): Extractor {
       ];
 
       // --- Run entity pipeline ---
-      const { counts } = await runEntityPipeline(ctx, specs, sprite);
+      const { counts } = await runEntityPipeline(ctx, specs);
 
       // Spec indices: 0=creature, 1=terrain, 2..11=item tables, 12=dungeon_feature, 13=light, 14=mutation, 15=monster_class, 16=status_effect, 17=monster_behavior, 18=monster_ability
       const creatureCount = counts[0] ?? 0;
@@ -440,18 +444,32 @@ export function createBrogueCEExtractor(): Extractor {
         imageAssetCount++;
       }
 
-      // --- Populations ---
-      ctx.output.writePopulation("creatures", 67, creatureCount);
-      ctx.output.writePopulation("terrain", 214, terrainCount);
-      ctx.output.writePopulation("items", 97, itemCount);
-      ctx.output.writePopulation("image_assets", imageFiles.length, imageAssetCount);
-      ctx.output.writePopulation("dungeon_features", 58, dungeonFeatureCount);
-      ctx.output.writePopulation("lights", 63, lightCount);
-      ctx.output.writePopulation("mutations", 16, mutationCount);
-      ctx.output.writePopulation("monster_classes", 15, monsterClassCount);
-      ctx.output.writePopulation("status_effects", 26, statusEffectCount);
-      ctx.output.writePopulation("monster_behaviors", 29, monsterBehaviorCount);
-      ctx.output.writePopulation("monster_abilities", 18, monsterAbilityCount);
+      // --- Populations (derived from manifest + image assets) ---
+      const popMap = new Map<string, number>();
+      popMap.set("creatures", creatureCount);
+      popMap.set("terrain", terrainCount);
+      popMap.set("items", itemCount);
+      popMap.set("image_assets", imageAssetCount);
+      popMap.set("dungeon_features", dungeonFeatureCount);
+      popMap.set("lights", lightCount);
+      popMap.set("mutations", mutationCount);
+      popMap.set("monster_classes", monsterClassCount);
+      popMap.set("status_effects", statusEffectCount);
+      popMap.set("monster_behaviors", monsterBehaviorCount);
+      popMap.set("monster_abilities", monsterAbilityCount);
+
+      const populationCounts = [
+        ...(manifest.exhaustivePopulations ?? []).map((p) => ({
+          dimension: p.dimension,
+          expected: p.expected ?? 0,
+          extracted: popMap.get(p.dimension) ?? 0,
+        })),
+        { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
+      ];
+
+      for (const pop of populationCounts) {
+        ctx.output.writePopulation(pop.dimension, pop.expected, pop.extracted);
+      }
 
       const recordCount = creatureCount + terrainCount + itemCount + imageAssetCount
         + dungeonFeatureCount + lightCount + mutationCount + monsterClassCount
@@ -462,19 +480,7 @@ export function createBrogueCEExtractor(): Extractor {
         extractorVersion: "1.0.0",
         runId: "broguece-run",
         recordCount,
-        populationCounts: [
-          { dimension: "creatures", expected: 67, extracted: creatureCount },
-          { dimension: "terrain", expected: 214, extracted: terrainCount },
-          { dimension: "items", expected: 97, extracted: itemCount },
-          { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
-          { dimension: "dungeon_features", expected: 58, extracted: dungeonFeatureCount },
-          { dimension: "lights", expected: 63, extracted: lightCount },
-          { dimension: "mutations", expected: 16, extracted: mutationCount },
-          { dimension: "monster_classes", expected: 15, extracted: monsterClassCount },
-          { dimension: "status_effects", expected: 26, extracted: statusEffectCount },
-          { dimension: "monster_behaviors", expected: 29, extracted: monsterBehaviorCount },
-          { dimension: "monster_abilities", expected: 18, extracted: monsterAbilityCount },
-        ],
+        populationCounts,
         diagnostics: [],
       };
     },

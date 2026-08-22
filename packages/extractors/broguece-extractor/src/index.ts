@@ -41,4 +41,4 @@ export {
   createSpritePipeline,
   type SpritePipeline,
 } from "./sprite-pipeline.ts";
-export { runEntityPipeline, type EntitySpec } from "./entity-pipeline.ts";
+export { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";

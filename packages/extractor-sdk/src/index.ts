@@ -63,3 +63,7 @@ export type { TileCoords } from "./sprite.ts";
 // Record envelope
 export { createRecordEnvelope } from "./envelope.ts";
 export type { RecordEnvelope } from "./envelope.ts";
+
+// Entity pipeline
+export { runEntityPipeline } from "./entity-pipeline.ts";
+export type { EntitySpec, PopulationEntry } from "./entity-pipeline.ts";

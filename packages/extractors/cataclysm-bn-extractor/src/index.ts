@@ -15,8 +15,10 @@ export {
   parseItemJson,
   parseMutationJson,
   parseProfessionJson,
+  parseJsonEntries,
   type MonsterEntry,
   type ItemEntry,
   type MutationEntry,
   type ProfessionEntry,
+  type JsonEntrySpec,
 } from "./json-parser.ts";
