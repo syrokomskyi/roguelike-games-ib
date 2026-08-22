@@ -21,7 +21,9 @@ const { evidence } = Astro.props;
             {ev.media.width && ev.media.height && <span>{ev.media.width}×{ev.media.height}px</span>}
           </div>
           {ev.github_url ? (
-            <img src={ev.github_url} alt={ev.media.alt_text ?? ev.artifact_path ?? "image asset"} loading="lazy" class="max-w-full rounded-lg border border-ib-border" style="max-height: 480px; object-fit: contain;" />
+            <div class="h-32 w-32 overflow-hidden rounded-lg border border-ib-border bg-ib-surface">
+              <img src={ev.github_url} alt={ev.media.alt_text ?? ev.artifact_path ?? "image asset"} loading="lazy" class="h-full w-full object-cover" />
+            </div>
           ) : (
             <p class="text-sm text-ib-muted">Image artifact not available for display.</p>
           )}

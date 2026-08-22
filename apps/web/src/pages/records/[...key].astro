@@ -45,13 +45,12 @@ const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "a
     {imageEvidence && (
       <section>
         <h2 class="atlas-label mb-4 text-ib-muted">00 / Image</h2>
-        <div class="overflow-hidden rounded-xl border border-ib-border bg-ib-surface">
+        <div class="h-48 w-48 overflow-hidden rounded-xl border border-ib-border bg-ib-surface">
           <img
             src={imageEvidence.github_url}
             alt={imageEvidence.media?.alt_text ?? imageEvidence.artifact_path ?? "image asset"}
             loading="lazy"
-            class="max-w-full"
-            style="max-height: 600px; object-fit: contain;"
+            class="h-full w-full object-cover"
           />
         </div>
         {imageEvidence.media && (
