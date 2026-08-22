@@ -1,7 +1,7 @@
 ---
 id: ADR-0006
 title: Taxonomy coverage confirmation for planned extraction work
-status: accepted
+status: implemented
 scope: project-wide
 decider: architecture
 reviewers:
@@ -10,7 +10,7 @@ related:
   - RFC-0001
 created: 2026-08-22
 accepted: 2026-08-22
-implementedAt:
+implementedAt: 2026-08-22
 closedAt: null
 ---
 
