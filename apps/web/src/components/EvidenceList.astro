@@ -10,9 +10,25 @@ const { evidence } = Astro.props;
 
 <div class="space-y-3">
   {evidence.map((ev) => (
-    <div class="rounded-lg border-l-2 border-ib-border bg-ib-surface p-3" data-evidence-id={ev.id} data-restricted={ev.restricted}>
+    <div class="border-l-2 border-ib-accent bg-ib-surface p-4" data-evidence-id={ev.id} data-restricted={ev.restricted} data-evidence-kind={ev.evidence_kind}>
       {ev.restricted ? (
         <p class="text-sm italic text-ib-amber">Evidence is not publicly accessible.</p>
+      ) : ev.evidence_kind === "asset" && ev.media ? (
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs text-ib-muted">
+            <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-ib-accent">asset</span>
+            {ev.media.mime_type && <span class="font-mono">{ev.media.mime_type}</span>}
+            {ev.media.width && ev.media.height && <span>{ev.media.width}×{ev.media.height}px</span>}
+          </div>
+          {ev.github_url ? (
+            <img src={ev.github_url} alt={ev.media.alt_text ?? ev.artifact_path ?? "image asset"} loading="lazy" class="max-w-full rounded-lg border border-ib-border" style="max-height: 480px; object-fit: contain;" />
+          ) : (
+            <p class="text-sm text-ib-muted">Image artifact not available for display.</p>
+          )}
+          {ev.artifact_path && (
+            <p class="font-mono text-xs text-ib-muted">{ev.artifact_path}</p>
+          )}
+        </div>
       ) : (
         <div class="space-y-1">
           {ev.excerpt && <p class="font-mono text-sm whitespace-pre-wrap text-ib-text">{ev.excerpt}</p>}

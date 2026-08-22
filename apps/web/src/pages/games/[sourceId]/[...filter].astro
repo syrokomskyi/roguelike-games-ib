@@ -5,6 +5,7 @@ import { getPageMetadata } from "../../../lib/metadata";
 import SourceBindingPanel from "../../../components/SourceBindingPanel.astro";
 import CoveragePanel from "../../../components/CoveragePanel.astro";
 import { recordsForSource } from "../../../lib/page-data";
+import { evidenceForRecord } from "../../../lib/evidence";
 import { resolve } from "node:path";
 
 export async function getStaticPaths() {
@@ -34,11 +35,12 @@ export async function getStaticPaths() {
 
       for (let page = 1; page <= maxPage; page++) {
         const isDefault = type === "all" && page === 1;
+        const pageRecords = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
         paths.push({
           params: { sourceId, filter: isDefault ? undefined : [type, String(page)].join("/") },
           props: {
             sourceId,
-            pageRecords: filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+            pageRecords,
             filteredCount: filtered.length,
             totalCount: records.length,
             byType,
@@ -63,6 +65,17 @@ function gameUrl(sourceId: string, type: string, page: number): string {
   if (type === "all" && page === 1) return `/games/${sourceId}/`;
   return `/games/${sourceId}/${type}/${page}/`;
 }
+
+const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+const _ctx = await createWebContext(distDir);
+const imageUrlMap = new Map<string, string>();
+for (const r of pageRecords) {
+  if (r.record_type !== "image_asset") continue;
+  const evRefs = ((r as unknown as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
+  const ev = evidenceForRecord(_ctx.store.evidence, evRefs, _ctx.store.sources, r.id);
+  const assetEv = ev.find((e) => e.evidence_kind === "asset" && e.media && e.github_url);
+  if (assetEv?.github_url) imageUrlMap.set(r.id, assetEv.github_url);
+}
 ---
 
 <Base title={sourceId ?? "Game"} metadata={meta} activeNav="games">
@@ -81,8 +94,13 @@ function gameUrl(sourceId: string, type: string, page: number): string {
       <div class="grid gap-2 sm:grid-cols-2">
         {pageRecords.map((r) => (
           <a href={`/records/${r.key}/`} class="flex items-center gap-2 rounded-lg border border-ib-border bg-ib-surface2 px-3 py-2 text-sm transition-colors hover:border-ib-accent">
-            <span class="font-mono text-xs text-ib-accent">{r.key}</span>
-            <span class="rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{r.record_type}</span>
+            {imageUrlMap.has(r.id) && (
+              <img src={imageUrlMap.get(r.id)} alt={r.key} loading="lazy" class="h-10 w-10 shrink-0 rounded object-cover" />
+            )}
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <span class="truncate font-mono text-xs text-ib-accent">{r.key}</span>
+              <span class="shrink-0 rounded-md bg-ib-accent/15 px-1.5 py-0.5 text-xs text-ib-accent">{r.record_type}</span>
+            </div>
           </a>
         ))}
       </div>

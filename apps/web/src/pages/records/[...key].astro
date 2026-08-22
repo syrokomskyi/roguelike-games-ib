@@ -33,19 +33,44 @@ const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"]
 const evidenceRefs = [...claims.flatMap((c) => c.evidence_refs), ...refClaims.flatMap((c) => c.evidence_refs), ...recordEvidenceRefs];
 const evidence = evidenceForRecord(ctx.store.evidence, evidenceRefs, ctx.store.sources, record.id);
 const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined;
+
+const isImageAsset = record.record_type === "image_asset" || (record as Record<string, unknown>)["kind"] === "image_asset";
+const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "asset" && e.media && e.github_url) : null;
 ---
 
 <Base title={record.key} metadata={meta}>
-  <div class="space-y-6">
+  <div class="space-y-12">
     <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
+
+    {imageEvidence && (
+      <section>
+        <h2 class="atlas-label mb-4 text-ib-muted">00 / Image</h2>
+        <div class="overflow-hidden rounded-xl border border-ib-border bg-ib-surface">
+          <img
+            src={imageEvidence.github_url}
+            alt={imageEvidence.media?.alt_text ?? imageEvidence.artifact_path ?? "image asset"}
+            loading="lazy"
+            class="max-w-full"
+            style="max-height: 600px; object-fit: contain;"
+          />
+        </div>
+        {imageEvidence.media && (
+          <p class="mt-2 text-xs text-ib-muted">
+            {imageEvidence.media.mime_type}
+            {imageEvidence.media.width && imageEvidence.media.height && ` · ${imageEvidence.media.width}×${imageEvidence.media.height}px`}
+          </p>
+        )}
+      </section>
+    )}
+
     <RecordAttributes record={record} />
 
     <section>
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Claims <span class="text-sm font-normal text-ib-muted">({claims.length})</span></h2>
+      <h2 class="atlas-label mb-4 text-ib-muted">02 / Claims <span>({claims.length})</span></h2>
       {claims.length > 0 ? (
         <div class="space-y-2">
           {claims.map((c) => (
-            <div class="rounded-lg border border-ib-border bg-ib-surface p-3">
+            <div class="border-l-2 border-ib-blue bg-ib-surface p-4">
               <div class="flex items-center gap-2 text-sm">
                 <strong class="text-ib-accent2">{c.predicate}</strong>
                 {c.object_ref && <span class="text-ib-muted">→ <span class="font-mono text-xs">{c.object_ref}</span></span>}
@@ -75,12 +100,12 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
     </section>
 
     <section>
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Evidence</h2>
+      <h2 class="atlas-label mb-4 text-ib-muted">03 / Evidence inspector</h2>
       <EvidenceList evidence={evidence} />
     </section>
 
     <section>
-      <h2 class="mb-3 text-lg font-semibold text-ib-text">Relations</h2>
+      <h2 class="atlas-label mb-4 text-ib-muted">04 / Local relation graph</h2>
       <RelationGraph relations={allRelations} records={ctx.store.records.map((r) => ({ id: r.id, key: r.key, record_type: r.record_type }))} />
     </section>
   </div>

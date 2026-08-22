@@ -18,8 +18,10 @@ export const DEFAULT_EXCERPT_LIMIT = 200;
 export interface RenderedEvidence {
   id: string;
   source_id: string;
+  evidence_kind: string;
   artifact_path: string | null;
   artifact_sha256: string | null;
+  media: PublicEvidence["media"];
   locator: PublicEvidence["locator"];
   fragment_hash: string | null;
   excerpt: string | null;
@@ -38,8 +40,10 @@ export function renderEvidence(
       return {
         id: ev.id,
         source_id: ev.source_id,
+        evidence_kind: ev.evidence_kind,
         artifact_path: null,
         artifact_sha256: null,
+        media: null,
         locator: null,
         fragment_hash: null,
         excerpt: null,
@@ -56,8 +60,10 @@ export function renderEvidence(
     return {
       id: ev.id,
       source_id: ev.source_id,
+      evidence_kind: ev.evidence_kind,
       artifact_path: ev.artifact_path,
       artifact_sha256: ev.artifact_sha256,
+      media: ev.media,
       locator: ev.locator,
       fragment_hash: ev.fragment_hash,
       excerpt,
