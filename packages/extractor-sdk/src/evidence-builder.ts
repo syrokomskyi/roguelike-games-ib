@@ -9,18 +9,17 @@
   <item>Initial creation: EvidenceFactory with create and createPrivate methods.</item>
 </CHANGE_SUMMARY>
 */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { createHash } from "node:crypto";
 import {
   createEvidenceAnchor,
   computeFragmentHash,
-  sha256File,
   defaultPublicPolicy,
   defaultPrivatePolicy,
   type EvidenceAnchor,
   type MediaQuery,
   type PublicationPolicy,
 } from "@roguelike-games-ib/knowledge-core";
+import type { ReadonlySourceReader } from "./source-reader.ts";
 
 export interface EvidenceBuildOptions {
   artifactPath: string;
@@ -35,16 +34,16 @@ export class EvidenceFactory {
   constructor(
     private readonly sourceId: string,
     private readonly bindingDigest: string,
-    private readonly sourceRoot: string,
+    private readonly reader: ReadonlySourceReader,
   ) {}
 
   create(opts: EvidenceBuildOptions): EvidenceAnchor {
-    const fullPath = resolve(this.sourceRoot, opts.artifactPath);
-    const artifactSha = sha256File(fullPath);
+    const buf = this.reader.readBytes(opts.artifactPath);
+    const artifactSha = createHash("sha256").update(buf).digest("hex");
 
     let fragmentHash: string | null = null;
     if (opts.fragmentLines) {
-      const content = readFileSync(fullPath, "utf-8");
+      const content = this.reader.readText(opts.artifactPath);
       fragmentHash = computeFragmentHash(
         content,
         opts.fragmentLines.lineStart,

@@ -108,7 +108,7 @@ describe("EXT-008: invalid staged record prevents promotion", () => {
     const aliasesPath = join(workspace, "knowledge", "identity", "aliases.jsonl");
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext008-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext008-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext008-test");
     const runId = "invalid-run-001";
     const output = new CandidateWriter(stagingDir, runId, "ext008-test", "invalid-record-test", "1.0.0");

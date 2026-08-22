@@ -13,11 +13,9 @@
 import type { ExtractorContext } from "./types.ts";
 import { createRecordEnvelope } from "./envelope.ts";
 
-export interface EntitySpec<E> {
-  kind: string;
+export interface EntityAdapter<E> {
   nativeKind: string;
   originActorId: string;
-  entries: E[];
   getSourcePath: (entry: E) => string;
   getSymbolName: (entry: E) => string;
   getSlug: (entry: E) => string;
@@ -29,6 +27,12 @@ export interface EntitySpec<E> {
   getDataKey: (entry: E) => string;
   skip?: (entry: E) => boolean;
   populationDimension?: string;
+}
+
+export interface EntitySpec<E> {
+  kind: string;
+  entries: E[];
+  adapter: EntityAdapter<E>;
 }
 
 export interface PopulationEntry {
@@ -46,30 +50,31 @@ export async function runEntityPipeline(
 
   for (let idx = 0; idx < specs.length; idx++) {
     const spec = specs[idx];
+    const adapter = spec.adapter;
     let count = 0;
 
     for (const entry of spec.entries) {
-      if (spec.skip?.(entry)) continue;
+      if (adapter.skip?.(entry)) continue;
 
-      const slug = spec.getSlug(entry);
-      const nativeId = spec.getNativeId(entry);
-      const sourcePath = spec.getSourcePath(entry);
+      const slug = adapter.getSlug(entry);
+      const nativeId = adapter.getNativeId(entry);
+      const sourcePath = adapter.getSourcePath(entry);
       const resolved = ctx.ids.resolveOrCreate(spec.kind as never, slug, nativeId);
       const envelope = createRecordEnvelope(
         ctx.binding.source_id,
         resolved.key,
         resolved.id,
-        spec.originActorId,
+        adapter.originActorId,
       );
 
-      const attributes = await spec.getAttributes(entry);
-      const { lineStart, lineEnd } = spec.getLineRange(entry);
+      const attributes = await adapter.getAttributes(entry);
+      const { lineStart, lineEnd } = adapter.getLineRange(entry);
 
       const record = {
         ...envelope,
         kind: spec.kind,
-        native_kind: spec.nativeKind,
-        name: { canonical: spec.getCanonicalName(entry), original: spec.getOriginalName(entry) },
+        native_kind: adapter.nativeKind,
+        name: { canonical: adapter.getCanonicalName(entry), original: adapter.getOriginalName(entry) },
         source_identity: {
           source_id: ctx.binding.source_id,
           native_id: nativeId,
@@ -85,12 +90,12 @@ export async function runEntityPipeline(
       const evidence = ctx.evidence.create({
         artifactPath: sourcePath,
         locator: {
-          symbol: spec.getSymbolName(entry),
+          symbol: adapter.getSymbolName(entry),
           line_start: lineStart,
           line_end: lineEnd,
           byte_start: null,
           byte_end: null,
-          data_key: spec.getDataKey(entry),
+          data_key: adapter.getDataKey(entry),
         },
         fragmentLines: { lineStart, lineEnd },
       });
@@ -99,9 +104,9 @@ export async function runEntityPipeline(
     }
 
     counts[idx] = count;
-    if (spec.populationDimension) {
-      const prev = dimensionCounts.get(spec.populationDimension) ?? 0;
-      dimensionCounts.set(spec.populationDimension, prev + count);
+    if (adapter.populationDimension) {
+      const prev = dimensionCounts.get(adapter.populationDimension) ?? 0;
+      dimensionCounts.set(adapter.populationDimension, prev + count);
     }
   }
 

@@ -16,7 +16,7 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
-import { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
+import { runEntityPipeline, PopulationCollector, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseMonsters,
   parseObjects,
@@ -63,82 +63,79 @@ export function createNetHackExtractor(): Extractor {
 
       const creatureSpec: EntitySpec<MonsterEntry> = {
         kind: "creature",
-        nativeKind: "mon",
-        originActorId: "nethack-factual",
         entries: monsters,
-        getSourcePath: () => MONSTERS_H,
-        getSymbolName: () => "MON",
-        getSlug: (m) => m.nativeId,
-        getNativeId: (m) => m.nativeId,
-        getCanonicalName: (m) => m.name,
-        getOriginalName: (m) => m.name,
-        getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
-        getDataKey: (m) => m.nativeId,
-        getAttributes: (m) => ({
-          symbol: m.symbol,
-          level: m.level,
-          move_speed: m.moveSpeed,
-          armor_class: m.armorClass,
-          magic_resistance: m.magicResistance,
-          alignment: m.alignment,
-          geno_flags: m.genoFlags,
-          attacks: m.attacks,
-          weight: m.weight,
-          nutrition: m.nutrition,
-          sound: m.sound,
-          size: m.size,
-          resistances: m.resistances,
-          conveys: m.conveys,
-          flags1: m.flags1,
-          flags2: m.flags2,
-          flags3: m.flags3,
-          difficulty: m.difficulty,
-          color: m.color,
-        }),
-        populationDimension: "creatures",
+        adapter: {
+          nativeKind: "mon",
+          originActorId: "nethack-factual",
+          getSourcePath: () => MONSTERS_H,
+          getSymbolName: () => "MON",
+          getSlug: (m) => m.nativeId,
+          getNativeId: (m) => m.nativeId,
+          getCanonicalName: (m) => m.name,
+          getOriginalName: (m) => m.name,
+          getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+          getDataKey: (m) => m.nativeId,
+          getAttributes: (m) => ({
+            symbol: m.symbol,
+            level: m.level,
+            move_speed: m.moveSpeed,
+            armor_class: m.armorClass,
+            magic_resistance: m.magicResistance,
+            alignment: m.alignment,
+            geno_flags: m.genoFlags,
+            attacks: m.attacks,
+            weight: m.weight,
+            nutrition: m.nutrition,
+            sound: m.sound,
+            size: m.size,
+            resistances: m.resistances,
+            conveys: m.conveys,
+            flags1: m.flags1,
+            flags2: m.flags2,
+            flags3: m.flags3,
+            difficulty: m.difficulty,
+            color: m.color,
+          }),
+          populationDimension: "creatures",
+        },
       };
 
       const itemSpec: EntitySpec<ObjectEntry> = {
         kind: "item",
-        nativeKind: "obj",
-        originActorId: "nethack-factual",
         entries: objects,
-        getSourcePath: () => OBJECTS_H,
-        getSymbolName: (o) => o.objClass.toUpperCase(),
-        getSlug: (o) => `${o.objClass}/${o.nativeId}`,
-        getNativeId: (o) => `${o.objClass}:${o.nativeId}`,
-        getCanonicalName: (o) => o.name,
-        getOriginalName: (o) => o.name,
-        getLineRange: (o) => ({ lineStart: o.lineStart, lineEnd: o.lineEnd }),
-        getDataKey: (o) => `${o.objClass}:${o.nativeId}`,
-        getAttributes: (o) => ({
-          description: o.description,
-          probability: o.probability,
-          weight: o.weight,
-          cost: o.cost,
-          material: o.material,
-          color: o.color,
-        }),
-        populationDimension: "items",
+        adapter: {
+          nativeKind: "obj",
+          originActorId: "nethack-factual",
+          getSourcePath: () => OBJECTS_H,
+          getSymbolName: (o) => o.objClass.toUpperCase(),
+          getSlug: (o) => `${o.objClass}/${o.nativeId}`,
+          getNativeId: (o) => `${o.objClass}:${o.nativeId}`,
+          getCanonicalName: (o) => o.name,
+          getOriginalName: (o) => o.name,
+          getLineRange: (o) => ({ lineStart: o.lineStart, lineEnd: o.lineEnd }),
+          getDataKey: (o) => `${o.objClass}:${o.nativeId}`,
+          getAttributes: (o) => ({
+            description: o.description,
+            probability: o.probability,
+            weight: o.weight,
+            cost: o.cost,
+            material: o.material,
+            color: o.color,
+          }),
+          populationDimension: "items",
+        },
       };
 
       const { dimensionCounts } = await runEntityPipeline(ctx, [creatureSpec, itemSpec]);
 
-      const populationCounts = (manifest.exhaustivePopulations ?? []).map((p) => ({
-        dimension: p.dimension,
-        expected: p.expected ?? 0,
-        extracted: dimensionCounts.get(p.dimension) ?? 0,
-      }));
-
-      for (const pop of populationCounts) {
-        ctx.output.writePopulation(pop.dimension, pop.expected, pop.extracted);
-      }
+      const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
+      const { populationCounts, recordCount } = popCollector.collect(dimensionCounts);
 
       return {
         extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "nethack-run",
-        recordCount: populationCounts.reduce((sum, p) => sum + p.extracted, 0),
+        recordCount,
         populationCounts,
         diagnostics: [],
       };

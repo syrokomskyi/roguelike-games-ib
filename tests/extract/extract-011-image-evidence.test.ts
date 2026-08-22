@@ -71,7 +71,7 @@ describe("EXT-011: image evidence records with media metadata", () => {
     );
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "ext011-test");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "run-1", "ext011-test", "test-extractor", "1.0.0");
@@ -119,7 +119,7 @@ describe("EXT-011: image evidence records with media metadata", () => {
     );
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, source);
 
     const anchor = evidence.create({
       artifactPath: "data.txt",
@@ -175,7 +175,7 @@ describe("EXT-011: image evidence records with media metadata", () => {
     );
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext011-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "ext011-test");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "run-2", "ext011-test", "test-extractor", "1.0.0");

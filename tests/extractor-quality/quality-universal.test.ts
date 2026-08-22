@@ -136,7 +136,7 @@ describe("harness validation with synthetic extractor", () => {
     const aliasesPath = join(workspace, "knowledge", "identity", "aliases.jsonl");
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("quality-harness-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("quality-harness-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "quality-harness-test");
     const schemas = createNullSchemaFacade();
     const runId = `quality-run-${Date.now()}-${Math.random()}`;

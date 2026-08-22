@@ -37,7 +37,7 @@ const extractor = createCataclysmBNExtractor();
 
 function createContext() {
   const source = new ReadonlySourceReader(SOURCE_ROOT);
-  const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, SOURCE_ROOT);
+  const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, source);
   const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
   const schemas = createNullSchemaFacade();
   const output = new CandidateWriter(

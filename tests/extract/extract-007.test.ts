@@ -78,7 +78,7 @@ describe("EXT-007: extractor output goes to staging only", () => {
     const aliasesPath = join(workspace, "knowledge", "identity", "aliases.jsonl");
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext007-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext007-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext007-test");
     const schemas = createNullSchemaFacade();
     const runId = "staging-run-001";

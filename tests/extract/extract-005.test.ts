@@ -135,7 +135,7 @@ describe("EXT-005: extractor run twice gives same normalized hash", () => {
 
     const result = await runExtractorDeterministic(extractor, () => {
       const source = new ReadonlySourceReader(sourceRoot);
-      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, sourceRoot);
+      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, source);
       const keys = readKeyRegistry(keysPath);
       const aliases = readAliasRegistry(aliasesPath);
       const ids = new RefreshIdentityResolver(keys, aliases, "ext005-test");
@@ -166,7 +166,7 @@ describe("EXT-005: extractor run twice gives same normalized hash", () => {
     // Run 1
     const ctx1 = (() => {
       const source = new ReadonlySourceReader(sourceRoot);
-      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, sourceRoot);
+      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, source);
       const keys = readKeyRegistry(keysPath);
       const aliases = readAliasRegistry(aliasesPath);
       const ids = new RefreshIdentityResolver(keys, aliases, "ext005-test");
@@ -181,7 +181,7 @@ describe("EXT-005: extractor run twice gives same normalized hash", () => {
     // Run 2 with different run ID
     const ctx2 = (() => {
       const source = new ReadonlySourceReader(sourceRoot);
-      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, sourceRoot);
+      const evidence = new EvidenceFactory("ext005-test", binding.binding_digest, source);
       const keys = readKeyRegistry(keysPath);
       const aliases = readAliasRegistry(aliasesPath);
       const ids = new RefreshIdentityResolver(keys, aliases, "ext005-test");

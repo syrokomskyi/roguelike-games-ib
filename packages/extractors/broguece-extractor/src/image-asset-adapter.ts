@@ -74,23 +74,25 @@ export function collectImageAssets(
 export function imageAssetSpec(entries: ImageAssetEntry[]): EntitySpec<ImageAssetEntry> {
   return {
     kind: "image_asset",
-    nativeKind: "image",
-    originActorId: "broguece-factual",
     entries,
-    getSourcePath: (e: ImageAssetEntry) => e.path,
-    getSymbolName: () => "",
-    getSlug: (e: ImageAssetEntry) => e.slug,
-    getNativeId: (e: ImageAssetEntry) => e.path,
-    getCanonicalName: (e: ImageAssetEntry) => e.fileName,
-    getOriginalName: (e: ImageAssetEntry) => e.fileName,
-    getLineRange: () => ({ lineStart: 0, lineEnd: 0 }),
-    getDataKey: (e: ImageAssetEntry) => e.path,
-    getAttributes: (e: ImageAssetEntry) => ({
-      mime_type: e.mimeType,
-      width: e.width,
-      height: e.height,
-      alt_text: e.altText,
-    }),
-    populationDimension: "image_assets",
+    adapter: {
+      nativeKind: "image",
+      originActorId: "broguece-factual",
+      getSourcePath: (e: ImageAssetEntry) => e.path,
+      getSymbolName: () => "",
+      getSlug: (e: ImageAssetEntry) => e.slug,
+      getNativeId: (e: ImageAssetEntry) => e.path,
+      getCanonicalName: (e: ImageAssetEntry) => e.fileName,
+      getOriginalName: (e: ImageAssetEntry) => e.fileName,
+      getLineRange: () => ({ lineStart: 0, lineEnd: 0 }),
+      getDataKey: (e: ImageAssetEntry) => e.path,
+      getAttributes: (e: ImageAssetEntry) => ({
+        mime_type: e.mimeType,
+        width: e.width,
+        height: e.height,
+        alt_text: e.altText,
+      }),
+      populationDimension: "image_assets",
+    },
   };
 }

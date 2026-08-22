@@ -109,7 +109,7 @@ describe("C9: BrogueCE vertical slice", () => {
 
     function createContext() {
       const source = new ReadonlySourceReader(SOURCE_ROOT);
-      const evidence = new EvidenceFactory("broguece", binding.binding_digest, SOURCE_ROOT);
+      const evidence = new EvidenceFactory("broguece", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver([], [], "broguece");
       const schemas = createNullSchemaFacade();
       const output = new CandidateWriter(

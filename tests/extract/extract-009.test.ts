@@ -93,7 +93,7 @@ describe("EXT-009: record identity retained across source path rename", () => {
     // Run 1
     {
       const source = new ReadonlySourceReader(sourceRoot);
-      const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, sourceRoot);
+      const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext009-test");
       const schemas = createNullSchemaFacade();
       const output = new CandidateWriter(stagingDir, "run-1", "ext009-test", "identity-test", "1.0.0");
@@ -112,7 +112,7 @@ describe("EXT-009: record identity retained across source path rename", () => {
     // Run 2 — same source, same native_id, same slug → should retain ID
     {
       const source = new ReadonlySourceReader(sourceRoot);
-      const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, sourceRoot);
+      const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext009-test");
       const schemas = createNullSchemaFacade();
       const output = new CandidateWriter(stagingDir, "run-2", "ext009-test", "identity-test", "1.0.0");
@@ -174,7 +174,7 @@ describe("EXT-009: record identity retained across source path rename", () => {
     };
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext009-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext009-test");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "rename-run", "ext009-test", "rename-test", "1.0.0");

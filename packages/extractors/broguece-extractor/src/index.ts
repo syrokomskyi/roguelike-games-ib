@@ -46,4 +46,4 @@ export {
   imageAssetSpec,
   type ImageAssetEntry,
 } from "./image-asset-adapter.ts";
-export { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
+export { runEntityPipeline, type EntitySpec, type EntityAdapter } from "@roguelike-games-ib/extractor-sdk";

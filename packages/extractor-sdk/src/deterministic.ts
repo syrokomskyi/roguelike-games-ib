@@ -12,12 +12,6 @@
 import { createHash } from "node:crypto";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";
 import type { Extractor, ExtractorContext, ExtractorRunResult } from "./types.ts";
-import type { ReadonlySourceReader } from "./source-reader.ts";
-import type { SourceBinding } from "@roguelike-games-ib/knowledge-core";
-import type { SchemaFacade } from "./context.ts";
-import type { EvidenceFactory } from "./evidence-builder.ts";
-import type { CandidateWriter } from "./output-writer.ts";
-import type { RefreshIdentityResolver } from "./identity.ts";
 
 export interface DeterministicRunResult {
   run1: ExtractorRunResult;
@@ -63,20 +57,5 @@ export async function runExtractorDeterministic(
   };
 }
 
-export function createExtractorContext(
-  source: ReadonlySourceReader,
-  binding: SourceBinding,
-  schemas: SchemaFacade,
-  evidence: EvidenceFactory,
-  ids: RefreshIdentityResolver,
-  output: CandidateWriter,
-): ExtractorContext {
-  return {
-    source,
-    binding,
-    schemas,
-    evidence,
-    ids,
-    output,
-  };
-}
+// Re-exported from runner.ts for backward compatibility
+export { createExtractorContext } from "./runner.ts";

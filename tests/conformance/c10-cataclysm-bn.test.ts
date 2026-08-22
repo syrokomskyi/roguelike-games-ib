@@ -106,7 +106,7 @@ describe("C10: Cataclysm-BN scale trial", () => {
 
     function createContext() {
       const source = new ReadonlySourceReader(SOURCE_ROOT);
-      const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, SOURCE_ROOT);
+      const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
       const schemas = createNullSchemaFacade();
       const output = new CandidateWriter(
@@ -229,7 +229,7 @@ describe("C10: Cataclysm-BN scale trial", () => {
     const stagingDir = join(WORKSPACE, "staging", "c10-bench");
 
     const source = new ReadonlySourceReader(SOURCE_ROOT);
-    const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, SOURCE_ROOT);
+    const evidence = new EvidenceFactory("cataclysm-bn", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "bench-run", "cataclysm-bn", "cataclysm-bn-factual", "1.0.0");

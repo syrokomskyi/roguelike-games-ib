@@ -87,7 +87,7 @@ describe("EXT-006: population denominator is recorded", () => {
     const aliasesPath = join(workspace, "knowledge", "identity", "aliases.jsonl");
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext006-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext006-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext006-test");
     const schemas = createNullSchemaFacade();
     const runId = "pop-test-run";
@@ -150,7 +150,7 @@ describe("EXT-006: population denominator is recorded", () => {
     const aliasesPath = join(workspace, "knowledge", "identity", "aliases.jsonl");
 
     const source = new ReadonlySourceReader(sourceRoot);
-    const evidence = new EvidenceFactory("ext006-test", binding.binding_digest, sourceRoot);
+    const evidence = new EvidenceFactory("ext006-test", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver(readKeyRegistry(keysPath), readAliasRegistry(aliasesPath), "ext006-test");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "mismatch-run", "ext006-test", "synthetic-pop-mismatch", "1.0.0");

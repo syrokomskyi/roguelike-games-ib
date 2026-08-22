@@ -18,7 +18,7 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
-import { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
+import { runEntityPipeline, PopulationCollector, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseMonsterJson,
   parseItemJson,
@@ -155,107 +155,115 @@ function mutationParser(text: string, file: string, seenIds: Map<string, number>
 function monsterSpec(entries: MonsterEntry[]): EntitySpec<MonsterEntry> {
   return {
     kind: "creature",
-    nativeKind: "MONSTER",
-    originActorId: "cataclysm-bn-factual",
     entries,
-    getSourcePath: (m) => m.path,
-    getSymbolName: () => "MONSTER",
-    getSlug: (m) => m.id.replace(/^mon_/, "").replace(/-/g, "_"),
-    getNativeId: (m) => m.id,
-    getCanonicalName: (m) => m.name,
-    getOriginalName: (m) => m.id,
-    getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
-    getDataKey: (m) => m.id,
-    getAttributes: (m) => ({
-      hp: m.hp,
-      speed: m.speed,
-      aggression: m.aggression,
-      morale: m.morale,
-      melee_skill: m.meleeSkill,
-      melee_dice: m.meleeDice,
-      melee_dice_sides: m.meleeDiceSides,
-      melee_cut: m.meleeCut,
-      dodge: m.dodge,
-      volume: m.volume,
-      weight: m.weight,
-      symbol: m.symbol,
-      color: m.color,
-      default_faction: m.defaultFaction,
-      species: m.species,
-      categories: m.categories,
-      flags: m.flags,
-    }),
-    populationDimension: "monsters",
+    adapter: {
+      nativeKind: "MONSTER",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (m) => m.path,
+      getSymbolName: () => "MONSTER",
+      getSlug: (m) => m.id.replace(/^mon_/, "").replace(/-/g, "_"),
+      getNativeId: (m) => m.id,
+      getCanonicalName: (m) => m.name,
+      getOriginalName: (m) => m.id,
+      getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+      getDataKey: (m) => m.id,
+      getAttributes: (m) => ({
+        hp: m.hp,
+        speed: m.speed,
+        aggression: m.aggression,
+        morale: m.morale,
+        melee_skill: m.meleeSkill,
+        melee_dice: m.meleeDice,
+        melee_dice_sides: m.meleeDiceSides,
+        melee_cut: m.meleeCut,
+        dodge: m.dodge,
+        volume: m.volume,
+        weight: m.weight,
+        symbol: m.symbol,
+        color: m.color,
+        default_faction: m.defaultFaction,
+        species: m.species,
+        categories: m.categories,
+        flags: m.flags,
+      }),
+      populationDimension: "monsters",
+    },
   };
 }
 
 function itemSpec(entries: ItemEntry[]): EntitySpec<ItemEntry> {
   return {
     kind: "item",
-    nativeKind: entries[0]?.type ?? "",
-    originActorId: "cataclysm-bn-factual",
     entries,
-    getSourcePath: (e) => e.path,
-    getSymbolName: (e) => e.type,
-    getSlug: (e) => (e as ItemEntry & { _slug: string })._slug,
-    getNativeId: (e) => e.id,
-    getCanonicalName: (e) => e.name,
-    getOriginalName: (e) => e.id,
-    getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
-    getDataKey: (e) => e.id,
-    getAttributes: (e) => ({
-      symbol: e.symbol,
-      color: e.color,
-      price: e.price,
-      volume: e.volume,
-      weight: e.weight,
-      material: e.material,
-      flags: e.flags,
-    }),
-    populationDimension: "items",
+    adapter: {
+      nativeKind: entries[0]?.type ?? "",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: (e) => e.type,
+      getSlug: (e) => (e as ItemEntry & { _slug: string })._slug,
+      getNativeId: (e) => e.id,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        symbol: e.symbol,
+        color: e.color,
+        price: e.price,
+        volume: e.volume,
+        weight: e.weight,
+        material: e.material,
+        flags: e.flags,
+      }),
+      populationDimension: "items",
+    },
   };
 }
 
 function mutationSpec(entries: MutationEntry[]): EntitySpec<MutationEntry> {
   return {
     kind: "mutation",
-    nativeKind: entries[0]?.type ?? "",
-    originActorId: "cataclysm-bn-factual",
     entries,
-    getSourcePath: (e) => e.path,
-    getSymbolName: (e) => e.type,
-    getSlug: (e) => (e as MutationEntry & { _slug: string })._slug,
-    getNativeId: (e) => e.id,
-    getCanonicalName: (e) => e.name,
-    getOriginalName: (e) => e.id,
-    getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
-    getDataKey: (e) => e.id,
-    getAttributes: (e) => ({
-      points: e.points,
-      visibility: e.visibility,
-      category: e.category,
-      leads_to: e.leadsTo,
-    }),
-    populationDimension: "mutations",
+    adapter: {
+      nativeKind: entries[0]?.type ?? "",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: (e) => e.type,
+      getSlug: (e) => (e as MutationEntry & { _slug: string })._slug,
+      getNativeId: (e) => e.id,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        points: e.points,
+        visibility: e.visibility,
+        category: e.category,
+        leads_to: e.leadsTo,
+      }),
+      populationDimension: "mutations",
+    },
   };
 }
 
 function professionSpec(entries: ProfessionEntry[]): EntitySpec<ProfessionEntry> {
   return {
     kind: "profession",
-    nativeKind: entries[0]?.type ?? "",
-    originActorId: "cataclysm-bn-factual",
     entries,
-    getSourcePath: (e) => e.path,
-    getSymbolName: (e) => e.type,
-    getSlug: (e) => e.id.replace(/-/g, "_"),
-    getNativeId: (e) => e.id,
-    getCanonicalName: (e) => e.name,
-    getOriginalName: (e) => e.id,
-    getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
-    getDataKey: (e) => e.id,
-    getAttributes: () => ({}),
-    populationDimension: "professions",
+    adapter: {
+      nativeKind: entries[0]?.type ?? "",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: (e) => e.type,
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => e.id,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: () => ({}),
+      populationDimension: "professions",
+    },
   };
 }
 
@@ -276,17 +284,8 @@ export function createCataclysmBNExtractor(): Extractor {
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 
-      const populationCounts = (manifest.exhaustivePopulations ?? []).map((p) => ({
-        dimension: p.dimension,
-        expected: p.expected ?? 0,
-        extracted: dimensionCounts.get(p.dimension) ?? 0,
-      }));
-
-      for (const pop of populationCounts) {
-        ctx.output.writePopulation(pop.dimension, pop.expected, pop.extracted);
-      }
-
-      const recordCount = populationCounts.reduce((sum, p) => sum + p.extracted, 0);
+      const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
+      const { populationCounts, recordCount } = popCollector.collect(dimensionCounts);
 
       return {
         extractorId: manifest.extractorId,

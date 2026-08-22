@@ -52,7 +52,7 @@ import {
   collectImageAssets,
   imageAssetSpec,
 } from "./image-asset-adapter.ts";
-import { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
+import { runEntityPipeline, PopulationCollector, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";
@@ -90,35 +90,37 @@ function creatureSpec(
 ): EntitySpec<MonsterEntry> {
   return {
     kind: "creature",
-    nativeKind: "monster",
-    originActorId: "broguece-factual",
     entries: monsters,
-    getSourcePath: () => sourcePath,
-    getSymbolName: () => "monsterCatalog",
-    skip: (m) => m.name === "you",
-    getSlug: (m) => m.nativeId,
-    getNativeId: (m) => m.nativeId,
-    getCanonicalName: (m) => m.name,
-    getOriginalName: (m) => m.name,
-    getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
-    getDataKey: (m) => m.nativeId,
-    getAttributes: async (m) => ({
-      glyph: m.glyph,
-      tile_coords: sprite.getCoords(m.glyph),
-      sprite_path: await sprite.extractSprite(m.glyph, m.nativeId),
-      max_hp: m.maxHp,
-      defense: m.defense,
-      accuracy: m.accuracy,
-      damage: m.damage,
-      turns_between_regen: m.turnsBetweenRegen,
-      movement_speed: m.movementSpeed,
-      attack_speed: m.attackSpeed,
-      is_large: m.isLarge,
-      blood_type: m.bloodType,
-      flags: m.flags,
-      ability_flags: m.abilityFlags,
-    }),
-    populationDimension: "creatures",
+    adapter: {
+      nativeKind: "monster",
+      originActorId: "broguece-factual",
+      getSourcePath: () => sourcePath,
+      getSymbolName: () => "monsterCatalog",
+      skip: (m) => m.name === "you",
+      getSlug: (m) => m.nativeId,
+      getNativeId: (m) => m.nativeId,
+      getCanonicalName: (m) => m.name,
+      getOriginalName: (m) => m.name,
+      getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+      getDataKey: (m) => m.nativeId,
+      getAttributes: async (m) => ({
+        glyph: m.glyph,
+        tile_coords: sprite.getCoords(m.glyph),
+        sprite_path: await sprite.extractSprite(m.glyph, m.nativeId),
+        max_hp: m.maxHp,
+        defense: m.defense,
+        accuracy: m.accuracy,
+        damage: m.damage,
+        turns_between_regen: m.turnsBetweenRegen,
+        movement_speed: m.movementSpeed,
+        attack_speed: m.attackSpeed,
+        is_large: m.isLarge,
+        blood_type: m.bloodType,
+        flags: m.flags,
+        ability_flags: m.abilityFlags,
+      }),
+      populationDimension: "creatures",
+    },
   };
 }
 
@@ -129,27 +131,29 @@ function terrainSpec(
 ): EntitySpec<TileEntry> {
   return {
     kind: "terrain",
-    nativeKind: "tileType",
-    originActorId: "broguece-factual",
     entries: tiles,
-    getSourcePath: () => sourcePath,
-    getSymbolName: () => "tileCatalog",
-    getSlug: (t) => t.nativeId.toLowerCase(),
-    getNativeId: (t) => t.nativeId,
-    getCanonicalName: (t) => t.description || t.nativeId,
-    getOriginalName: (t) => t.nativeId,
-    getLineRange: (t) => ({ lineStart: t.lineStart, lineEnd: t.lineEnd }),
-    getDataKey: (t) => t.nativeId,
-    getAttributes: async (t) => ({
-      glyph: t.glyph,
-      tile_coords: sprite.getCoords(t.glyph),
-      sprite_path: await sprite.extractSprite(t.glyph, `terrain-${t.nativeId.toLowerCase()}`),
-      draw_priority: t.drawPriority,
-      flags: t.flags,
-      mech_flags: t.mechFlags,
-      flavor_text: t.flavorText,
-    }),
-    populationDimension: "terrain",
+    adapter: {
+      nativeKind: "tileType",
+      originActorId: "broguece-factual",
+      getSourcePath: () => sourcePath,
+      getSymbolName: () => "tileCatalog",
+      getSlug: (t) => t.nativeId.toLowerCase(),
+      getNativeId: (t) => t.nativeId,
+      getCanonicalName: (t) => t.description || t.nativeId,
+      getOriginalName: (t) => t.nativeId,
+      getLineRange: (t) => ({ lineStart: t.lineStart, lineEnd: t.lineEnd }),
+      getDataKey: (t) => t.nativeId,
+      getAttributes: async (t) => ({
+        glyph: t.glyph,
+        tile_coords: sprite.getCoords(t.glyph),
+        sprite_path: await sprite.extractSprite(t.glyph, `terrain-${t.nativeId.toLowerCase()}`),
+        draw_priority: t.drawPriority,
+        flags: t.flags,
+        mech_flags: t.mechFlags,
+        flavor_text: t.flavorText,
+      }),
+      populationDimension: "terrain",
+    },
   };
 }
 
@@ -162,29 +166,31 @@ function itemSpec(
 ): EntitySpec<ItemTableEntry> {
   return {
     kind: "item",
-    nativeKind: tableName,
-    originActorId: "broguece-factual",
     entries: items,
-    getSourcePath: () => sourcePath,
-    getSymbolName: () => arrayName,
-    getSlug: (item) => `${tableName}/${item.nativeId}`,
-    getNativeId: (item) => `${tableName}:${item.nativeId}`,
-    getCanonicalName: (item) => item.name,
-    getOriginalName: (item) => item.name,
-    getLineRange: (item) => ({ lineStart: item.lineStart, lineEnd: item.lineEnd }),
-    getDataKey: (item) => `${tableName}:${item.nativeId}`,
-    getAttributes: async (item) => ({
-      glyph: item.glyph,
-      tile_coords: sprite.getCoords(item.glyph),
-      sprite_path: await sprite.extractSprite(item.glyph, `item-${tableName}-${item.nativeId}`),
-      frequency: item.frequency,
-      market_value: item.marketValue,
-      strength_required: item.strengthRequired,
-      power: item.power,
-      damage_range: item.damageRange,
-      description: item.description,
-    }),
-    populationDimension: "items",
+    adapter: {
+      nativeKind: tableName,
+      originActorId: "broguece-factual",
+      getSourcePath: () => sourcePath,
+      getSymbolName: () => arrayName,
+      getSlug: (item) => `${tableName}/${item.nativeId}`,
+      getNativeId: (item) => `${tableName}:${item.nativeId}`,
+      getCanonicalName: (item) => item.name,
+      getOriginalName: (item) => item.name,
+      getLineRange: (item) => ({ lineStart: item.lineStart, lineEnd: item.lineEnd }),
+      getDataKey: (item) => `${tableName}:${item.nativeId}`,
+      getAttributes: async (item) => ({
+        glyph: item.glyph,
+        tile_coords: sprite.getCoords(item.glyph),
+        sprite_path: await sprite.extractSprite(item.glyph, `item-${tableName}-${item.nativeId}`),
+        frequency: item.frequency,
+        market_value: item.marketValue,
+        strength_required: item.strengthRequired,
+        power: item.power,
+        damage_range: item.damageRange,
+        description: item.description,
+      }),
+      populationDimension: "items",
+    },
   };
 }
 
@@ -207,19 +213,21 @@ function simpleSpec<E>(
 ): EntitySpec<E> {
   return {
     kind,
-    nativeKind,
-    originActorId: "broguece-factual",
     entries,
-    getSourcePath: () => sourcePath,
-    getSymbolName: () => symbolName,
-    getSlug: opts.getSlug,
-    getNativeId: opts.getNativeId,
-    getCanonicalName: opts.getCanonicalName,
-    getOriginalName: opts.getOriginalName,
-    getLineRange: opts.getLineRange,
-    getDataKey: opts.getDataKey,
-    getAttributes: async (e) => opts.getAttributes(e),
-    populationDimension,
+    adapter: {
+      nativeKind,
+      originActorId: "broguece-factual",
+      getSourcePath: () => sourcePath,
+      getSymbolName: () => symbolName,
+      getSlug: opts.getSlug,
+      getNativeId: opts.getNativeId,
+      getCanonicalName: opts.getCanonicalName,
+      getOriginalName: opts.getOriginalName,
+      getLineRange: opts.getLineRange,
+      getDataKey: opts.getDataKey,
+      getAttributes: async (e) => opts.getAttributes(e),
+      populationDimension,
+    },
   };
 }
 
@@ -356,20 +364,10 @@ export function createBrogueCEExtractor(): Extractor {
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 
       // --- Populations (derived from manifest + image assets) ---
-      const populationCounts = [
-        ...(manifest.exhaustivePopulations ?? []).map((p) => ({
-          dimension: p.dimension,
-          expected: p.expected ?? 0,
-          extracted: dimensionCounts.get(p.dimension) ?? 0,
-        })),
+      const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
+      const { populationCounts, recordCount } = popCollector.collect(dimensionCounts, [
         { dimension: "image_assets", expected: imageEntries.length, extracted: dimensionCounts.get("image_assets") ?? 0 },
-      ];
-
-      for (const pop of populationCounts) {
-        ctx.output.writePopulation(pop.dimension, pop.expected, pop.extracted);
-      }
-
-      const recordCount = populationCounts.reduce((sum, p) => sum + p.extracted, 0);
+      ]);
 
       return {
         extractorId: manifest.extractorId,

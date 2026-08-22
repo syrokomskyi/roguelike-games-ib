@@ -104,7 +104,7 @@ describe("C12: NetHack scale trial", () => {
 
     function createContext() {
       const source = new ReadonlySourceReader(SOURCE_ROOT);
-      const evidence = new EvidenceFactory("nethack", binding.binding_digest, SOURCE_ROOT);
+      const evidence = new EvidenceFactory("nethack", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver([], [], "nethack");
       const schemas = createNullSchemaFacade();
       const output = new CandidateWriter(
@@ -176,7 +176,7 @@ describe("C12: NetHack scale trial", () => {
     const stagingDir = join(WORKSPACE, "staging", "c12-bench");
 
     const source = new ReadonlySourceReader(SOURCE_ROOT);
-    const evidence = new EvidenceFactory("nethack", binding.binding_digest, SOURCE_ROOT);
+    const evidence = new EvidenceFactory("nethack", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "nethack");
     const schemas = createNullSchemaFacade();
     const output = new CandidateWriter(stagingDir, "bench-run", "nethack", "nethack-factual", "1.0.0");
