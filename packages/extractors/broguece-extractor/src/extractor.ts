@@ -300,6 +300,9 @@ export function createBrogueCEExtractor(): Extractor {
           },
           activation: "active" as const,
           attributes: {
+            glyph: t.glyph,
+            tile_coords: glyphToTileCoords(t.glyph, glyphMap),
+            sprite_path: await extractSprite(t.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, `terrain-${t.nativeId.toLowerCase()}`),
             draw_priority: t.drawPriority,
             flags: t.flags,
             mech_flags: t.mechFlags,
@@ -360,6 +363,9 @@ export function createBrogueCEExtractor(): Extractor {
             },
             activation: "active" as const,
             attributes: {
+              glyph: item.glyph,
+              tile_coords: glyphToTileCoords(item.glyph, glyphMap),
+              sprite_path: await extractSprite(item.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, `item-${table.name}-${item.nativeId}`),
               frequency: item.frequency,
               market_value: item.marketValue,
               strength_required: item.strengthRequired,

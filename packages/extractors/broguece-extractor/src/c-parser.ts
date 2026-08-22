@@ -186,6 +186,7 @@ function finalizeMonsterEntry(
 
 export interface TileEntry {
   nativeId: string;
+  glyph: string | null;
   description: string;
   flavorText: string;
   drawPriority: number;
@@ -230,6 +231,9 @@ export function parseTileCatalog(source: string): TileEntry[] {
       }
     }
 
+    const glyphMatch = fullLine.match(/\/\*[A-Z_][A-Z0-9_]*\*\/\s*\{\s*(G_[A-Z_][A-Z0-9_]*|'[^']')/);
+    const glyph = glyphMatch ? glyphMatch[1] : null;
+
     const descMatch = fullLine.match(/"([^"]+)"\s*,\s*"([^"]*)"/);
     const description = descMatch ? descMatch[1] : "";
     const flavorText = descMatch ? descMatch[2] : "";
@@ -245,6 +249,7 @@ export function parseTileCatalog(source: string): TileEntry[] {
 
     entries.push({
       nativeId,
+      glyph,
       description,
       flavorText,
       drawPriority,
@@ -261,6 +266,7 @@ export function parseTileCatalog(source: string): TileEntry[] {
 export interface ItemTableEntry {
   nativeId: string;
   name: string;
+  glyph: string | null;
   frequency: number;
   marketValue: number;
   strengthRequired: number;
@@ -367,6 +373,16 @@ function finalizeItemEntry(
   const name = nameMatch[1];
   const nativeId = name.replace(/\s+/g, "_").toLowerCase();
 
+  const TABLE_GLYPHS: Record<string, string> = {
+    weapon: "G_WEAPON",
+    armor: "G_ARMOR",
+    food: "G_FOOD",
+    key: "G_KEY",
+    staff: "G_STAFF",
+    ring: "G_RING",
+  };
+  const glyph = TABLE_GLYPHS[tableName] ?? null;
+
   const numOrZero = (s: string | undefined): number =>
     s ? parseInt(s, 10) || 0 : 0;
 
@@ -384,6 +400,7 @@ function finalizeItemEntry(
   return {
     nativeId,
     name,
+    glyph,
     frequency,
     marketValue,
     strengthRequired,
