@@ -52,11 +52,8 @@ export function buildPathResolver(records: CanonicalRecord[]): PathResolver {
     const notePath = `${scope}/${typeSlug}/${keySlug}.md`;
 
     if (pathToId.has(notePath)) {
-      const shortId = record.id.split(":").pop()?.slice(0, 8) ?? "dup";
-      const disambiguated = `${scope}/${typeSlug}/${keySlug}-${shortId}.md`;
-      idToPath.set(record.id, disambiguated);
-      keyToPath.set(record.key, disambiguated);
-      pathToId.set(disambiguated, record.id);
+      const existingId = pathToId.get(notePath)!;
+      throw new Error(`Path collision: "${notePath}" mapped by both "${existingId}" and "${record.id}"`);
     } else {
       idToPath.set(record.id, notePath);
       keyToPath.set(record.key, notePath);

@@ -8,6 +8,7 @@ import {
 } from "../packages/knowledge-core/src/index.ts";
 import {
   EvidenceFactory,
+  ReadonlySourceReader,
 } from "../packages/extractor-sdk/src/index.ts";
 import { readCanonicalState } from "../packages/materializer/src/index.ts";
 import { mkdirSync, readFileSync } from "node:fs";
@@ -518,8 +519,8 @@ async function main() {
   console.log(`Found ${catbnRecords.length} Cataclysm-BN factual records`);
   console.log(`Found ${nethackRecords.length} NetHack factual records`);
 
-  const catbnEvidence = new EvidenceFactory("cataclysm-bn", CATBN_BINDING_DIGEST, CATBN_SOURCE_ROOT);
-  const nethackEvidence = new EvidenceFactory("nethack", NETHACK_BINDING_DIGEST, NETHACK_SOURCE_ROOT);
+  const catbnEvidence = new EvidenceFactory("cataclysm-bn", CATBN_BINDING_DIGEST, new ReadonlySourceReader(CATBN_SOURCE_ROOT));
+  const nethackEvidence = new EvidenceFactory("nethack", NETHACK_BINDING_DIGEST, new ReadonlySourceReader(NETHACK_SOURCE_ROOT));
 
   const catbnRunId = "cataclysm-bn-semantic-run";
   const nethackRunId = "nethack-semantic-run";

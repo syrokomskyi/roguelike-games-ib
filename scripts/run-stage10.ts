@@ -46,7 +46,7 @@ async function main() {
   mkdirSync(stagingRunDir, { recursive: true });
 
   const source = new ReadonlySourceReader(SOURCE_ROOT);
-  const evidence = new EvidenceFactory("cataclysm-bn", BINDING_DIGEST, SOURCE_ROOT);
+  const evidence = new EvidenceFactory("cataclysm-bn", BINDING_DIGEST, source);
   const ids = new RefreshIdentityResolver([], [], "cataclysm-bn");
   const schemas = createNullSchemaFacade();
   const output = new CandidateWriter(STAGING_ROOT, runId, "cataclysm-bn", "cataclysm-bn-factual", "1.0.0");

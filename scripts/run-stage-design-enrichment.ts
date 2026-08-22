@@ -6,6 +6,7 @@ import {
 } from "../packages/knowledge-core/src/index.ts";
 import {
   EvidenceFactory,
+  ReadonlySourceReader,
 } from "../packages/extractor-sdk/src/index.ts";
 import { readCanonicalState } from "../packages/materializer/src/index.ts";
 import { join } from "node:path";
@@ -82,8 +83,8 @@ async function main() {
   console.log(`  weaponEnchantment: ${weaponEnchantment?.id ?? "NOT FOUND"}`);
   console.log(`  nethackArtifact: ${nethackArtifact?.id ?? "NOT FOUND"}`);
 
-  const brogueceEvidence = new EvidenceFactory("broguece", BROGUECE_BINDING_DIGEST, BROGUECE_SOURCE_ROOT);
-  const nethackEvidence = new EvidenceFactory("nethack", NETHACK_BINDING_DIGEST, NETHACK_SOURCE_ROOT);
+  const brogueceEvidence = new EvidenceFactory("broguece", BROGUECE_BINDING_DIGEST, new ReadonlySourceReader(BROGUECE_SOURCE_ROOT));
+  const nethackEvidence = new EvidenceFactory("nethack", NETHACK_BINDING_DIGEST, new ReadonlySourceReader(NETHACK_SOURCE_ROOT));
 
   const concepts: any[] = [];
   const relations: any[] = [];

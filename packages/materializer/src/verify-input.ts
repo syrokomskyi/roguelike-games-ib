@@ -56,6 +56,8 @@ function classifyAndStore(
       const anchor = evRecord["anchor"] as Record<string, unknown> | undefined;
       if (anchor) {
         evidence.push({ ...anchor, id: evRecord["id"], record_id: evRecord["record_id"] } as unknown as EvidenceAnchor);
+      } else {
+        evidence.push(evRecord as unknown as EvidenceAnchor);
       }
       break;
     }
