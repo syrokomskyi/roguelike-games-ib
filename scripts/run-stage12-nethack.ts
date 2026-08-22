@@ -22,8 +22,8 @@ const SOURCE_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/NetHac
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 const STAGING_ROOT = join(WORKSPACE, "staging");
 
-const FINGERPRINT = "b500ce40aaef968e7dd8d6b4ba423d754ab5cf9a2d142975a7a584fd65fb537b";
-const BINDING_DIGEST = "bb2d375f5feea0baa2e24b7848786a6100b7504febb2419ba24b42df701b2b7f";
+const FINGERPRINT = "3644218fae3cfcd1eb58f3b908ddd323f66e02cc743bfff192a1505ced0d95d0";
+const BINDING_DIGEST = "40dde88fe3b4529a92a27cce53ba855682346cdb9b3715383850f0bf1ec1fc78";
 
 async function main() {
   const t0 = Date.now();
