@@ -502,208 +502,92 @@ export function createBrogueCEExtractor(): Extractor {
       // --- Dungeon Features ---
       const dungeonFeatures = parseDungeonFeatureCatalog(globalsC);
       for (const df of dungeonFeatures) {
-        const slug = df.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("dungeon_feature", slug, `dungeonFeature:${df.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "dungeon_feature", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "dungeon_feature",
-          native_kind: "dungeonFeature",
-          name: { canonical: df.description, original: df.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `dungeonFeature:${df.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            layer: df.layer,
-            start: df.start,
-            decay: df.decay,
-            flags: df.flags,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "dungeonFeatureCatalog", line_start: df.lineStart, line_end: df.lineEnd, byte_start: null, byte_end: null, data_key: df.nativeId },
-          fragmentLines: { lineStart: df.lineStart, lineEnd: df.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "dungeon_feature", nativeKind: "dungeonFeature",
+          slug: df.nativeId.toLowerCase(), nativeIdPrefixed: `dungeonFeature:${df.nativeId}`,
+          canonicalName: df.description, originalName: df.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "dungeonFeatureCatalog",
+          attributes: { layer: df.layer, start: df.start, decay: df.decay, flags: df.flags },
+          lineStart: df.lineStart, lineEnd: df.lineEnd, dataKey: df.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Lights ---
       const lights = parseLightCatalog(globalsC);
-      for (const lt of lights) {
-        const slug = lt.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("light", slug, `lightSource:${lt.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "light", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "light",
-          native_kind: "lightSource",
-          name: { canonical: lt.description, original: lt.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `lightSource:${lt.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            color: lt.color,
-            radius_min: lt.radiusMin,
-            radius_max: lt.radiusMax,
-            fade_percent: lt.fadePercent,
-            pass_through_creatures: lt.passThroughCreatures,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "lightCatalog", line_start: lt.lineStart, line_end: lt.lineEnd, byte_start: null, byte_end: null, data_key: lt.nativeId },
-          fragmentLines: { lineStart: lt.lineStart, lineEnd: lt.lineEnd },
+      for (const light of lights) {
+        writeEntityRecord({
+          ctx, kind: "light", nativeKind: "lightSource",
+          slug: light.nativeId.toLowerCase(), nativeIdPrefixed: `lightSource:${light.nativeId}`,
+          canonicalName: light.description, originalName: light.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "lightCatalog",
+          attributes: { color: light.color, radius_min: light.radiusMin, radius_max: light.radiusMax, fade_percent: light.fadePercent, pass_through_creatures: light.passThroughCreatures },
+          lineStart: light.lineStart, lineEnd: light.lineEnd, dataKey: light.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Mutations ---
       const mutations = parseMutationCatalog(globalsC);
       for (const mut of mutations) {
-        const slug = mut.nativeId;
-        const resolved = ctx.ids.resolveOrCreate("mutation", slug, `mutation:${mut.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "mutation", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "mutation",
-          native_kind: "mutation",
-          name: { canonical: mut.name, original: mut.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `mutation:${mut.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            health_factor: mut.healthFactor,
-            move_speed_mult: mut.moveSpeedMult,
-            attack_speed_mult: mut.attackSpeedMult,
-            defense_mult: mut.defenseMult,
-            damage_mult: mut.damageMult,
-            description: mut.description,
-            can_be_negated: mut.canBeNegated,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "mutationCatalog", line_start: mut.lineStart, line_end: mut.lineEnd, byte_start: null, byte_end: null, data_key: mut.nativeId },
-          fragmentLines: { lineStart: mut.lineStart, lineEnd: mut.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "mutation", nativeKind: "mutation",
+          slug: mut.nativeId, nativeIdPrefixed: `mutation:${mut.nativeId}`,
+          canonicalName: mut.name, originalName: mut.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "mutationCatalog",
+          attributes: { health_factor: mut.healthFactor, move_speed_mult: mut.moveSpeedMult, attack_speed_mult: mut.attackSpeedMult, defense_mult: mut.defenseMult, damage_mult: mut.damageMult, description: mut.description, can_be_negated: mut.canBeNegated },
+          lineStart: mut.lineStart, lineEnd: mut.lineEnd, dataKey: mut.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Monster Classes ---
       const monsterClasses = parseMonsterClassCatalog(globalsC);
       for (const mc of monsterClasses) {
-        const slug = mc.nativeId;
-        const resolved = ctx.ids.resolveOrCreate("monster_class", slug, `monsterClass:${mc.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_class", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "monster_class",
-          native_kind: "monsterClass",
-          name: { canonical: mc.name, original: mc.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterClass:${mc.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            frequency: mc.frequency,
-            max_depth: mc.maxDepth,
-            members: mc.members,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "monsterClassCatalog", line_start: mc.lineStart, line_end: mc.lineEnd, byte_start: null, byte_end: null, data_key: mc.nativeId },
-          fragmentLines: { lineStart: mc.lineStart, lineEnd: mc.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "monster_class", nativeKind: "monsterClass",
+          slug: mc.nativeId, nativeIdPrefixed: `monsterClass:${mc.nativeId}`,
+          canonicalName: mc.name, originalName: mc.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "monsterClassCatalog",
+          attributes: { frequency: mc.frequency, max_depth: mc.maxDepth, members: mc.members },
+          lineStart: mc.lineStart, lineEnd: mc.lineEnd, dataKey: mc.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Status Effects ---
       const statusEffects = parseStatusEffectCatalog(globalsC);
       for (const se of statusEffects) {
-        const slug = se.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("status_effect", slug, `statusEffect:${se.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "status_effect", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "status_effect",
-          native_kind: "statusEffect",
-          name: { canonical: se.name || se.nativeId, original: se.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `statusEffect:${se.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            is_buff: se.isBuff,
-            display_in_sidebar: se.displayInSidebar,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "statusEffectCatalog", line_start: se.lineStart, line_end: se.lineEnd, byte_start: null, byte_end: null, data_key: se.nativeId },
-          fragmentLines: { lineStart: se.lineStart, lineEnd: se.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "status_effect", nativeKind: "statusEffect",
+          slug: se.nativeId.toLowerCase(), nativeIdPrefixed: `statusEffect:${se.nativeId}`,
+          canonicalName: se.name || se.nativeId, originalName: se.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "statusEffectCatalog",
+          attributes: { is_buff: se.isBuff, display_in_sidebar: se.displayInSidebar },
+          lineStart: se.lineStart, lineEnd: se.lineEnd, dataKey: se.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Monster Behaviors ---
       const monsterBehaviors = parseMonsterBehaviorCatalog(globalsC);
       for (const mb of monsterBehaviors) {
-        const slug = mb.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("monster_behavior", slug, `monsterBehavior:${mb.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_behavior", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "monster_behavior",
-          native_kind: "monsterBehavior",
-          name: { canonical: mb.description || mb.nativeId, original: mb.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterBehavior:${mb.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            description: mb.description,
-            is_always_active: mb.isAlwaysActive,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "monsterBehaviorCatalog", line_start: mb.lineStart, line_end: mb.lineEnd, byte_start: null, byte_end: null, data_key: mb.nativeId },
-          fragmentLines: { lineStart: mb.lineStart, lineEnd: mb.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "monster_behavior", nativeKind: "monsterBehavior",
+          slug: mb.nativeId.toLowerCase(), nativeIdPrefixed: `monsterBehavior:${mb.nativeId}`,
+          canonicalName: mb.description || mb.nativeId, originalName: mb.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "monsterBehaviorCatalog",
+          attributes: { description: mb.description, is_always_active: mb.isAlwaysActive },
+          lineStart: mb.lineStart, lineEnd: mb.lineEnd, dataKey: mb.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       // --- Monster Abilities ---
       const monsterAbilities = parseMonsterAbilityCatalog(globalsC);
       for (const ma of monsterAbilities) {
-        const slug = ma.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("monster_ability", slug, `monsterAbility:${ma.nativeId}`);
-        const envelope = makeRecordEnvelope(ctx.binding.source_id, "monster_ability", resolved.key, resolved.id, "broguece-factual");
-        const record = {
-          ...envelope,
-          kind: "monster_ability",
-          native_kind: "monsterAbility",
-          name: { canonical: ma.description || ma.nativeId, original: ma.nativeId },
-          source_identity: { source_id: ctx.binding.source_id, native_id: `monsterAbility:${ma.nativeId}`, path: GLOBALS_C },
-          activation: "active" as const,
-          attributes: {
-            description: ma.description,
-            is_always_active: ma.isAlwaysActive,
-          },
-          evidence_refs: [] as string[],
-        };
-        ctx.output.writeRecord(record);
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: { symbol: "monsterAbilityCatalog", line_start: ma.lineStart, line_end: ma.lineEnd, byte_start: null, byte_end: null, data_key: ma.nativeId },
-          fragmentLines: { lineStart: ma.lineStart, lineEnd: ma.lineEnd },
+        writeEntityRecord({
+          ctx, kind: "monster_ability", nativeKind: "monsterAbility",
+          slug: ma.nativeId.toLowerCase(), nativeIdPrefixed: `monsterAbility:${ma.nativeId}`,
+          canonicalName: ma.description || ma.nativeId, originalName: ma.nativeId,
+          sourcePath: GLOBALS_C, symbolName: "monsterAbilityCatalog",
+          attributes: { description: ma.description, is_always_active: ma.isAlwaysActive },
+          lineStart: ma.lineStart, lineEnd: ma.lineEnd, dataKey: ma.nativeId,
         });
-        ctx.output.writeEvidence(resolved.id, evidence);
       }
 
       let imageAssetCount = 0;
