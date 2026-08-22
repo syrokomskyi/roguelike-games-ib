@@ -10,4 +10,20 @@
 
 All game-specific extractor packages MUST live under `packages/extractors/`. Do not create extractor packages directly in `packages/`. The `packages/extractors/` directory is registered in `pnpm-workspace.yaml` as a workspace glob.
 
+## Extraction Methodology
+
+All extractors MUST follow RFC-0001 (Extraction methodology for multi-game knowledge base). The RFC defines 11 binding principles governing how extractors map game source data into the knowledge base. Key requirements:
+
+- One source object = one record (Principle 1)
+- Factual extraction without loss — no cross-game normalization (Principle 2)
+- Canonical kind mapping declared in manifest (Principle 3)
+- Evidence anchors for every record (Principle 4)
+- Population completeness contracts for every data dimension (Principle 5)
+- Composite data stays in attributes (Principle 6)
+- One extractor per game (Principle 7)
+- New game onboarding follows the 10-step process (Principle 8)
+- Taxonomy extension via RFC only when existing kinds are insufficient (Principle 9)
+
+Agents creating new extractors MUST use the `fo-create-extractor` skill, which references RFC-0001 as the methodology source.
+
 
