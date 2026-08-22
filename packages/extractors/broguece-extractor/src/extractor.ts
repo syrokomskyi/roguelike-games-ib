@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>BrogueCE factual extractor — parses C source files and emits creature, terrain, and item records with evidence anchors and population counts.</purpose>
+<purpose>BrogueCE factual extractor — parses C source files and emits creature, terrain, item, dungeon feature, light, mutation, monster class, status effect, monster behavior, monster ability, and image asset records with evidence anchors and population counts.</purpose>
 <non-goals>
   <item>Does not parse JSON or YAML — BrogueCE source is C code only.</item>
   <item>Does not compute design-space relations — factual extraction only.</item>
@@ -8,6 +8,9 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: BrogueCE extractor with monster, tile, and item table parsing.</item>
+  <item>Added variant item tables (potion, scroll, wand, charm) from GlobalsBrogue.c.</item>
+  <item>Added 7 new entity catalogs: dungeon features, lights, mutations, monster classes, status effects, monster behaviors, monster abilities.</item>
+  <item>Extracted writeEntityRecord helper to deduplicate entity record creation.</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -249,6 +252,45 @@ function makeRecordEnvelope(
   };
 }
 
+interface EntityWriteParams {
+  ctx: ExtractorContext;
+  kind: string;
+  nativeKind: string;
+  slug: string;
+  nativeIdPrefixed: string;
+  canonicalName: string;
+  originalName: string;
+  sourcePath: string;
+  symbolName: string;
+  attributes: Record<string, unknown>;
+  lineStart: number;
+  lineEnd: number;
+  dataKey: string;
+}
+
+function writeEntityRecord(params: EntityWriteParams): void {
+  const { ctx, kind, nativeKind, slug, nativeIdPrefixed, canonicalName, originalName, sourcePath, symbolName, attributes, lineStart, lineEnd, dataKey } = params;
+  const resolved = ctx.ids.resolveOrCreate(kind as never, slug, nativeIdPrefixed);
+  const envelope = makeRecordEnvelope(ctx.binding.source_id, kind, resolved.key, resolved.id, "broguece-factual");
+  const record = {
+    ...envelope,
+    kind,
+    native_kind: nativeKind,
+    name: { canonical: canonicalName, original: originalName },
+    source_identity: { source_id: ctx.binding.source_id, native_id: nativeIdPrefixed, path: sourcePath },
+    activation: "active" as const,
+    attributes,
+    evidence_refs: [] as string[],
+  };
+  ctx.output.writeRecord(record);
+  const evidence = ctx.evidence.create({
+    artifactPath: sourcePath,
+    locator: { symbol: symbolName, line_start: lineStart, line_end: lineEnd, byte_start: null, byte_end: null, data_key: dataKey },
+    fragmentLines: { lineStart, lineEnd },
+  });
+  ctx.output.writeEvidence(resolved.id, evidence);
+}
+
 export function createBrogueCEExtractor(): Extractor {
   return {
     manifest,
@@ -421,7 +463,7 @@ export function createBrogueCEExtractor(): Extractor {
             source_identity: {
               source_id: ctx.binding.source_id,
               native_id: `${table.name}:${item.nativeId}`,
-              path: GLOBALS_C,
+              path: table.source,
             },
             activation: "active" as const,
             attributes: {
@@ -441,7 +483,7 @@ export function createBrogueCEExtractor(): Extractor {
           ctx.output.writeRecord(record);
 
           const evidence = ctx.evidence.create({
-            artifactPath: GLOBALS_C,
+            artifactPath: table.source,
             locator: {
               symbol: table.array,
               line_start: item.lineStart,

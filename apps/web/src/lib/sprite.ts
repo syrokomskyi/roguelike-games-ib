@@ -24,10 +24,10 @@
 export function keyToSpriteUrl(key: string): string {
   const parts = key.split("/");
   if (parts.length < 2) return "";
-  const source = parts[0];
+  const source = encodeURIComponent(parts[0]);
   const type = parts[1];
   const rest = type === "creature"
-    ? parts[parts.length - 1]
-    : parts.slice(1).join("-");
+    ? encodeURIComponent(parts[parts.length - 1])
+    : encodeURIComponent(parts.slice(1).join("-"));
   return `/sprites/${source}/${rest}.png`;
 }
