@@ -71,7 +71,8 @@ const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../..
 const _ctx = await createWebContext(distDir);
 const imageUrlMap = new Map<string, string>();
 for (const r of pageRecords) {
-  if (r.record_type !== "image_asset") continue;
+  const kind = (r as unknown as Record<string, unknown>)["kind"] as string | undefined;
+  if (kind !== "image_asset") continue;
   const evRefs = ((r as unknown as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
   const ev = evidenceForRecord(_ctx.store.evidence, evRefs, _ctx.store.sources, r.id);
   const assetEv = ev.find((e) => e.evidence_kind === "asset" && e.media && e.github_url);

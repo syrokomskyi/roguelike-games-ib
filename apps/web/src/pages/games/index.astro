@@ -23,7 +23,8 @@ for (const r of ctx.store.records) {
 
 const illustrationBySource = new Map<string, string>();
 for (const r of ctx.store.records) {
-  if (r.record_type !== "image_asset") continue;
+  const kind = (r as Record<string, unknown>)["kind"] as string | undefined;
+  if (kind !== "image_asset") continue;
   const si = (r as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
   const sid = si?.["source_id"] as string | undefined;
   if (!sid) continue;
