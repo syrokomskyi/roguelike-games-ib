@@ -11,10 +11,10 @@ const SPRITE_AR = 232 / 128;
 const { recordKey, size = 24 } = Astro.props;
 const url = keyToSpriteUrl(recordKey);
 const hasSprite = spriteExists(recordKey);
-const height = Math.round(size * SPRITE_AR);
+const width = Math.round(size / SPRITE_AR);
 ---
 
-<span class="shrink-0" style={`display:inline-block;width:${size}px;height:${height}px`}>
+<span class="shrink-0" style={`display:inline-block;width:${width}px;height:${size}px`}>
   {hasSprite && (
     <img
       src={url}
