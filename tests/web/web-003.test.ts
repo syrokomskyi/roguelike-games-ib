@@ -7,21 +7,29 @@ const longExcerpt = "A".repeat(500);
 const evidence = [
   {
     id: "ev-001",
-    source_id: "src-a",
-    artifact: { path: "src/main.c", sha256: "abc123" },
-    locator: { symbol: "goblin_damage", line_start: 42, line_end: 45, byte_start: null, byte_end: null, data_key: null },
-    fragment_hash: "frag-001",
-    excerpt: longExcerpt,
-    publication: { access: "public", expose_locator: true, excerpt_policy: "short", license_ref: "CC-BY-4.0" },
+    anchor: {
+      source_id: "src-a",
+      evidence_kind: "source_code",
+      artifact: { path: "src/main.c", sha256: "abc123" },
+      media: null,
+      locator: { symbol: "goblin_damage", line_start: 42, line_end: 45, byte_start: null, byte_end: null, data_key: null },
+      fragment_hash: "frag-001",
+      excerpt: longExcerpt,
+      publication: { access: "public", expose_locator: true, excerpt_policy: "short", license_ref: "CC-BY-4.0" },
+    },
   },
   {
     id: "ev-002",
-    source_id: "src-a",
-    artifact: { path: "src/main.c", sha256: "def456" },
-    locator: { symbol: null, line_start: 10, line_end: 20, byte_start: null, byte_end: null, data_key: null },
-    fragment_hash: "frag-002",
-    excerpt: "short excerpt",
-    publication: { access: "public", expose_locator: false, excerpt_policy: "short", license_ref: "CC-BY-4.0" },
+    anchor: {
+      source_id: "src-a",
+      evidence_kind: "source_code",
+      artifact: { path: "src/main.c", sha256: "def456" },
+      media: null,
+      locator: { symbol: null, line_start: 10, line_end: 20, byte_start: null, byte_end: null, data_key: null },
+      fragment_hash: "frag-002",
+      excerpt: "short excerpt",
+      publication: { access: "public", expose_locator: false, excerpt_policy: "short", license_ref: "CC-BY-4.0" },
+    },
   },
 ];
 
