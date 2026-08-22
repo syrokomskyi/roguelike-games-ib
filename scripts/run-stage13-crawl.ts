@@ -22,8 +22,8 @@ const SOURCE_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/crawl/
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 const STAGING_ROOT = join(WORKSPACE, "staging");
 
-const FINGERPRINT = "c3f1ce6053667450dbde94a77162411888438cdbc084edc64835536a58035317";
-const BINDING_DIGEST = "de8b21b4beb5654ebb656bdb6f8947d286bf5bf8f31729816e38074471b1ec4a";
+const FINGERPRINT = "c67eae3293dc2a81ed836c77681d364eef64bead345baca3a122fa8299d7ad14";
+const BINDING_DIGEST = "ed51ed562b68f13972eb4cf3f2a43c275d266ed468260ab0c2635dc5cb2260a0";
 
 async function main() {
   const t0 = Date.now();

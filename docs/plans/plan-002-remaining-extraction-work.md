@@ -1,7 +1,7 @@
 ---
 id: PLAN-002
 title: Remaining extraction work — all games coverage expansion
-status: accepted
+status: closed
 scope: project-wide
 decider: architecture
 reviewers:
@@ -14,7 +14,7 @@ related:
 created: 2026-08-22
 accepted: 2026-08-22
 implementedAt: 2026-08-23
-closedAt: null
+closedAt: 2026-08-23
 ---
 
 # PLAN-002: Remaining extraction work — all games coverage expansion
@@ -215,9 +215,9 @@ After each game's tasks complete: re-extract that game + re-run deriver.
 - [x] Crawl: spells, abilities, branches, forms extracted and passing conformance
 - [x] Cataclysm-BN: bionics, traps, recipes, skills, effects, factions extracted and passing conformance
 - [x] NetHack: artifacts, traps, roles, races, branches, skills extracted and passing conformance
-- [x] All conformance tests pass (no regressions) — 589/590 pass (1 pre-existing crawl fingerprint mismatch)
-- [ ] Deriver re-run after all extractions
-- [ ] Coverage files updated for all games
+- [x] All conformance tests pass (no regressions) — 590/590 pass (Crawl fingerprint fixed)
+- [x] Deriver re-run after all extractions
+- [x] Coverage files updated for all games
 
 ## Risks
 
