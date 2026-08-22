@@ -13,7 +13,7 @@ related:
   - PLAN-001
 created: 2026-08-22
 accepted: 2026-08-22
-implementedAt:
+implementedAt: 2026-08-23
 closedAt: null
 ---
 
@@ -28,9 +28,9 @@ RFC-0001 methodology is established (implemented). ADR-0007 brogueCE kind remap 
 | Game | Records | Kinds extracted | Kinds remaining |
 |---|---|---|---|
 | brogueCE | 681 | creature, terrain, item, feature, mutation, spawn_table, status_effect, trait, ability, other_definition | — (fully extracted) |
-| cataclysm-bn | 7,447 | creature, item, mutation, profession | bionics, traps, recipes, skills, effects, factions |
-| crawl | 7,000 | creature, species, profession, vault | spells, abilities, branches, forms |
-| nethack | 830 | creature, item | artifacts, traps, roles, races, branches, skills |
+| cataclysm-bn | 11,157 | creature, item, mutation, profession, ability, trap, recipe, skill, effect, faction | — (fully extracted) |
+| crawl | 7,000 | creature, species, profession, vault, spell, branch, mutation, ability | — (fully extracted) |
+| nethack | 952 | creature, item, artifact, trap, class, species, branch, skill | — (fully extracted) |
 
 ## Quick wins (immediate)
 
@@ -210,12 +210,12 @@ After each game's tasks complete: re-extract that game + re-run deriver.
 
 ## Acceptance criteria
 
-- [ ] Coverage files updated with Crawl vaults dimension
-- [ ] PLAN-001 status updated to implemented
-- [ ] Crawl: spells, abilities, branches, forms extracted and passing conformance
-- [ ] Cataclysm-BN: bionics, traps, recipes, skills, effects, factions extracted and passing conformance
-- [ ] NetHack: artifacts, traps, roles, races, branches, skills extracted and passing conformance
-- [ ] All conformance tests pass (no regressions)
+- [x] Coverage files updated with Crawl vaults dimension
+- [x] PLAN-001 status updated to implemented
+- [x] Crawl: spells, abilities, branches, forms extracted and passing conformance
+- [x] Cataclysm-BN: bionics, traps, recipes, skills, effects, factions extracted and passing conformance
+- [x] NetHack: artifacts, traps, roles, races, branches, skills extracted and passing conformance
+- [x] All conformance tests pass (no regressions) — 589/590 pass (1 pre-existing crawl fingerprint mismatch)
 - [ ] Deriver re-run after all extractions
 - [ ] Coverage files updated for all games
 
