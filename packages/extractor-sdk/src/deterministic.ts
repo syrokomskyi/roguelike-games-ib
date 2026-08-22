@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: deterministic run verifier with normalizeRunResult, hashRunResult, and createExtractorContext.</item>
+  <item>createExtractorContext moved to runner.ts; re-exported here for backward compatibility.</item>
 </CHANGE_SUMMARY>
 */
 import { createHash } from "node:crypto";

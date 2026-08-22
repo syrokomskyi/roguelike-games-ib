@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: EvidenceFactory with create and createPrivate methods.</item>
+  <item>Constructor accepts ReadonlySourceReader instead of raw sourceRoot — all file I/O routed through sandbox.</item>
 </CHANGE_SUMMARY>
 */
 import { createHash } from "node:crypto";
