@@ -91,7 +91,7 @@ describe("WEB-007: image evidence rendering on the web", () => {
     const rendered = renderEvidence(setup.ctx.store.evidence, setup.ctx.store.sources);
     expect(rendered[0].github_url).not.toBeNull();
     expect(rendered[0].github_url).toContain("icon.png");
-    expect(rendered[0].github_url).toContain("github.com");
+    expect(rendered[0].github_url).toContain("raw.githubusercontent.com");
   });
 
   it("rendered evidence includes artifact_path", () => {

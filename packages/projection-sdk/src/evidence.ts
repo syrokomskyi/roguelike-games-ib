@@ -43,7 +43,16 @@ export function buildEvidenceUrl(
     ? `${source.payload_path}/${artifactPath}`
     : artifactPath;
 
-  let url = `${repo}/blob/${ref}/${fullPath}`;
+  const isAsset = evidence.evidence_kind === "asset";
+  const repoBase = repo.replace(/^https?:\/\/github\.com\//, "");
+  const rawBase = `https://raw.githubusercontent.com/${repoBase}`;
+
+  let url: string;
+  if (isAsset) {
+    url = `${rawBase}/${ref}/${fullPath}`;
+  } else {
+    url = `${repo}/blob/${ref}/${fullPath}`;
+  }
 
   const loc = evidence.locator;
   if (loc?.line_start != null) {
