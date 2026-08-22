@@ -24,7 +24,7 @@ const keys = [
   { id: testId(2), key: "brogue-ce/creature/Goblin", record_type: "creature" },
 ];
 
-describe("OBS-003: duplicate path collision fails build", () => {
+describe("OBS-003: duplicate path collision is disambiguated", () => {
   let setup: ReturnType<typeof setupCanonicalWorkspace>;
 
   beforeEach(() => {
@@ -33,13 +33,15 @@ describe("OBS-003: duplicate path collision fails build", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("throws when two records map to same note path", () => {
-    expect(() =>
-      buildObsidianVault({
-        workspaceRoot: setup.workspace,
-        distDir: setup.distDir,
-        vaultDir: setup.vaultDir,
-      }),
-    ).toThrow(/Path collision/);
+  it("disambiguates two records that map to same note path", () => {
+    const result = buildObsidianVault({
+      workspaceRoot: setup.workspace,
+      distDir: setup.distDir,
+      vaultDir: setup.vaultDir,
+    });
+    expect(result.noteCount).toBeGreaterThanOrEqual(2);
+    const goblinPaths = result.notePaths.filter((p) => p.includes("goblin"));
+    expect(goblinPaths.length).toBe(2);
+    expect(new Set(goblinPaths).size).toBe(2);
   });
 });
