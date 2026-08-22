@@ -9,4 +9,5 @@ export {
 } from "./yaml-parser.ts";
 export { createCrawlSpritePipeline, type CrawlSpritePipeline } from "./sprite-pipeline.ts";
 export { parseDesVaults, type VaultEntry } from "./des-parser.ts";
+export { parseSpellData, parseBranchData, type SpellEntry, type BranchEntry } from "./c-struct-parser.ts";
 

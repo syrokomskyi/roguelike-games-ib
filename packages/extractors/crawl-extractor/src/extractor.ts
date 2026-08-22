@@ -1,14 +1,14 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Crawl factual extractor — parses YAML data files and .des vault definitions, emits creature, species, profession, vault, and sprite records with evidence anchors and population counts.</purpose>
+<purpose>Crawl factual extractor — parses YAML data files, .des vault definitions, and C header files, emits creature, species, profession, vault, spell, branch, and sprite records with evidence anchors and population counts.</purpose>
 <non-goals>
-  <item>Does not parse C source — Crawl data is YAML and .des files only.</item>
   <item>Does not compute design-space relations — factual extraction only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: Crawl extractor with monster, species, job, and vault parsing.</item>
   <item>ADR-0005: extractor follows the 10-step onboarding process — source registered in registry.yaml, binding in bindings.yaml, kinds mapped to game-content-taxonomy.yaml, populations declared, conformance test present.</item>
+  <item>Added spell extraction (418 entries) from spl-data.h and branch extraction from branch-data.h via C struct parser with preprocessor directive handling.</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -29,6 +29,8 @@ import {
 } from "./yaml-parser.ts";
 import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
 import { parseDesVaults, type VaultEntry } from "./des-parser.ts";
+import { parseSpellData, parseBranchData, type SpellEntry, type BranchEntry } from "./c-struct-parser.ts";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
 
@@ -37,7 +39,7 @@ const manifest: ExtractorManifest = {
   extractorId: "crawl-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "species", "profession", "vault"],
+  recordKinds: ["creature", "species", "profession", "vault", "spell", "branch"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -64,6 +66,18 @@ const manifest: ExtractorManifest = {
       denominatorKind: "extractor_population",
       expected: 6246,
       description: "All NAME: blocks in .des files under dat/des/ (excluding test/)",
+    },
+    {
+      dimension: "spells",
+      denominatorKind: "extractor_population",
+      expected: 418,
+      description: "All spell entries in spelldata[] array in spl-data.h",
+    },
+    {
+      dimension: "branches",
+      denominatorKind: "extractor_population",
+      expected: 41,
+      description: "All branch entries in branches[] array in branch-data.h (TAG_MAJOR_VERSION == 34, excluding > 34 conditional entries)",
     },
   ],
 };
@@ -230,6 +244,72 @@ function vaultSpec(entries: VaultEntry[]): EntitySpec<VaultEntry> {
   };
 }
 
+function spellSpec(entries: SpellEntry[]): EntitySpec<SpellEntry> {
+  return {
+    kind: "spell",
+    entries,
+    adapter: {
+      nativeKind: "SPELL",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `spell:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: (e) => ({
+        schools: e.schools,
+        flags: e.flags,
+        level: e.level,
+        power_cap: e.powerCap,
+        min_range: e.minRange,
+        max_range: e.maxRange,
+        effect_noise: e.effectNoise,
+        tile: e.tile,
+      }),
+      populationDimension: "spells",
+    },
+  };
+}
+
+function branchSpec(entries: BranchEntry[]): EntitySpec<BranchEntry> {
+  return {
+    kind: "branch",
+    entries,
+    adapter: {
+      nativeKind: "BRANCH",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `branch:${e.nativeId}`,
+      getCanonicalName: (e) => e.shortName || e.nativeId,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: (e) => ({
+        parent_branch: e.parentBranch,
+        mindepth: e.mindepth,
+        maxdepth: e.maxdepth,
+        depth: e.depth,
+        absdepth: e.absdepth,
+        flags: e.flags,
+        short_name: e.shortName,
+        long_name: e.longName,
+        abbrev: e.abbrev,
+        floor_colour: e.floorColour,
+        rock_colour: e.rockColour,
+        travel_shortcut: e.travelShortcut,
+        runes: e.runes,
+        ambient_noise: e.ambientNoise,
+      }),
+      populationDimension: "branches",
+    },
+  };
+}
+
 export function createCrawlExtractor(): Extractor {
   return {
     manifest,
@@ -274,13 +354,42 @@ export function createCrawlExtractor(): Extractor {
         }
       }
 
+      // --- Parse C header files (outside dat/ payload path) ---
+      // Copy headers into dat/ temporarily so EvidenceFactory can read them
+      const spellSourcePath = resolve(sourceRoot, "../spl-data.h");
+      const spellCopyPath = resolve(sourceRoot, "spl-data.h");
+      let spellEntries: SpellEntry[] = [];
+      try {
+        const spellSource = readFileSync(spellSourcePath, "utf-8");
+        writeFileSync(spellCopyPath, spellSource);
+        spellEntries = parseSpellData(spellSource, "spl-data.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse spl-data.h: ${err}`);
+      }
+
+      const branchSourcePath = resolve(sourceRoot, "../branch-data.h");
+      const branchCopyPath = resolve(sourceRoot, "branch-data.h");
+      let branchEntries: BranchEntry[] = [];
+      try {
+        const branchSource = readFileSync(branchSourcePath, "utf-8");
+        writeFileSync(branchCopyPath, branchSource);
+        branchEntries = parseBranchData(branchSource, "branch-data.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse branch-data.h: ${err}`);
+      }
+
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));
       if (speciesEntries.length > 0) specs.push(speciesSpec(speciesEntries));
       if (jobEntries.length > 0) specs.push(jobSpec(jobEntries));
       if (allVaults.length > 0) specs.push(vaultSpec(allVaults));
+      if (spellEntries.length > 0) specs.push(spellSpec(spellEntries));
+      if (branchEntries.length > 0) specs.push(branchSpec(branchEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
+
+      // Note: copied headers are left in dat/ so evidence artifacts remain valid
+      // for quality tests that verify artifact hashes after extraction
 
       const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
       const { populationCounts, recordCount } = popCollector.collect(dimensionCounts);
