@@ -13,6 +13,10 @@ const SKIP_KEYS = new Set([
   "origin", "scope", "source_identity", "activation",
 ]);
 
+const SKIP_NESTED_KEYS = new Set([
+  "tile_coords", "glyph",
+]);
+
 function formatValue(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "boolean") return value ? "true" : "false";
@@ -44,7 +48,7 @@ const entries = Object.entries(record as Record<string, unknown>)
                 {isObject(value) ? (
                   <table class="w-full text-xs">
                     <tbody>
-                      {Object.entries(value).map(([subKey, subVal]) => (
+                      {Object.entries(value).filter(([subKey]) => !SKIP_NESTED_KEYS.has(subKey)).map(([subKey, subVal]) => (
                         <tr>
                           <td class="py-0.5 pr-3 font-mono text-ib-muted align-top">{subKey}</td>
                           <td class="py-0.5 text-ib-text align-top">{formatValue(subVal)}</td>
