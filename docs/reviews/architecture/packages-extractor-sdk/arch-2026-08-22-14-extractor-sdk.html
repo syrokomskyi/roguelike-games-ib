@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — extractor-sdk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              extractor-sdk
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 · packages/extractor-sdk
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">13</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              source modules
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">3</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              extractor consumers
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">7</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              params in createExtractorContext
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">0</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              extractors calling resolvePopulationCounts
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">&rarr;</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="extractor-runner"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen context assembly into an ExtractorRunner module
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractor-sdk/src/deterministic.ts (createExtractorContext,
+              runExtractorDeterministic)<br />
+              packages/extractor-sdk/src/types.ts (ExtractorContext)<br />
+              tests/extractor-quality/quality-universal.test.ts (lines 126&ndash;144
+              &mdash; manual context assembly)<br />
+              tests/extractor-quality/harness.ts (lines 168&ndash;175 &mdash; repeated
+              context creation per quality check)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; shallow context factory + scattered lifecycle
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  T["test / caller"] --> R1["new ReadonlySourceReader(sourceRoot)"]
+                  T --> R2["new EvidenceFactory(sourceId, digest, sourceRoot)"]
+                  T --> R3["new RefreshIdentityResolver(keys, aliases, sourceId)"]
+                  T --> R4["new CandidateWriter(stagingDir, runId, sourceId, extId, extVer)"]
+                  T --> R5["createNullSchemaFacade()"]
+                  T --> R6["createSourceBinding(...)"]
+                  R1 --> C["createExtractorContext\n(7-param passthrough)"]
+                  R2 --> C
+                  R3 --> C
+                  R4 --> C
+                  R5 --> C
+                  R6 --> C
+                  C --> E["extractor.run(ctx)"]
+                  E --> P["manual population assembly\n(repeated in every extractor)"]
+                  P --> F["ctx.output.flush()"]
+                  F --> DR["runExtractorDeterministic\n(runs twice, hashes)"]
+                  DR --> C
+                  C -.shallow: 1-line object literal.-> C
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class R1,R2,R3,R4,R5,R6,P leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep ExtractorRunner module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  T["test / caller"] -->|3 params| RUN["ExtractorRunner\n.run(extractor, options)"]
+                  subgraph RI["deep implementation"]
+                    A["construct SourceReader\n+ EvidenceFactory\n+ IdentityResolver\n+ CandidateWriter\n+ SchemaFacade"]
+                    B["call extractor.run(ctx)"]
+                    C["collect results"]
+                    D["resolve populations"]
+                    E["flush output"]
+                    F["optional: determinism check"]
+                    A --> B --> C --> D --> E --> F
+                  end
+                  RUN -.contains.-> RI
+                  RUN --> O["RunResult\n{ records, evidence, populations,\n  diagnostics, deterministic? }"]
+                  class RUN,RI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>createExtractorContext</code> is a 7-parameter passthrough
+                &mdash; its interface is as complex as its implementation (one
+                object literal). Every caller manually constructs 6 dependencies
+                with compatible parameters (<code>sourceId</code>,
+                <code>sourceRoot</code>, <code>binding</code>, etc.). The quality
+                harness creates a fresh context <em>per test</em> (8 checks
+                &times; 8 lines each). <code>runExtractorDeterministic</code>
+                lives in the same module but is a separate concern &mdash; it
+                runs the extractor twice and hashes, which is a verification
+                concern, not a context-assembly concern.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep <strong>ExtractorRunner</strong> module that owns
+                the full run lifecycle: constructing all 6 dependencies from
+                high-level parameters, calling <code>extractor.run(ctx)</code>,
+                resolving populations, flushing output, and optionally verifying
+                determinism. The interface shrinks to
+                <code>runner.run(extractor, options)</code> where
+                <code>options</code> is <code>{ sourceRoot, binding, keyRegistry,
+                aliasRegistry, schemas, stagingDir }</code>. The current
+                <code>createExtractorContext</code> becomes an internal detail.
+                <code>runExtractorDeterministic</code> becomes
+                <code>runner.verifyDeterministic(extractor, options)</code>.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all run-lifecycle steps in one module</li>
+              <li>depth: callers pass 3 params, not 6 constructor calls</li>
+              <li>leverage: every test and production invocation benefits</li>
+              <li>tests: one mock interface, not 6 constructor mocks</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="population-collector"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen population.ts into a PopulationCollector that owns the
+                resolve&rarr;write&rarr;count flow
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractor-sdk/src/population.ts (resolvePopulationCounts,
+              checkRecordLoss)<br />
+              packages/extractors/broguece-extractor/src/extractor.ts (lines
+              359&ndash;370 &mdash; inline population pattern)<br />
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts (lines
+              279&ndash;289 &mdash; same pattern)<br />
+              packages/extractors/nethack-extractor/src/extractor.ts (lines
+              127&ndash;135 &mdash; same pattern)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; unused pure functions + duplicated inline pattern
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph SDK["population.ts"]
+                    F1["resolvePopulationCounts\n(contracts, map) → PopulationCount[]"]
+                    F2["checkRecordLoss\n(prev, curr, threshold) → {loss, count}"]
+                  end
+                  F1 -.unused: 0 callers.-> X["∅"]
+                  F2 -.unused: 0 callers.-> X
+                  B["broguece run()"] --> P1["manifest.exhaustivePopulations.map(p → …)"]
+                  C["cataclysm run()"] --> P2["manifest.exhaustivePopulations.map(p → …)"]
+                  N["nethack run()"] --> P3["manifest.exhaustivePopulations.map(p → …)"]
+                  P1 --> W1["ctx.output.writePopulation(…)"]
+                  P2 --> W2["ctx.output.writePopulation(…)"]
+                  P3 --> W3["ctx.output.writePopulation(…)"]
+                  P1 --> RC1["recordCount = reduce(sum)"]
+                  P2 --> RC2["recordCount = reduce(sum)"]
+                  P3 --> RC3["recordCount = reduce(sum)"]
+                  D1["duplicated:\nmap + writePopulation + reduce"] -.leak.-> P1
+                  D1 -.leak.-> P2
+                  D1 -.leak.-> P3
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class F1,F2,P1,P2,P3,D1 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; deep PopulationCollector behind one seam
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  E["extractor run()"] -->|dimensionCounts + manifest| PC["PopulationCollector"]
+                  subgraph PI["deep implementation"]
+                    R["resolve counts\nfrom manifest + dimensionCounts"]
+                    W["write populations\nto ctx.output"]
+                    C["compute recordCount"]
+                    L["check record loss\n(optional)"]
+                    R --> W --> C --> L
+                  end
+                  PC -.contains.-> PI
+                  PC --> O["{ populationCounts, recordCount, lossDetected? }"]
+                  class PC,PI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>resolvePopulationCounts</code> and
+                <code>checkRecordLoss</code> are pure functions extracted for
+                testability, but <strong>no extractor calls them</strong>. All
+                three extractors inline the same 5-line pattern: map
+                <code>manifest.exhaustivePopulations</code> &rarr; write each to
+                <code>ctx.output</code> &rarr; reduce for
+                <code>recordCount</code>. The functions have no
+                <strong>locality</strong> &mdash; the real bugs hide in the
+                callers' copy-pasted code, not in the tested pure functions.
+                BogueCE additionally mixes in a non-manifest population
+                (<code>image_assets</code>), making the pattern diverge.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a <strong>PopulationCollector</strong> that owns the full
+                resolve&rarr;write&rarr;count flow. It takes
+                <code>(manifest, dimensionCounts, ctx.output)</code> and
+                internally resolves counts, writes populations, computes
+                <code>recordCount</code>, and optionally checks record loss.
+                Extractors call one method instead of inlining the pattern. The
+                existing pure functions become internal implementation details.
+                The BrogueCE <code>image_assets</code> extra population is
+                handled by allowing the caller to pass additional ad-hoc
+                populations alongside the manifest.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: population flow in one module, not 3 copies</li>
+              <li>depth: one method replaces 5 inlined lines per extractor</li>
+              <li>leverage: new extractors get population handling for free</li>
+              <li>tests: test the collector, not 3 duplicate caller patterns</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="evidence-seam-leak"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Fix EvidenceFactory seam leak &mdash; receive ReadonlySourceReader
+                instead of raw sourceRoot
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractor-sdk/src/evidence-builder.ts (EvidenceFactory
+              constructor + create method)<br />
+              packages/extractor-sdk/src/source-reader.ts (ReadonlySourceReader
+              &mdash; the existing sandbox)<br />
+              tests/extractor-quality/quality-universal.test.ts (line 139 &mdash;
+              passes sourceRoot string to EvidenceFactory)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; dual I/O paths, sandbox bypassed
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph Caller
+                    SR["sourceRoot: string"]
+                  end
+                  SR --> RSR["ReadonlySourceReader(root)"]
+                  SR --> EF["EvidenceFactory(sourceId, digest, sourceRoot)"]
+                  subgraph RSR_I["sandboxed I/O"]
+                    RS1["resolveSafe(path)"]
+                    RS2["readText(path)"]
+                    RS3["readBytes(path)"]
+                  end
+                  RSR -.contains.-> RSR_I
+                  subgraph EF_I["unsandboxed I/O"]
+                    ES1["resolve(sourceRoot, artifactPath)"]
+                    ES2["readFileSync(fullPath)"]
+                    ES3["sha256File(fullPath)"]
+                  end
+                  EF -.contains.-> EF_I
+                  L1["no path traversal check"] -.leak.-> ES1
+                  L2["no symlink escape check"] -.leak.-> ES1
+                  L3["caller must ensure\nsourceRoot matches"] -.leak.-> SR
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class ES1,ES2,ES3,L1,L2,L3 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; single I/O seam through ReadonlySourceReader
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  RSR["ReadonlySourceReader"] --> EF["EvidenceFactory(sourceId, digest, reader)"]
+                  subgraph EF_I["delegates to sandbox"]
+                    D1["reader.readBytes(artifactPath)"]
+                    D2["reader.readText(artifactPath)"]
+                    D3["sha256File(reader.resolveSafe(path))"]
+                    D1 --> D3
+                  end
+                  EF -.contains.-> EF_I
+                  RSR -.provides sandboxed I/O.-> EF
+                  class EF,EF_I deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>EvidenceFactory</code> takes a raw
+                <code>sourceRoot: string</code> and does its own
+                <code>resolve()</code> + <code>readFileSync()</code>. This
+                bypasses the <code>ReadonlySourceReader</code> sandbox &mdash; no
+                path-traversal check, no symlink-escape check. Two modules
+                independently resolve and read files from the same root. The
+                caller must ensure <code>sourceRoot</code> matches between the
+                reader and the factory, but nothing enforces this.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Change <code>EvidenceFactory</code> to receive a
+                <code>ReadonlySourceReader</code> instead of a
+                <code>sourceRoot</code> string. The factory calls
+                <code>reader.readBytes()</code> for SHA-256 and
+                <code>reader.readText()</code> for fragment hashes. Path
+                resolution goes through <code>reader.resolveSafe()</code>. The
+                sandbox is the single I/O seam. The constructor becomes
+                <code>EvidenceFactory(sourceId, bindingDigest, reader)</code>.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all file I/O behind one sandboxed seam</li>
+              <li>depth: sandbox guarantees extend to evidence hashing</li>
+              <li>leverage: no caller-side sourceRoot matching needed</li>
+              <li>tests: mock ReadonlySourceReader, not fs + path</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="entity-spec-mass-interface"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Narrow the EntitySpec mass interface &mdash; 13 fields to 3 +
+                adapter
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractor-sdk/src/entity-pipeline.ts (EntitySpec
+              interface, runEntityPipeline)<br />
+              packages/extractors/broguece-extractor/src/extractor.ts
+              (simpleSpec workaround, 9-param helper)<br />
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts (4
+              spec builders, each 13 fields)<br />
+              packages/extractors/nethack-extractor/src/extractor.ts (2 inline
+              specs, each 13 fields)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 13-field mass interface
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph Spec["EntitySpec&lt;E&gt; — 13 fields"]
+                    F1["kind"]
+                    F2["nativeKind"]
+                    F3["originActorId"]
+                    F4["entries: E[]"]
+                    F5["getSourcePath(entry) → string"]
+                    F6["getSymbolName(entry) → string"]
+                    F7["getSlug(entry) → string"]
+                    F8["getNativeId(entry) → string"]
+                    F9["getCanonicalName(entry) → string"]
+                    F10["getOriginalName(entry) → string"]
+                    F11["getAttributes(entry) → Record"]
+                    F12["getLineRange(entry) → {start, end}"]
+                    F13["getDataKey(entry) → string"]
+                    F14["skip?(entry) → boolean"]
+                    F15["populationDimension?"]
+                  end
+                  Spec -->|every extractor\nimplements all 13| E1["broguece: 11 specs\n+ simpleSpec workaround"]
+                  Spec -->|every extractor\nimplements all 13| E2["cataclysm: 4 specs\n× 13 fields each"]
+                  Spec -->|every extractor\nimplements all 13| E3["nethack: 2 specs\n× 13 fields each"]
+                  W["simpleSpec helper\n(9 params itself)"] -.workaround for mass interface.-> E1
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,W leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; 3-field base + adapter interface
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph Base["EntitySpec&lt;E&gt; — 3 fields"]
+                    B1["kind"]
+                    B2["entries: E[]"]
+                    B3["adapter: EntityAdapter&lt;E&gt;"]
+                  end
+                  subgraph Adapter["EntityAdapter&lt;E&gt; — defaults provided"]
+                    A1["identity: { nativeKind, originActorId, populationDimension }"]
+                    A2["resolve(entry) → { slug, nativeId, sourcePath, symbolName, dataKey }"]
+                    A3["names(entry) → { canonical, original }"]
+                    A4["attributes(entry) → Record"]
+                    A5["evidence(entry) → { lineStart, lineEnd }"]
+                    A6["skip?(entry) → boolean"]
+                  end
+                  Base --> Adapter
+                  Base -->|one adapter per extractor| E1["broguece: 11 adapters\n(grouped by pattern)"]
+                  Base -->|one adapter per extractor| E2["cataclysm: 4 adapters"]
+                  Base -->|one adapter per extractor| E3["nethack: 2 adapters"]
+                  class Base,Adapter deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>EntitySpec&lt;E&gt;</code> has 13 fields, most of which
+                are getter functions. Every extractor must implement all 13
+                &mdash; even when 8 are constant per extractor (e.g.
+                <code>originActorId</code>, <code>getSourcePath</code> pattern).
+                The broguece extractor created a <code>simpleSpec</code> helper
+                with 9 parameters as a workaround, proving the interface is too
+                wide. The <strong>deletion test</strong> fails: deleting
+                <code>EntitySpec</code> would just move the 13 fields into each
+                extractor's inline code &mdash; but the friction is in the
+                <em>shape</em>, not the count. The pipeline pushes complexity to
+                the caller instead of absorbing it.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Split <code>EntitySpec</code> into a 3-field base
+                (<code>kind</code>, <code>entries</code>,
+                <code>adapter</code>) and an <code>EntityAdapter&lt;E&gt;</code>
+                interface that groups the 12 getters into cohesive clusters:
+                <code>identity</code> (constant per extractor),
+                <code>resolve(entry)</code> (slug + nativeId + sourcePath +
+                symbolName + dataKey), <code>names(entry)</code>,
+                <code>attributes(entry)</code>,
+                <code>evidence(entry)</code>, <code>skip?(entry)</code>. Provide
+                a <code>createEntityAdapter</code> builder with defaults for
+                constant fields. The pipeline's
+                <code>runEntityPipeline</code> calls
+                <code>spec.adapter.resolve(entry)</code> instead of 6 individual
+                getters. The <code>simpleSpec</code> workaround becomes
+                unnecessary.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: adapter groups related getters cohesively</li>
+              <li>depth: pipeline absorbs resolution logic, not just dispatches</li>
+              <li>leverage: new entity kinds need only an adapter, not 13 fields</li>
+              <li>tests: adapter is mockable as one unit</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#extractor-runner"
+            >Deepen context assembly into an ExtractorRunner first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          The <code>createExtractorContext</code> passthrough is the single
+          largest source of friction for every consumer of the SDK. Every test,
+          every quality check, and every production invocation manually
+          constructs 6 dependencies with compatible parameters. Deepening this
+          into an <strong>ExtractorRunner</strong> creates the seam that
+          Candidate 02 (PopulationCollector) plugs into &mdash; the runner owns
+          the lifecycle, the collector owns the population flow within it.
+          Candidate 03 (EvidenceFactory seam leak) becomes a natural part of the
+          runner's internal construction: the runner creates the
+          <code>ReadonlySourceReader</code> once and passes it to both the
+          context and the <code>EvidenceFactory</code>. Without this deepening
+          first, the other candidates improve parts without improving the whole.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> One interface for run lifecycle
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> PopulationCollector plugs in
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> EvidenceFactory gets reader
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> EntitySpec narrows last
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from extractor-sdk/src/* (13 modules, ~850 lines),
+        broguece-extractor, cataclysm-bn-extractor, nethack-extractor, and the
+        quality test harness on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>

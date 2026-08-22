@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — broguece-extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              broguece-extractor
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 · packages/extractors/broguece-extractor
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">1,536</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines of source
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">11</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              entity kinds extracted
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">390</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines in run() method
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">0</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              parser unit tests
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">&rarr;</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="entity-pipeline"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen the run() method into an Entity Pipeline
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/extractor.ts (lines
+              290&ndash;678)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; flat 390-line run() method
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  C[ctx] --> R["run() — 390 lines"]
+                  subgraph RI["flat sequence"]
+                    M1["creatures block\n(inline envelope + record + evidence)"]
+                    M2["terrain block\n(inline envelope + record + evidence)"]
+                    M3["items block × 10 tables\n(inline envelope + record + evidence)"]
+                    M4["7 × writeEntityRecord calls\n(14-field params each)"]
+                    M5["image assets block\n(inline envelope + record + evidence)"]
+                    M6["population counts\n(hard-coded expected numbers)"]
+                    M1 --> M2 --> M3 --> M4 --> M5 --> M6
+                  end
+                  R -.contains.-> RI
+                  S1["glyphMap + sprite extraction\ninterleaved in blocks"] -.leak.-> M1
+                  S1 -.leak.-> M2
+                  S1 -.leak.-> M3
+                  E1["makeRecordEnvelope\n(module-level)"] -.leak.-> M1
+                  E1 -.leak.-> M2
+                  E1 -.leak.-> M3
+                  E1 -.leak.-> M5
+                  W1["writeEntityRecord\n(module-level)"] -.leak.-> M4
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class S1,E1,W1,M1,M2,M3,M4,M5 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep Entity Pipeline module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  C[ctx] -->|small seam| P[Entity Pipeline]
+                  subgraph PI["deep implementation"]
+                    S["entity specs\n(declarative per-kind)"]
+                    R["resolve + envelope\n(unified for all kinds)"]
+                    A["attribute mapper\n(per-kind function)"]
+                    E["evidence builder\n(unified for all kinds)"]
+                    N["population collector\n(from specs)"]
+                    S --> R --> A --> E --> N
+                  end
+                  P -.contains.-> PI
+                  P --> O["records + evidence + populations"]
+                  SP["Sprite Pipeline\n(adapter)"] -.-> A
+                  class P,PI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The run() method is a 390-line flat sequence of 11 entity-type
+                blocks. Three blocks (creatures, terrain, items) use inline
+                envelope+record+evidence construction; seven use the
+                writeEntityRecord helper with a 14-field interface. Adding a new
+                entity kind means appending another block and touching the
+                population section. Two record-writing patterns coexist without
+                reason &mdash; the helper was added later but the first three
+                were never migrated.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep Entity Pipeline module that owns the
+                parse&rarr;resolve&rarr;envelope&rarr;attributes&rarr;evidence&rarr;count
+                flow. Each entity kind becomes a declarative specification
+                (parse function, record kind, native kind, slug strategy,
+                attribute mapper, evidence symbol). The pipeline iterates over
+                specs, unifying both record-writing patterns. Population counts
+                are derived from specs, not hard-coded. Sprite extraction
+                becomes an adapter passed to the pipeline.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all entity flow in one module</li>
+              <li>depth: run() becomes a one-liner</li>
+              <li>leverage: new entity kinds are specs, not blocks</li>
+              <li>tests: each spec testable in isolation</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="catalog-parser-factory"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen c-parser.ts into a Catalog Parser factory
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/c-parser.ts (853 lines,
+              10 parsers)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 10 copy-paste parsers
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S[C source text] --> P1[parseMonsterCatalog\n76 lines]
+                  S --> P2[parseTileCatalog\n66 lines]
+                  S --> P3[parseItemTable\n45 lines]
+                  S --> P4[parseDungeonFeatureCatalog\n57 lines]
+                  S --> P5[parseLightCatalog\n58 lines]
+                  S --> P6[parseMutationCatalog\n59 lines]
+                  S --> P7[parseMonsterClassCatalog\n52 lines]
+                  S --> P8[parseStatusEffectCatalog\n40 lines]
+                  S --> P9[parseMonsterBehaviorCatalog\n36 lines]
+                  S --> P10[parseMonsterAbilityCatalog\n36 lines]
+                  D1["duplicated: line split\n+ catalog start detection\n+ }; termination"] -.leak.-> P1
+                  D2["duplicated: multi-line\naccumulation logic"] -.leak.-> P4
+                  D2 -.leak.-> P5
+                  D2 -.leak.-> P6
+                  D2 -.leak.-> P7
+                  D3["duplicated: regex field\nextraction + parseInt"] -.leak.-> P4
+                  D3 -.leak.-> P5
+                  D3 -.leak.-> P6
+                  D3 -.leak.-> P7
+                  U["parseEntryFields\n(only used by item table)"] -. orphan .-> P3
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class D1,D2,D3,U leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep Catalog Parser
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S[C source text] -->|small seam| CP[Catalog Parser]
+                  subgraph CPI["deep implementation"]
+                    SL["line scanner\n(start marker + termination)"]
+                    ED["entry detector\n(per-catalog strategy)"]
+                    ML["multi-line accumulator\n(brace/quote/string aware)"]
+                    FE["field extractor\n(parseEntryFields, shared)"]
+                    SL --> ED --> ML --> FE
+                  end
+                  CP -.contains.-> CPI
+                  CP --> O["typed entries + line ranges"]
+                  SP1["monster spec\nglyph+stats extraction"] -.-> CP
+                  SP2["tile spec\nglyph+flags extraction"] -.-> CP
+                  SP3["item spec\nfield-index extraction"] -.-> CP
+                  SP4["7 catalog specs\ncomment/string detection"] -.-> CP
+                  class CP,CPI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                853 lines with 10 parsers, 7 of which follow the same pattern:
+                split lines, find catalog start, loop until <code>};</code>,
+                match comment or string for entry name, accumulate multi-line
+                entries, extract fields via regex. The shared scaffolding is
+                duplicated. <code>parseEntryFields</code> (lines 330&ndash;356)
+                handles nested braces and strings correctly but is only used by
+                the item table parser &mdash; the other 6 catalog parsers use
+                naive <code>split(",")</code> which breaks on nested braces.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a deep C Catalog Parser module that encapsulates the
+                line-scanning, entry-detection, multi-line-accumulation, and
+                field-extraction patterns. Each catalog becomes a specification
+                (start marker pattern, entry detector, field extractors) rather
+                than a full function. <code>parseEntryFields</code> becomes the
+                shared field extractor for all parsers, fixing the latent
+                nested-brace bug in the 6 catalog parsers that use naive
+                splitting.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: parsing scaffolding in one place</li>
+              <li>depth: each catalog is a spec, not a function</li>
+              <li>leverage: new catalogs are specs, not 50-line functions</li>
+              <li>tests: spec-level tests with synthetic C fragments</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="envelope-sdk"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Extract makeRecordEnvelope into the extractor SDK
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >cross-package</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/extractor.ts:221&ndash;249
+              &middot; packages/extractors/nethack-extractor/src/extractor.ts:53&ndash;80
+              &middot; packages/extractors/cataclysm-bn-extractor/src/extractor.ts:88&ndash;115
+              &middot; packages/extractor-sdk/src/types.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; envelope duplicated across 3 extractors
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\ntypes only"] -. no builder .-> X["extractors must\nbuild envelopes themselves"]
+                  B1["broguece\nmakeRecordEnvelope\n(5 params, includes recordType)"]
+                  B2["nethack\nmakeRecordEnvelope\n(4 params, no recordType)"]
+                  B3["cataclysm-bn\nmakeRecordEnvelope\n(4 params, no recordType)"]
+                  X --> B1
+                  X --> B2
+                  X --> B3
+                  B1 -. "schema + scope + origin\n+ epistemic + aliases\nidentical in all 3" .-> B2
+                  B2 -. identical .-> B3
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class X,B1,B2,B3 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; SDK owns the envelope seam
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\ncreateRecordEnvelope(sourceId, kind, key, id, actorId)"]
+                  B1[broguece extractor]
+                  B2[nethack extractor]
+                  B3[cataclysm-bn extractor]
+                  SDK -->|small seam| B1
+                  SDK --> B2
+                  SDK --> B3
+                  class SDK deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The envelope construction (schema, id, key, record_type,
+                language, scope, origin, epistemic, aliases) is duplicated
+                identically across all three extractors. The broguece version
+                passes <code>recordType</code> as a parameter; the other two
+                don't &mdash; a silent drift. The SDK defines the types but not
+                the builder, so each extractor re-implements the same 20-line
+                function.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Add a <code>createRecordEnvelope</code> function to the
+                extractor SDK, behind the existing seam. Extractors call it
+                instead of re-implementing it. The SDK becomes the single
+                source of truth for envelope shape. The
+                <code>recordType</code> parameter drift is resolved by making it
+                optional with a default of <code>"definition"</code>.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: envelope shape in one module</li>
+              <li>depth: SDK hides envelope construction</li>
+              <li>leverage: all extractors benefit from fixes</li>
+              <li>tests: one envelope test, not three</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="sprite-pipeline"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Consolidate sprite extraction into a Sprite Pipeline
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/extractor.ts:63&ndash;127
+              (buildGlyphIndexMap, glyphToTileCoords, extractSprite,
+              readPngDimensions) &middot; lines 297&ndash;307 (tile sheet
+              loading + process.cwd dependency)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; sprite logic interleaved with record writing
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  RH["Rogue.h"] --> G["buildGlyphIndexMap\n(module-level, 18 lines)"]
+                  G --> TC["glyphToTileCoords\n(module-level, 10 lines)"]
+                  TP["tiles.png"] --> EX["extractSprite\n(module-level, 19 lines)"]
+                  TC --> EX
+                  EX -. "inline in creature block" .-> C["creature record\nattributes.sprite_path"]
+                  EX -. "inline in terrain block" .-> T["terrain record\nattributes.sprite_path"]
+                  EX -. "inline in item block × 10" .-> I["item record\nattributes.sprite_path"]
+                  PWD["process.cwd()"] -. "non-deterministic\ndirectory dependency" .-> EX
+                  PNG["readPngDimensions\n(module-level, 6 lines)"] -. "only used for\nimage_asset records" .-> IA
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class PWD,EX,TC,G leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one deep Sprite Pipeline
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  RH["Rogue.h"] -->|small seam| SP[Sprite Pipeline]
+                  TP["tiles.png"] --> SP
+                  subgraph SPI["deep implementation"]
+                    G["glyph index map"]
+                    TC["tile coordinate math"]
+                    EX["sprite extraction\n+ file I/O"]
+                    PNG["PNG dimension reader"]
+                    G --> TC --> EX
+                    PNG --> EX
+                  end
+                  SP -.contains.-> SPI
+                  SP -->|relative path or null| C[creature attributes]
+                  SP -->|relative path or null| T[terrain attributes]
+                  SP -->|relative path or null| I[item attributes]
+                  SP -->|dimensions| IA[image asset attributes]
+                  class SP,SPI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                Glyph mapping, tile coordinate math, and sprite file I/O are
+                interleaved with record writing in run(). Four module-level
+                functions (53 lines) exist only to serve run(). The
+                <code>process.cwd()</code> call (line 306) makes the extractor
+                environment-sensitive &mdash; the sprite output directory
+                depends on the working directory, not the context.
+                <code>readPngDimensions</code> is used for image_asset records
+                but lives next to sprite code, creating false locality.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create a Sprite Pipeline module that owns glyph-to-coordinate
+                mapping, tile sheet reading, sprite extraction, and PNG
+                dimension reading. The extractor passes glyph + tile sheet
+                buffer; the pipeline returns a relative path. The output
+                directory is passed via the extractor context, not
+                <code>process.cwd()</code>. The pipeline is an adapter that the
+                Entity Pipeline (Candidate 01) can call per-entity.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all sprite logic in one module</li>
+              <li>depth: glyph math hidden behind a seam</li>
+              <li>leverage: testable without real source tree</li>
+              <li>tests: synthetic tile sheet fixtures</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="stale-barrel"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 05
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Fix the stale index.ts barrel export
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                >Speculative</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/index.ts
+            </p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The barrel exports <code>parseEnum</code>,
+                <code>parseMonsterCatalog</code>,
+                <code>parseTileCatalog</code>, <code>parseItemTable</code> but
+                not the 7 newer parsers (<code>parseDungeonFeatureCatalog</code>,
+                etc.). Meanwhile <code>extractor.ts</code> imports those 7
+                directly from <code>c-parser.ts</code>, bypassing the barrel.
+                External consumers who import from the barrel cannot access the
+                newer parsers.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Update the barrel to export all 10 parsers and their types.
+                This is a one-line fix, not a deepening &mdash; but it signals
+                that the barrel is not maintained as new parsers are added. If
+                Candidate 02 (Catalog Parser factory) is implemented, the barrel
+                would export the factory + spec types instead.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: barrel is the single import surface</li>
+              <li>leverage: external consumers get all parsers</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#entity-pipeline"
+            >Deepen run() into an Entity Pipeline first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          The 390-line run() method is the single largest source of friction.
+          It forces every reader to hold 11 entity-type blocks in their head
+          simultaneously, hosts two contradictory record-writing patterns, and
+          interleaves sprite extraction with record construction. Deepening it
+          into an Entity Pipeline creates the seam that Candidates 02 and 04
+          plug into &mdash; the catalog parser becomes a spec, and the sprite
+          pipeline becomes an adapter. Without this deepening first, the other
+          candidates improve parts without improving the whole.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> Declarative entity specs
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> Unified record writing
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> Population from specs
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> Sprite as adapter
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from extractor.ts (683 lines), c-parser.ts (853 lines),
+        index.ts (23 lines), extractor-sdk/src/* (11 modules), nethack-extractor,
+        cataclysm-bn-extractor, and the quality test harness on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>

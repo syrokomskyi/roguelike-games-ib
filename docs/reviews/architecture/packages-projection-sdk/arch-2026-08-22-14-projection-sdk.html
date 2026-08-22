@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — projection-sdk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700">
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              projection-sdk
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 · packages/projection-sdk
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">10</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              source files
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">18</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              consumer files
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">0</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              test files
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">5 dead exports</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              no consumer references
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded border border-slate-500 bg-white"></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">→</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="deepen-store"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-violet-700">
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen ProjectionStore — absorb shallow query modules
+              </h2>
+            </div>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Strong</span>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/projection-sdk/src/{open,records,claims,graph,coverage,sources,evidence,index}.ts
+              · apps/mcp/src/tools/{records,claims,graph,compare,evidence,coverage}.ts
+              · apps/web/src/lib/{page-data,resolve,evidence}.ts
+              · packages/obsidian-builder/src/render-record.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700">
+                Before · data bag with shallow satellites
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  OP[openProjection] --> PS[ProjectionStore struct: 11 public fields]
+                  PS -->|raw array| C1[claims.ts: filter one-liner]
+                  PS -->|raw array| G1[graph.ts: filter one-liner]
+                  PS -->|raw array| S1[sources.ts: find one-liner]
+                  PS -->|raw array| E1[evidence.ts: filter + URL builder]
+                  PS -->|raw array| CV1[coverage.ts: filter one-liner]
+                  PS -->|raw array| R1[records.ts: find one-liner]
+                  C1 -. 1-line impl .-> C1
+                  G1 -. 1-line impl .-> G1
+                  S1 -. 1-line impl .-> S1
+                  CV1 -. 1-line impl .-> CV1
+                  W[Web consumer] -->|reaches into 6 fields| PS
+                  M[MCP consumer] -->|reaches into 7 fields| PS
+                  O[Obsidian builder] -->|reaches into 8 fields| PS
+                  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+                  class C1,G1,S1,CV1,R1,W,M,O leak
+              </pre>
+            </div>
+            <div class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                After · one deep ProjectionStore module
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  D[distDir] -->|small seam| PS[ProjectionStore]
+                  subgraph PSI[Deep implementation]
+                    RL[Read manifest + validate]
+                    RR[Read records + keyMap + aliasMap]
+                    RS[Read sources + relations + claims]
+                    RE[Read evidence + coverage]
+                    Q1[Query: claimsForRecord]
+                    Q2[Query: relationsForRecord]
+                    Q3[Query: evidenceForRecord + URL]
+                    Q4[Query: resolveRecord by id/key/alias]
+                    Q5[Query: coverageForSource]
+                    RL --> RR --> RS --> RE
+                  end
+                  PS -->|resolveRecord| W[Web consumer]
+                  PS -->|claimsForRecord| M[MCP consumer]
+                  PS -->|evidenceForRecord| O[Obsidian builder]
+                  PS -.contains.-> PSI
+                  class PS,PSI deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                ProjectionStore is a struct with 11 public fields. Six submodules
+                each wrap a <em>read</em> function (only called from openProjection)
+                and 1–2 one-liner query helpers. The modules are shallow —
+                interface ≈ implementation. Every consumer reaches into raw arrays
+                and calls free functions, so there is no locality: the logic for
+                "evidence for a record" is duplicated in render-record.ts and
+                web/evidence.ts independently.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Make ProjectionStore a deep module. The <em>read</em> functions
+                become private implementation details of openProjection. The
+                one-liner query helpers become methods on the store. Consumers
+                interact through the store's interface — resolveRecord,
+                claimsForRecord, relationsForRecord, evidenceForRecord — not by
+                reaching into raw arrays and calling free functions. The store
+                owns its data and provides query operations with locality.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: all projection query logic in one module</li>
+              <li>leverage: one interface for all query operations</li>
+              <li>depth: store interface smaller than implementation</li>
+              <li>tests: test through store interface, not raw arrays</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="dead-resolution-api"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-violet-700">
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Eliminate dead resolution API in records.ts
+              </h2>
+            </div>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Strong</span>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/projection-sdk/src/{records,open,index}.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700">
+                Before · two parallel resolution APIs
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph RT[records.ts — dead]
+                    F1[findRecordById]
+                    F2[findRecordByKey]
+                    F3[resolveKeyToId]
+                    F4[resolveAliasToKey]
+                    F5[resolveAliasToId]
+                  end
+                  subgraph OT[open.ts — alive]
+                    R1[resolveRecordById]
+                    R2[resolveRecordByKey]
+                    R3[resolveRecordByAlias]
+                    R4[resolveRecord]
+                  end
+                  RT -. 0 consumers .-> X[Dead code]
+                  OT --> W[Web · MCP · Obsidian]
+                  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+                  class F1,F2,F3,F4,F5,X leak
+              </pre>
+            </div>
+            <div class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                After · single resolution API
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  subgraph OT[open.ts / ProjectionStore]
+                    R1[resolveRecordById]
+                    R2[resolveRecordByKey]
+                    R3[resolveRecordByAlias]
+                    R4[resolveRecord]
+                  end
+                  OT --> W[Web · MCP · Obsidian]
+                  RT[records.ts: readRecords + readKeyMap + readAliasMap only]
+                  RT -->|internal| OT
+                  class OT deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                records.ts exports five functions — findRecordById,
+                findRecordByKey, resolveKeyToId, resolveAliasToKey,
+                resolveAliasToId — that no consumer ever calls. The open.ts
+                versions (resolveRecordById, resolveRecordByKey,
+                resolveRecordByAlias, resolveRecord) are used instead. Two
+                parallel APIs for the same concept; one is dead weight that
+                confuses AI navigation.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Delete the five unused functions from records.ts and remove their
+                exports from index.ts. Keep only readRecords, readKeyMap,
+                readAliasMap (used internally by openProjection) and the KeyMap
+                and AliasMap types. If Candidate 01 is adopted, these survivors
+                become private to the deepened ProjectionStore.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: one resolution path</li>
+              <li>leverage: less surface to learn</li>
+              <li>depth: fewer trivial wrappers</li>
+              <li>tests: no dead code to maintain</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="dead-authority"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-violet-700">
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Remove speculative authority module
+              </h2>
+            </div>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Worth exploring</span>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/projection-sdk/src/{authority,open,index}.ts
+              · packages/laboratory-runtime/src/schema.ts (independent)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700">
+                Before · authority set but never checked
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  A[authority.ts]
+                  A --> F1[canonicalAuthority — called once]
+                  A --> F2[laboratoryAuthority — 0 callers]
+                  A --> F3[isCanonical — 0 callers]
+                  A --> F4[isLaboratory — 0 callers]
+                  OP[openProjection] -->|sets authority| PS[ProjectionStore.authority]
+                  PS -. 0 consumers read .-> X[Dead field]
+                  LR[laboratory-runtime] -->|own isCanonicalRecordId| LR2[Independent]
+                  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+                  class F2,F3,F4,X leak
+              </pre>
+            </div>
+            <div class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                After · authority added when needed
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  OP[openProjection] --> PS[ProjectionStore: canonicalHash only]
+                  LR[laboratory-runtime] -->|own isCanonicalRecordId| LR2[Independent]
+                  F[Future: second authority type] -.->|add then| PS
+                  class PS deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                authority.ts exports six symbols. canonicalAuthority is called
+                once (from openProjection). laboratoryAuthority, isCanonical, and
+                isLaboratory have zero callers. The AuthorityContext field on
+                ProjectionStore is set but never read by any consumer. The
+                laboratory-runtime package has its own independent
+                isCanonicalRecordId / isLaboratoryRecordId — it does not use
+                projection-sdk's authority at all. The module is speculative.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Remove authority.ts entirely. Drop the authority field from
+                ProjectionStore. The canonicalHash already identifies the
+                projection's authority — a separate AuthorityContext wrapper adds
+                no value until a second authority type actually needs to flow
+                through the store. If that day comes, add the module then with
+                real consumers.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: no dead concepts to navigate</li>
+              <li>leverage: simpler store interface</li>
+              <li>depth: no speculative abstraction</li>
+              <li>tests: no dead paths to cover</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="dedup-manifest"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-violet-700">
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deduplicate manifest validation
+              </h2>
+            </div>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Worth exploring</span>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/projection-sdk/src/{open,manifest}.ts
+              · apps/web/src/lib/{context,verify}.ts
+              · apps/mcp/src/context.ts
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700">
+                Before · manifest read 2–3 times per distDir
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  CW[createWebContext] -->|read + validate| M1[manifest.json]
+                  CW -->|calls openProjection| OP[openProjection]
+                  OP -->|read + validate again| M1
+                  CM[createMcpContext] -->|read| M1
+                  CM -->|calls openProjection| OP
+                  VW[verifyMaterialization] -->|read + validate| M1
+                  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+                  class M1,CW,OP,VW leak
+              </pre>
+            </div>
+            <div class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white">
+              <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                After · openProjection validates once
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  CW[createWebContext] -->|calls openProjection| OP[openProjection]
+                  CM[createMcpContext] -->|calls openProjection| OP
+                  VW[verifyMaterialization] -->|readManifest only| M1[manifest.json]
+                  OP -->|read + validate once| M1
+                  OP -->|exposes manifest| PS[ProjectionStore]
+                  CW -->|reads from store| PS
+                  class OP,PS deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                openProjection reads and validates the manifest. createWebContext
+                independently reads and validates the same manifest, then calls
+                openProjection which reads and validates again. createMcpContext
+                reads the manifest separately too. verifyMaterialization does its
+                own read-and-validate. The same file is read and checked 2–3
+                times for the same distDir.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                openProjection is the single validation point. It already throws
+                on unsupported schema. Expose the manifest (or its metadata
+                fields) through ProjectionStore so callers don't need to
+                re-read. createWebContext and createMcpContext call openProjection
+                and get the manifest from the store. verifyMaterialization keeps
+                its own lightweight check since it runs before opening a store.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: one validation path</li>
+              <li>leverage: manifest from store, not re-read</li>
+              <li>depth: openProjection owns validation</li>
+              <li>tests: one test for manifest validation</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300">
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#deepen-store"
+            >Deepen ProjectionStore first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          It is the root deepening that subsumes the others. When ProjectionStore
+          becomes a deep module, the six shallow satellite modules collapse into
+          private implementation details, the dead resolution API in records.ts
+          disappears, and the manifest validation can be internalized. The store
+          gains locality — all query logic lives behind one interface — and
+          consumers stop reaching into raw arrays. This also creates the first
+          testable seam: today there are zero test files for projection-sdk
+          because there is no interface to test through.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> Collapse 6 shallow modules
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> Delete 5 dead exports
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> Internalize manifest check
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> Create first test seam
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from projection-sdk source (10 files), 18 consumer files
+        across apps/web, apps/mcp, and packages/obsidian-builder, grep for dead
+        exports, and the laboratory-runtime package on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>
