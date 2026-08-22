@@ -3,9 +3,9 @@ import Base from "../../layouts/Base.astro";
 import { resolve } from "node:path";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
-import { resolveRecordRoute } from "../../lib/resolve";
 import { evidenceForRecord } from "../../lib/evidence";
 import { claimsForRecord, claimsReferencingRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import RecordHeader from "../../components/RecordHeader.astro";
 import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
@@ -16,17 +16,15 @@ const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../..
 export async function getStaticPaths() {
   const staticDistDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
   const ctx = await createWebContext(staticDistDir);
-  return ctx.store.records.map((record) => ({ params: { key: record.key } }));
+  return ctx.store.records.map((record) => ({
+    params: { key: record.key },
+    props: { record },
+  }));
 }
 
-const key = Astro.params.key as string;
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
-
-const resolved = resolveRecordRoute(ctx.store, key);
-if (!resolved) throw new Error(`Record route could not be resolved: ${key}`);
-
-const { record, resolvedFrom, currentKey } = resolved;
+const record = Astro.props.record as CanonicalRecord;
 const claims = claimsForRecord(ctx.store.claims, record.id);
 const refClaims = claimsReferencingRecord(ctx.store.claims, record.id);
 const { outgoing, incoming } = relationsForRecord(ctx.store.relations, record.id);
@@ -40,8 +38,6 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
 <Base title={record.key} metadata={meta}>
   <div class="space-y-6">
     <RecordHeader record={record} authority="canonical" assertionState={assertionState} canonicalHash={ctx.canonicalHash} />
-    {resolvedFrom === "alias" && <p class="rounded-lg border border-ib-amber/30 bg-ib-amber/10 px-4 py-2 text-sm text-ib-amber">Redirected from alias to current key: {currentKey}</p>}
-
     <RecordAttributes record={record} />
 
     <section>

@@ -10,7 +10,10 @@ const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../..
 export async function getStaticPaths() {
   const staticDistDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
   const ctx = await createWebContext(staticDistDir);
-  const recordIds = new Set(ctx.store.evidence.flatMap((evidence) => [evidence.source_id, evidence.id]).filter(Boolean));
+  // Individual evidence is rendered on its canonical record page. Limiting this
+  // index route to source-level dossiers keeps the CDN build bounded rather than
+  // emitting one duplicate page for every evidence fragment.
+  const recordIds = new Set(ctx.store.evidence.map((evidence) => evidence.source_id).filter(Boolean));
   return [...recordIds].map((recordId) => ({ params: { recordId } }));
 }
 

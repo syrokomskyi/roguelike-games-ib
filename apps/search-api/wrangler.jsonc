@@ -14,7 +14,7 @@
   ],
   "vars": {
     "EMBEDDING_MODEL": "@cf/baai/bge-m3",
-    "ALLOWED_ORIGINS": "http://localhost:4321"
+    "ALLOWED_ORIGINS": "https://asciium.com,http://localhost:4321"
   },
   "secrets": {
     "required": ["INDEXING_TOKEN"]
