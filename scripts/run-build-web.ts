@@ -1,5 +1,5 @@
 import { materialize } from "../packages/materializer/src/index.ts";
-import { buildObsidianVault } from "../packages/obsidian-builder/src/build.ts";
+import { buildObsidianVault } from "../packages/builders/obsidian-builder/src/build.ts";
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 

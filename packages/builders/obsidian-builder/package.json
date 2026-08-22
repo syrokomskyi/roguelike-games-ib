@@ -15,7 +15,7 @@
   "scripts": {
     "build:check": "tsc --noEmit",
     "test": "vitest run",
-    "build:obsidian": "tsx ../../scripts/run-build-obsidian.ts"
+    "build:obsidian": "tsx ../../../scripts/run-build-obsidian.ts"
   },
   "dependencies": {
     "@roguelike-games-ib/knowledge-core": "workspace:*",
