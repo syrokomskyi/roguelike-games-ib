@@ -68,12 +68,12 @@ const spriteUrl = spritePath ? `/sprites/broguece/${spritePath.split("/").pop()}
     {spriteUrl && (
       <section>
         <h2 class="atlas-label mb-4 text-ib-muted">00 / Sprite</h2>
-        <div class="h-48 w-48 overflow-hidden rounded-xl border border-ib-border bg-black flex items-center justify-center">
+        <div class="overflow-hidden rounded-xl border border-ib-border" style="width:192px">
           <img
             src={spriteUrl}
             alt={`Sprite of ${record.key}`}
             loading="lazy"
-            class="h-full w-full object-contain"
+            class="h-auto w-full"
           />
         </div>
       </section>

@@ -15,7 +15,7 @@ const { ancestry } = Astro.props;
     {ancestry.map((node: AncestryNode) => (
       <div style={`margin-left: ${node.depth * 1.5}rem`} class="flex items-center gap-2 text-sm">
         <span class="text-ib-muted">{node.depth === 0 ? "●" : "└─"}</span>
-        <img src={keyToSpriteUrl(node.record_key)} alt="" loading="lazy" class="h-5 w-5 shrink-0 object-contain" onerror="this.style.visibility='hidden'" />
+        <img src={keyToSpriteUrl(node.record_key)} alt="" loading="lazy" class="h-auto w-5 shrink-0" onerror="this.style.visibility='hidden'" />
         <a href={`/records/${node.record_key}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{node.record_key}</a>
         {node.title ? <span class="text-ib-muted">— {node.title}</span> : ""}
       </div>
