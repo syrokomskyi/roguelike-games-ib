@@ -1,7 +1,7 @@
 ---
 id: ADR-0007
 title: Remap brogueCE non-canonical recordKinds to existing taxonomy kinds
-status: accepted
+status: implemented
 scope: project-wide
 decider: architecture
 reviewers:
@@ -11,7 +11,7 @@ related:
   - ADR-0006
 created: 2026-08-22
 accepted: 2026-08-22
-implementedAt:
+implementedAt: 2026-08-22
 closedAt: null
 ---
 
