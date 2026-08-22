@@ -24,8 +24,10 @@
     "test:unit": "pnpm exec vitest run --project unit 2>/dev/null || pnpm exec vitest run",
     "test:integration": "pnpm exec vitest run --project integration 2>/dev/null || echo 'no integration project'",
     "test:conformance": "pnpm exec vitest run tests/conformance/",
+    "test:quality": "pnpm exec vitest run tests/extractor-quality/",
     "release:check": "pnpm exec turbo run release:check",
-    "release:evidence": "pnpm exec turbo run release:evidence"
+    "release:evidence": "pnpm exec turbo run release:evidence",
+    "prepare": "bash scripts/pre-commit-quality.sh --install 2>/dev/null || true"
   },
   "devDependencies": {
     "@roguelike-games-ib/broguece-extractor": "workspace:*",

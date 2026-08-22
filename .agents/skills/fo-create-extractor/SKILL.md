@@ -149,7 +149,9 @@ For JSON source, line numbers may be null if the parser doesn't track them.
 
 ### 7. Create quality tests
 
-Create `tests/extractor-quality/<game-name>-quality.test.ts` using the quality harness:
+Create `tests/extractor-quality/<game-name>-quality.test.ts` using the quality harness.
+
+**This step is mandatory.** A guard test (`tests/extractor-quality/guard.test.ts`) automatically verifies that every package under `packages/extractors/` has a corresponding `<game>-quality.test.ts` file that imports `runQualityChecks`. If you skip this step, `pnpm test` will fail.
 
 ```typescript
 import { describe } from "vitest";
@@ -166,15 +168,19 @@ describe(`<game>-quality`, () => {
 });
 ```
 
-The harness runs all six quality dimensions. See `tests/extractor-quality/harness.ts` for the full API.
+The harness runs all quality dimensions. See `tests/extractor-quality/harness.ts` for the full API.
 
 ### 8. Run quality tests
 
 Run the quality tests and fix any failures:
 
 ```bash
-pnpm exec vitest run tests/extractor-quality/<game-name>-quality.test.ts
+pnpm test:quality
 ```
+
+This runs all tests in `tests/extractor-quality/`, including the guard test and all `<game>-quality.test.ts` files.
+
+**Enforcement:** A pre-commit hook (`scripts/pre-commit-quality.sh`) automatically runs `pnpm test:quality` when files under `packages/extractors/` or `tests/extractor-quality/` are staged. The commit will be blocked if any quality test fails. The hook is installed automatically via `pnpm prepare` (runs on `pnpm install`).
 
 Common failures and fixes — consult `fix-patterns.md` for known patterns.
 

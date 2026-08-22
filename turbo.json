@@ -11,6 +11,9 @@
     "test": {
       "dependsOn": ["^build:check"]
     },
+    "test:quality": {
+      "dependsOn": ["^build:check"]
+    },
     "verify": {},
     "source:status": {},
     "materialize": {

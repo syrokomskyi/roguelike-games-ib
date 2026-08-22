@@ -15,7 +15,9 @@ All game-specific extractor packages MUST live under `packages/extractors/`. Do 
 
 Use the `fo-create-extractor` skill (`.agents/skills/fo-create-extractor/`) when creating a new game-specific extractor. The skill guides the full workflow: source analysis, parser implementation, population denominators, and quality testing.
 
-Quality tests for extractors live in `tests/extractor-quality/`. Import `runQualityChecks` from `harness.ts` and create a `<game>-quality.test.ts` file that validates the extractor against six quality dimensions (determinism, population completeness, evidence coverage, schema validation, record loss, performance). See ADR-0003 for details.
+Quality tests for extractors live in `tests/extractor-quality/`. Import `runQualityChecks` from `harness.ts` and create a `<game>-quality.test.ts` file that validates the extractor against all quality dimensions (determinism, population completeness, evidence coverage, schema validation, record loss, performance, and more). See ADR-0003 for details.
+
+**Enforcement:** A guard test (`tests/extractor-quality/guard.test.ts`) automatically verifies that every package under `packages/extractors/` has a corresponding quality test file. If a quality test is missing, `pnpm test` will fail. Additionally, a pre-commit hook (`scripts/pre-commit-quality.sh`) runs `pnpm test:quality` when extractor files are staged — the commit is blocked if any quality test fails. The hook is installed automatically via `pnpm prepare` (runs on `pnpm install`). Run quality tests manually with `pnpm test:quality`.
 
 ## No Direct Projection Edits
 
