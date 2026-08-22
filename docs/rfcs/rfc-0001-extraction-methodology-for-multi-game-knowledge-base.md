@@ -15,6 +15,7 @@ owners:
 reviewers: []
 createdAt: 2026-08-22
 updatedAt: 2026-08-22
+enhancedAt: 2026-08-22
 implementedAt:
 closedAt:
 supersedes: []
@@ -65,6 +66,8 @@ nonGoals:
   - Does not define duplicate native_id handling — covered by ADR-0004
   - Does not modify the extractor SDK TypeScript interfaces — the SDK already supports the methodology
   - Does not define projection or search indexing — downstream concerns
+  - Does not address attribute name changes across source versions — this is a deriver/concept layer concern, not an extraction methodology issue
+  - Does not retroactively taxonomy-align existing brogueCE recordKinds (image_asset, dungeon_feature, light, monster_class, monster_behavior, monster_ability) — these are existing technical debt requiring a separate taxonomy cleanup effort
 # RFC-0268: OPTIONAL machine-checkable acceptance probes, executed on-demand
 # via `pnpm exec werkstatt run rfc.acceptance.run --id <this-rfc-id>` (never
 # automatically inside build pipelines). Closed probe vocabulary — see
@@ -151,7 +154,7 @@ This RFC establishes a formal extraction methodology consisting of eleven princi
 
 - **ADR-0003** (extractor creation skill) — this RFC provides the methodology that the skill teaches. The skill guides agents through the workflow; this RFC defines the rules the workflow follows.
 - **ADR-0004** (duplicate native_id namespacing) — this RFC references ADR-0004 as the specific resolution for a common extraction issue within the methodology.
-- **game-content-taxonomy.yaml** — this RFC confirms the existing taxonomy as the canonical kind vocabulary and defines the process for mapping game-local types to it. No taxonomy changes are proposed.
+- game-content-taxonomy.yaml — this RFC confirms the existing taxonomy as the canonical kind vocabulary and defines the process for mapping game-local types to it. One taxonomy addition is proposed: `profession` must be added to the `abilities_character` category (see Principle 9).
 - **extractor-sdk EntitySpec/EntityAdapter** — the SDK already supports the methodology. `EntitySpec.kind` maps to canonical kinds, `EntityAdapter.nativeKind` carries the game-local type name, and `EntityAdapter.getAttributes` preserves game-local attributes without normalization.
 - **record-envelope.schema.yaml** — all extracted records are `definition` type with `kind` from the taxonomy. This RFC does not change the schema.
 - **evidence.schema.yaml** — every record has an evidence anchor. This RFC formalizes that as a principle.
@@ -311,7 +314,11 @@ If a game data type genuinely does not fit any existing canonical kind:
 3. Document the mapping rationale
 4. Update `record-types.yaml` if a new `record_type` is needed (unlikely — `definition` covers all extracted data)
 
-**Current status**: the existing taxonomy covers all identified data types across the four current game sources. No taxonomy extensions are needed for the planned extraction work.
+**Current status**: the existing taxonomy covers all identified **unextracted** data types across the four current game sources. No taxonomy extensions are needed for the planned **new** extraction work.
+
+**Known gap**: `profession` is used by existing extractors (crawl, cataclysm-bn) and in this RFC's mapping table, but is missing from `game-content-taxonomy.yaml`. This RFC proposes adding `profession` to the `abilities_character` category as part of its implementation. This is the only taxonomy addition required by this RFC.
+
+**Existing technical debt**: several brogueCE recordKinds (`image_asset`, `dungeon_feature`, `light`, `monster_class`, `monster_behavior`, `monster_ability`) are not in the taxonomy. These were added before the taxonomy was formalized. A separate taxonomy cleanup effort should address them — this RFC does not propose changes to those kinds.
 
 ### Principle 10: Versioning and refresh
 
@@ -362,10 +369,10 @@ The existing SDK types already support the methodology. No new types are needed:
 ## Rollout
 
 - **Existing extractors** are already compliant with most principles. They use `EntitySpec`/`EntityAdapter`, declare `recordKinds` and `exhaustivePopulations`, and produce evidence anchors via `runEntityPipeline`. No migration is needed for existing records.
-- **New extraction work** (Crawl vaults, Cataclysm-BN bionics/traps/recipes, NetHack artifacts/levels) follows the methodology from the start. Each new data type is mapped per Principle 3, gets a population contract per Principle 5, and is added to the existing extractor for that game.
+- **New extraction work** (Crawl vaults/spells/abilities/branches, Cataclysm-BN bionics/traps/recipes/skills/effects/factions, NetHack artifacts/traps/levels/roles/races/branches/skills) follows the methodology from the start. Each new data type is mapped per Principle 3, gets a population contract per Principle 5, and is added to the existing extractor for that game.
 - **New games** follow the onboarding process (Principle 8) from registration through conformance testing.
 - **ADR-0005** (companion) documents the onboarding process as a local decision and references this RFC.
-- **ADR-0006** (companion) documents the taxonomy coverage analysis confirming no taxonomy extensions are needed.
+- **ADR-0006** (companion) documents the taxonomy coverage analysis for unextracted data types confirming no taxonomy extensions are needed for planned new extraction work. The `profession` gap (already-extracted kind missing from taxonomy) is addressed by this RFC directly.
 - The `fo-create-extractor` skill (ADR-0003) should be updated to reference this RFC as the methodology source.
 
 ## Alternatives considered
@@ -395,7 +402,8 @@ The existing SDK types already support the methodology. No new types are needed:
 - [ ] RFC-0001 validated with `rfc.validate` and passes
 - [ ] ADR-0005 (new game onboarding process) created and references this RFC
 - [ ] ADR-0006 (taxonomy coverage confirmation) created and references this RFC
-- [ ] Existing extractors reviewed for compliance with all 10 principles
+- [ ] `profession` added to `game-content-taxonomy.yaml` in the `abilities_character` category
+- [ ] Existing extractors reviewed for compliance with all 11 principles
 - [ ] `fo-create-extractor` skill updated to reference this RFC as methodology source
 - [ ] First new extraction (Crawl vaults or Cataclysm-BN bionics) follows the methodology and passes conformance
 - [ ] `AGENTS.md` updated with a reference to this RFC for extractor creation
