@@ -3,6 +3,7 @@ import Base from "../../../layouts/Base.astro";
 import { createWebContext } from "../../../lib/context";
 import { getPageMetadata } from "../../../lib/metadata";
 import { systemsForSource } from "../../../lib/page-data";
+import { keyToSpriteUrl } from "../../../lib/sprite";
 import { resolve } from "node:path";
 
 export async function getStaticPaths() {
@@ -33,10 +34,13 @@ const { sourceId, records, meta } = Astro.props;
     {records.length > 0 ? (
       <div class="grid gap-3 sm:grid-cols-2">
         {records.map((r) => (
-          <a href={`/records/${r.key}/`} class="block rounded-lg border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
-            <div class="font-mono text-xs text-ib-accent">{r.key}</div>
-            {r.title && <div class="mt-1 text-sm text-ib-text">{r.title}</div>}
-            {r.summary && <div class="mt-1 text-xs text-ib-muted line-clamp-2">{r.summary}</div>}
+          <a href={`/records/${r.key}/`} class="flex items-start gap-2 rounded-lg border border-ib-border bg-ib-surface p-4 transition-colors hover:border-ib-accent">
+            <img src={keyToSpriteUrl(r.key)} alt="" loading="lazy" class="mt-0.5 h-8 w-8 shrink-0 object-contain" onerror="this.style.display='none'" />
+            <div class="min-w-0">
+              <div class="font-mono text-xs text-ib-accent">{r.key}</div>
+              {r.title && <div class="mt-1 text-sm text-ib-text">{r.title}</div>}
+              {r.summary && <div class="mt-1 text-xs text-ib-muted line-clamp-2">{r.summary}</div>}
+            </div>
           </a>
         ))}
       </div>
