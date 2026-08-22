@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
 import { evidenceForRecord } from "../../lib/evidence";
-import { claimsForRecord, claimsReferencingRecord, relationsForRecord } from "@roguelike-games-ib/projection-sdk";
+import { claimsForRecord, claimsReferencingRecord, relationsForRecord, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import RecordHeader from "../../components/RecordHeader.astro";
 import RecordAttributes from "../../components/RecordAttributes.astro";
@@ -36,6 +36,12 @@ const assertionState = claims.length > 0 ? claims[0].assertion_state : undefined
 
 const isImageAsset = record.record_type === "image_asset" || (record as Record<string, unknown>)["kind"] === "image_asset";
 const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "asset" && e.media && e.github_url) : null;
+
+const tileCoords = ((record as Record<string, unknown>)["attributes"] as Record<string, unknown> | undefined)?.["tile_coords"] as { x: number; y: number; w: number; h: number } | null | undefined;
+const tilesPngEvidence = tileCoords ? ctx.store.evidence.find((e) => e.evidence_kind === "asset" && e.artifact_path?.endsWith("tiles.png")) : null;
+const tilesUrl = tilesPngEvidence ? buildEvidenceUrl(tilesPngEvidence, ctx.store.sources) : null;
+const PNG_W = 2048;
+const PNG_H = 5568;
 ---
 
 <Base title={record.key} metadata={meta}>
@@ -59,6 +65,19 @@ const imageEvidence = isImageAsset ? evidence.find((e) => e.evidence_kind === "a
             {imageEvidence.media.width && imageEvidence.media.height && ` · ${imageEvidence.media.width}×${imageEvidence.media.height}px`}
           </p>
         )}
+      </section>
+    )}
+
+    {tileCoords && tilesUrl && (
+      <section>
+        <h2 class="atlas-label mb-4 text-ib-muted">00 / Sprite</h2>
+        <div
+          class="h-48 w-48 overflow-hidden rounded-xl border border-ib-border bg-black"
+          style={`background-image: url(${tilesUrl}); background-position: -${tileCoords.x}px -${tileCoords.y}px; background-size: ${PNG_W}px ${PNG_H}px; background-repeat: no-repeat;`}
+          role="img"
+          aria-label={`Sprite of ${record.key}`}
+        >
+        </div>
       </section>
     )}
 

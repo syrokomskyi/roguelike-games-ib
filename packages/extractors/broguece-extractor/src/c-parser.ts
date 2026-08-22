@@ -55,6 +55,7 @@ export function parseEnum(source: string, enumName: string): EnumEntry | null {
 export interface MonsterEntry {
   nativeId: string;
   name: string;
+  glyph: string | null;
   maxHp: number;
   defense: number;
   accuracy: number;
@@ -123,6 +124,9 @@ function finalizeMonsterEntry(
   const name = nameMatch[1];
   const nativeId = name.replace(/\s+/g, "_").toLowerCase();
 
+  const glyphMatch = fullText.match(/\{0,\s*"[^"]+",\s*(G_[A-Z_][A-Z0-9_]*)/);
+  const glyph = glyphMatch ? glyphMatch[1] : null;
+
   const hpMatch = fullText.match(/\{0,\s*"[^"]+",\s*[^,]+,\s*[^,]+,\s*(\d+)/);
   const maxHp = hpMatch ? parseInt(hpMatch[1], 10) : 0;
 
@@ -163,6 +167,7 @@ function finalizeMonsterEntry(
   return {
     nativeId,
     name,
+    glyph,
     maxHp,
     defense,
     accuracy,

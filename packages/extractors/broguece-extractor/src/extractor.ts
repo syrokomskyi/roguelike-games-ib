@@ -48,6 +48,42 @@ function readPngDimensions(buf: Buffer): { width: number; height: number } | nul
   return { width, height };
 }
 
+const TILE_WIDTH = 128;
+const TILE_HEIGHT = 232;
+const TILE_COLS = 16;
+const GLYPH_BASE = 128;
+
+function buildGlyphIndexMap(rogueH: string): Map<string, number> {
+  const map = new Map<string, number>();
+  const enumMatch = rogueH.match(/enum\s+displayGlyph\s*\{([^}]+)\}/);
+  if (!enumMatch) return map;
+  const entries = enumMatch[1].split(",");
+  let currentVal = GLYPH_BASE;
+  for (const entry of entries) {
+    const trimmed = entry.trim();
+    if (!trimmed || trimmed.startsWith("//") || trimmed.startsWith("/*")) continue;
+    const nameMatch = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
+    if (nameMatch) {
+      const eqMatch = trimmed.match(/=\s*(\d+)/);
+      if (eqMatch) currentVal = parseInt(eqMatch[1], 10);
+      map.set(nameMatch[1], currentVal);
+      currentVal++;
+    }
+  }
+  return map;
+}
+
+function glyphToTileCoords(glyph: string | null, glyphMap: Map<string, number>): { x: number; y: number; w: number; h: number } | null {
+  if (!glyph) return null;
+  const val = glyphMap.get(glyph);
+  if (val == null) return null;
+  const tileIndex = val - GLYPH_BASE;
+  if (tileIndex < 0) return null;
+  const row = Math.floor(tileIndex / TILE_COLS);
+  const col = tileIndex % TILE_COLS;
+  return { x: col * TILE_WIDTH, y: row * TILE_HEIGHT, w: TILE_WIDTH, h: TILE_HEIGHT };
+}
+
 function readImageMedia(
   source: { readBytes: (path: string) => Buffer },
   relativePath: string,
@@ -135,6 +171,8 @@ export function createBrogueCEExtractor(): Extractor {
       const rogueH = ctx.source.readText(ROGUE_H);
       const globalsC = ctx.source.readText(GLOBALS_C);
 
+      const glyphMap = buildGlyphIndexMap(rogueH);
+
       let creatureCount = 0;
       let terrainCount = 0;
       let itemCount = 0;
@@ -164,6 +202,8 @@ export function createBrogueCEExtractor(): Extractor {
           },
           activation: "active" as const,
           attributes: {
+            glyph: m.glyph,
+            tile_coords: glyphToTileCoords(m.glyph, glyphMap),
             max_hp: m.maxHp,
             defense: m.defense,
             accuracy: m.accuracy,
