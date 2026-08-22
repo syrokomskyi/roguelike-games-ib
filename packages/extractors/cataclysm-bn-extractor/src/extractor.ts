@@ -16,6 +16,7 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
+import { createRecordEnvelope } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseMonsterJson,
   parseItemJson,
@@ -85,35 +86,6 @@ function namespaceDuplicateId(
   return { slug, nativeId };
 }
 
-function makeRecordEnvelope(
-  sourceId: string,
-  key: string,
-  id: string,
-  originActorId: string,
-) {
-  return {
-    schema: "rgkb/game-definition@2",
-    id,
-    key,
-    record_type: "definition",
-    language: "en",
-    scope: {
-      source_id: sourceId,
-      scope_kind: "source" as const,
-    },
-    origin: {
-      kind: "extractor" as const,
-      actor_id: originActorId,
-      run_id: null,
-    },
-    epistemic: {
-      status: "observed" as const,
-      confidence: "verified" as const,
-    },
-    aliases: [] as string[],
-  };
-}
-
 const MONSTER_DIRS = ["monsters"];
 const ITEM_DIRS = ["items"];
 const MUTATION_DIRS = ["mutations"];
@@ -148,7 +120,7 @@ export function createCataclysmBNExtractor(): Extractor {
           for (const m of monsters) {
             const slug = m.id.replace(/^mon_/, "").replace(/-/g, "_");
             const resolved = ctx.ids.resolveOrCreate("creature", slug, m.id);
-            const envelope = makeRecordEnvelope(
+            const envelope = createRecordEnvelope(
               ctx.binding.source_id,
               resolved.key,
               resolved.id,
@@ -223,7 +195,7 @@ export function createCataclysmBNExtractor(): Extractor {
           for (const item of items) {
             const { slug, nativeId } = namespaceDuplicateId(item.id, file, "items", seenItemIds);
             const resolved = ctx.ids.resolveOrCreate("item", slug, nativeId);
-            const envelope = makeRecordEnvelope(
+            const envelope = createRecordEnvelope(
               ctx.binding.source_id,
               resolved.key,
               resolved.id,
@@ -288,7 +260,7 @@ export function createCataclysmBNExtractor(): Extractor {
           for (const mut of mutations) {
             const { slug, nativeId } = namespaceDuplicateId(mut.id, file, "mutations", seenMutationIds);
             const resolved = ctx.ids.resolveOrCreate("mutation", slug, nativeId);
-            const envelope = makeRecordEnvelope(
+            const envelope = createRecordEnvelope(
               ctx.binding.source_id,
               resolved.key,
               resolved.id,
@@ -348,7 +320,7 @@ export function createCataclysmBNExtractor(): Extractor {
         for (const prof of professions) {
           const slug = prof.id.replace(/-/g, "_");
           const resolved = ctx.ids.resolveOrCreate("profession", slug, prof.id);
-          const envelope = makeRecordEnvelope(
+          const envelope = createRecordEnvelope(
             ctx.binding.source_id,
             resolved.key,
             resolved.id,

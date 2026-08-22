@@ -59,3 +59,7 @@ export type { DeterministicRunResult } from "./deterministic.ts";
 // Sprite extraction
 export { extractTileSprite } from "./sprite.ts";
 export type { TileCoords } from "./sprite.ts";
+
+// Record envelope
+export { createRecordEnvelope } from "./envelope.ts";
+export type { RecordEnvelope } from "./envelope.ts";

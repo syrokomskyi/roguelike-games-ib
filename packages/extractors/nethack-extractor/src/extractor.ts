@@ -16,6 +16,7 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
+import { createRecordEnvelope } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseMonsters,
   parseObjects,
@@ -50,35 +51,6 @@ const manifest: ExtractorManifest = {
   ],
 };
 
-function makeRecordEnvelope(
-  sourceId: string,
-  key: string,
-  id: string,
-  originActorId: string,
-) {
-  return {
-    schema: "rgkb/game-definition@2",
-    id,
-    key,
-    record_type: "definition",
-    language: "en",
-    scope: {
-      source_id: sourceId,
-      scope_kind: "source" as const,
-    },
-    origin: {
-      kind: "extractor" as const,
-      actor_id: originActorId,
-      run_id: null,
-    },
-    epistemic: {
-      status: "observed" as const,
-      confidence: "verified" as const,
-    },
-    aliases: [] as string[],
-  };
-}
-
 export function createNetHackExtractor(): Extractor {
   return {
     manifest,
@@ -93,7 +65,7 @@ export function createNetHackExtractor(): Extractor {
       for (const m of monsters) {
         const slug = m.nativeId;
         const resolved = ctx.ids.resolveOrCreate("creature", slug, m.nativeId);
-        const envelope = makeRecordEnvelope(
+        const envelope = createRecordEnvelope(
           ctx.binding.source_id,
           resolved.key,
           resolved.id,
@@ -157,7 +129,7 @@ export function createNetHackExtractor(): Extractor {
       for (const obj of objects) {
         const slug = `${obj.objClass}/${obj.nativeId}`;
         const resolved = ctx.ids.resolveOrCreate("item", slug, `${obj.objClass}:${obj.nativeId}`);
-        const envelope = makeRecordEnvelope(
+        const envelope = createRecordEnvelope(
           ctx.binding.source_id,
           resolved.key,
           resolved.id,

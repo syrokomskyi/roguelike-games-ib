@@ -4,13 +4,15 @@
 <non-goals>
   <item>Does not parse JSON or YAML — BrogueCE source is C code only.</item>
   <item>Does not compute design-space relations — factual extraction only.</item>
-</non-goals>
+</non_goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: BrogueCE extractor with monster, tile, and item table parsing.</item>
   <item>Added variant item tables (potion, scroll, wand, charm) from GlobalsBrogue.c.</item>
   <item>Added 7 new entity catalogs: dungeon features, lights, mutations, monster classes, status effects, monster behaviors, monster abilities.</item>
   <item>Extracted writeEntityRecord helper to deduplicate entity record creation.</item>
+  <item>Deepened into Entity Pipeline + Sprite Pipeline: run() is now a declarative spec list, not a 390-line flat sequence.</item>
+  <item>Replaced local makeRecordEnvelope with SDK createRecordEnvelope.</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -19,9 +21,8 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
-import { extractTileSprite } from "@roguelike-games-ib/extractor-sdk";
+import { createRecordEnvelope } from "@roguelike-games-ib/extractor-sdk";
 import {
-  parseEnum,
   parseMonsterCatalog,
   parseTileCatalog,
   parseItemTable,
@@ -43,6 +44,13 @@ import {
   type MonsterBehaviorEntry,
   type MonsterAbilityEntry,
 } from "./c-parser.ts";
+import {
+  buildGlyphIndexMap,
+  createSpritePipeline,
+  readPngDimensions,
+  type SpritePipeline,
+} from "./sprite-pipeline.ts";
+import { runEntityPipeline, type EntitySpec } from "./entity-pipeline.ts";
 import { join } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
@@ -59,72 +67,6 @@ const MIME_MAP: Record<string, string> = {
   ".webp": "image/webp",
   ".bmp": "image/bmp",
 };
-
-function readPngDimensions(buf: Buffer): { width: number; height: number } | null {
-  if (buf.length < 24) return null;
-  if (buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) return null;
-  const width = buf.readUInt32BE(16);
-  const height = buf.readUInt32BE(20);
-  return { width, height };
-}
-
-const TILE_WIDTH = 128;
-const TILE_HEIGHT = 232;
-const TILE_COLS = 16;
-const GLYPH_BASE = 128;
-
-function buildGlyphIndexMap(rogueH: string): Map<string, number> {
-  const map = new Map<string, number>();
-  const enumMatch = rogueH.match(/enum\s+displayGlyph\s*\{([^}]+)\}/);
-  if (!enumMatch) return map;
-  const entries = enumMatch[1].split(",");
-  let currentVal = GLYPH_BASE;
-  for (const entry of entries) {
-    const trimmed = entry.trim();
-    if (!trimmed || trimmed.startsWith("//") || trimmed.startsWith("/*")) continue;
-    const nameMatch = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)/);
-    if (nameMatch) {
-      const eqMatch = trimmed.match(/=\s*(\d+)/);
-      if (eqMatch) currentVal = parseInt(eqMatch[1], 10);
-      map.set(nameMatch[1], currentVal);
-      currentVal++;
-    }
-  }
-  return map;
-}
-
-function glyphToTileCoords(glyph: string | null, glyphMap: Map<string, number>): { x: number; y: number; w: number; h: number } | null {
-  if (!glyph) return null;
-  const val = glyphMap.get(glyph);
-  if (val == null) return null;
-  // BrogueCE fontIndex(): tile sprites start at 256, so tileIndex = glyph + 128 - 2 = glyph + 126
-  // (subtract 2 for G_UP_ARROW/G_DOWN_ARROW which are font glyphs, not tile sprites)
-  const tileIndex = val + 126;
-  const row = Math.floor(tileIndex / TILE_COLS);
-  const col = tileIndex % TILE_COLS;
-  return { x: col * TILE_WIDTH, y: row * TILE_HEIGHT, w: TILE_WIDTH, h: TILE_HEIGHT };
-}
-
-async function extractSprite(
-  glyph: string | null,
-  glyphMap: Map<string, number>,
-  tilesPngBuf: Buffer | null,
-  outDir: string,
-  relPrefix: string,
-  creatureSlug: string,
-): Promise<string | null> {
-  if (!glyph || !tilesPngBuf) return null;
-  const coords = glyphToTileCoords(glyph, glyphMap);
-  if (!coords) return null;
-
-  const fileName = `${creatureSlug}.png`;
-  const outPath = join(outDir, fileName);
-  const relPath = `${relPrefix}/${fileName}`;
-
-  await extractTileSprite(tilesPngBuf, coords, outPath);
-
-  return relPath;
-}
 
 function readImageMedia(
   source: { readBytes: (path: string) => Buffer },
@@ -155,136 +97,150 @@ const manifest: ExtractorManifest = {
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
-    {
-      dimension: "creatures",
-      denominatorKind: "extractor_population",
-      expected: 67,
-      description: "All monsters in monsterCatalog (excluding MK_YOU and NUMBER_MONSTER_KINDS)",
-    },
-    {
-      dimension: "terrain",
-      denominatorKind: "extractor_population",
-      expected: 214,
-      description: "All tile types in tileCatalog",
-    },
-    {
-      dimension: "items",
-      denominatorKind: "extractor_population",
-      expected: 97,
-      description: "All items across weapon/armor/food/key/staff/ring/potion/scroll/wand/charm tables",
-    },
-    {
-      dimension: "dungeon_features",
-      denominatorKind: "extractor_population",
-      expected: 58,
-      description: "All entries in dungeonFeatureCatalog",
-    },
-    {
-      dimension: "lights",
-      denominatorKind: "extractor_population",
-      expected: 63,
-      description: "All entries in lightCatalog",
-    },
-    {
-      dimension: "mutations",
-      denominatorKind: "extractor_population",
-      expected: 16,
-      description: "All entries in mutationCatalog",
-    },
-    {
-      dimension: "monster_classes",
-      denominatorKind: "extractor_population",
-      expected: 15,
-      description: "All entries in monsterClassCatalog",
-    },
-    {
-      dimension: "status_effects",
-      denominatorKind: "extractor_population",
-      expected: 26,
-      description: "All entries in statusEffectCatalog",
-    },
-    {
-      dimension: "monster_behaviors",
-      denominatorKind: "extractor_population",
-      expected: 29,
-      description: "All entries in monsterBehaviorCatalog",
-    },
-    {
-      dimension: "monster_abilities",
-      denominatorKind: "extractor_population",
-      expected: 18,
-      description: "All entries in monsterAbilityCatalog",
-    },
+    { dimension: "creatures", denominatorKind: "extractor_population", expected: 67, description: "All monsters in monsterCatalog (excluding MK_YOU and NUMBER_MONSTER_KINDS)" },
+    { dimension: "terrain", denominatorKind: "extractor_population", expected: 214, description: "All tile types in tileCatalog" },
+    { dimension: "items", denominatorKind: "extractor_population", expected: 97, description: "All items across weapon/armor/food/key/staff/ring/potion/scroll/wand/charm tables" },
+    { dimension: "dungeon_features", denominatorKind: "extractor_population", expected: 58, description: "All entries in dungeonFeatureCatalog" },
+    { dimension: "lights", denominatorKind: "extractor_population", expected: 63, description: "All entries in lightCatalog" },
+    { dimension: "mutations", denominatorKind: "extractor_population", expected: 16, description: "All entries in mutationCatalog" },
+    { dimension: "monster_classes", denominatorKind: "extractor_population", expected: 15, description: "All entries in monsterClassCatalog" },
+    { dimension: "status_effects", denominatorKind: "extractor_population", expected: 26, description: "All entries in statusEffectCatalog" },
+    { dimension: "monster_behaviors", denominatorKind: "extractor_population", expected: 29, description: "All entries in monsterBehaviorCatalog" },
+    { dimension: "monster_abilities", denominatorKind: "extractor_population", expected: 18, description: "All entries in monsterAbilityCatalog" },
   ],
 };
 
-function makeRecordEnvelope(
-  sourceId: string,
-  recordType: string,
-  key: string,
-  id: string,
-  originActorId: string,
-) {
+// --- Entity spec builders ---
+
+function creatureSpec(
+  monsters: MonsterEntry[],
+  sourcePath: string,
+  sprite: SpritePipeline,
+): EntitySpec<MonsterEntry> {
   return {
-    schema: "rgkb/game-definition@2",
-    id,
-    key,
-    record_type: "definition",
-    language: "en",
-    scope: {
-      source_id: sourceId,
-      scope_kind: "source" as const,
-    },
-    origin: {
-      kind: "extractor" as const,
-      actor_id: originActorId,
-      run_id: null,
-    },
-    epistemic: {
-      status: "observed" as const,
-      confidence: "verified" as const,
-    },
-    aliases: [] as string[],
+    kind: "creature",
+    nativeKind: "monster",
+    sourcePath,
+    symbolName: "monsterCatalog",
+    entries: monsters,
+    skip: (m) => m.name === "you",
+    getSlug: (m) => m.nativeId,
+    getNativeId: (m) => m.nativeId,
+    getCanonicalName: (m) => m.name,
+    getOriginalName: (m) => m.name,
+    getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+    getDataKey: (m) => m.nativeId,
+    getAttributes: async (m) => ({
+      glyph: m.glyph,
+      tile_coords: sprite.getCoords(m.glyph),
+      sprite_path: await sprite.extractSprite(m.glyph, m.nativeId),
+      max_hp: m.maxHp,
+      defense: m.defense,
+      accuracy: m.accuracy,
+      damage: m.damage,
+      turns_between_regen: m.turnsBetweenRegen,
+      movement_speed: m.movementSpeed,
+      attack_speed: m.attackSpeed,
+      is_large: m.isLarge,
+      blood_type: m.bloodType,
+      flags: m.flags,
+      ability_flags: m.abilityFlags,
+    }),
   };
 }
 
-interface EntityWriteParams {
-  ctx: ExtractorContext;
-  kind: string;
-  nativeKind: string;
-  slug: string;
-  nativeIdPrefixed: string;
-  canonicalName: string;
-  originalName: string;
-  sourcePath: string;
-  symbolName: string;
-  attributes: Record<string, unknown>;
-  lineStart: number;
-  lineEnd: number;
-  dataKey: string;
+function terrainSpec(
+  tiles: TileEntry[],
+  sourcePath: string,
+  sprite: SpritePipeline,
+): EntitySpec<TileEntry> {
+  return {
+    kind: "terrain",
+    nativeKind: "tileType",
+    sourcePath,
+    symbolName: "tileCatalog",
+    entries: tiles,
+    getSlug: (t) => t.nativeId.toLowerCase(),
+    getNativeId: (t) => t.nativeId,
+    getCanonicalName: (t) => t.description || t.nativeId,
+    getOriginalName: (t) => t.nativeId,
+    getLineRange: (t) => ({ lineStart: t.lineStart, lineEnd: t.lineEnd }),
+    getDataKey: (t) => t.nativeId,
+    getAttributes: async (t) => ({
+      glyph: t.glyph,
+      tile_coords: sprite.getCoords(t.glyph),
+      sprite_path: await sprite.extractSprite(t.glyph, `terrain-${t.nativeId.toLowerCase()}`),
+      draw_priority: t.drawPriority,
+      flags: t.flags,
+      mech_flags: t.mechFlags,
+      flavor_text: t.flavorText,
+    }),
+  };
 }
 
-function writeEntityRecord(params: EntityWriteParams): void {
-  const { ctx, kind, nativeKind, slug, nativeIdPrefixed, canonicalName, originalName, sourcePath, symbolName, attributes, lineStart, lineEnd, dataKey } = params;
-  const resolved = ctx.ids.resolveOrCreate(kind as never, slug, nativeIdPrefixed);
-  const envelope = makeRecordEnvelope(ctx.binding.source_id, kind, resolved.key, resolved.id, "broguece-factual");
-  const record = {
-    ...envelope,
+function itemSpec(
+  items: ItemTableEntry[],
+  tableName: string,
+  arrayName: string,
+  sourcePath: string,
+  sprite: SpritePipeline,
+): EntitySpec<ItemTableEntry> {
+  return {
+    kind: "item",
+    nativeKind: tableName,
+    sourcePath,
+    symbolName: arrayName,
+    entries: items,
+    getSlug: (item) => `${tableName}/${item.nativeId}`,
+    getNativeId: (item) => `${tableName}:${item.nativeId}`,
+    getCanonicalName: (item) => item.name,
+    getOriginalName: (item) => item.name,
+    getLineRange: (item) => ({ lineStart: item.lineStart, lineEnd: item.lineEnd }),
+    getDataKey: (item) => `${tableName}:${item.nativeId}`,
+    getAttributes: async (item) => ({
+      glyph: item.glyph,
+      tile_coords: sprite.getCoords(item.glyph),
+      sprite_path: await sprite.extractSprite(item.glyph, `item-${tableName}-${item.nativeId}`),
+      frequency: item.frequency,
+      market_value: item.marketValue,
+      strength_required: item.strengthRequired,
+      power: item.power,
+      damage_range: item.damageRange,
+      description: item.description,
+    }),
+  };
+}
+
+function simpleSpec<E>(
+  kind: string,
+  nativeKind: string,
+  entries: E[],
+  sourcePath: string,
+  symbolName: string,
+  opts: {
+    getSlug: (e: E) => string;
+    getNativeId: (e: E) => string;
+    getCanonicalName: (e: E) => string;
+    getOriginalName: (e: E) => string;
+    getAttributes: (e: E) => Record<string, unknown>;
+    getLineRange: (e: E) => { lineStart: number; lineEnd: number };
+    getDataKey: (e: E) => string;
+  },
+): EntitySpec<E> {
+  return {
     kind,
-    native_kind: nativeKind,
-    name: { canonical: canonicalName, original: originalName },
-    source_identity: { source_id: ctx.binding.source_id, native_id: nativeIdPrefixed, path: sourcePath },
-    activation: "active" as const,
-    attributes,
-    evidence_refs: [] as string[],
+    nativeKind,
+    sourcePath,
+    symbolName,
+    entries,
+    getSlug: opts.getSlug,
+    getNativeId: opts.getNativeId,
+    getCanonicalName: opts.getCanonicalName,
+    getOriginalName: opts.getOriginalName,
+    getLineRange: opts.getLineRange,
+    getDataKey: opts.getDataKey,
+    getAttributes: async (e) => opts.getAttributes(e),
   };
-  ctx.output.writeRecord(record);
-  const evidence = ctx.evidence.create({
-    artifactPath: sourcePath,
-    locator: { symbol: symbolName, line_start: lineStart, line_end: lineEnd, byte_start: null, byte_end: null, data_key: dataKey },
-    fragmentLines: { lineStart, lineEnd },
-  });
-  ctx.output.writeEvidence(resolved.id, evidence);
 }
 
 export function createBrogueCEExtractor(): Extractor {
@@ -306,124 +262,20 @@ export function createBrogueCEExtractor(): Extractor {
       const SPRITE_DIR = join(process.cwd(), "knowledge/evidence/broguece/sprites");
       const SPRITE_REL_PREFIX = "knowledge/evidence/broguece/sprites";
 
-      let creatureCount = 0;
-      let terrainCount = 0;
-      let itemCount = 0;
+      const sprite = createSpritePipeline(glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX);
 
+      // --- Parse all catalogs ---
       const monsters = parseMonsterCatalog(globalsC);
-      for (const m of monsters) {
-        if (m.name === "you") continue;
-        const slug = m.nativeId;
-        const resolved = ctx.ids.resolveOrCreate("creature", slug, m.nativeId);
-        const envelope = makeRecordEnvelope(
-          ctx.binding.source_id,
-          "creature",
-          resolved.key,
-          resolved.id,
-          "broguece-factual",
-        );
-
-        const record = {
-          ...envelope,
-          kind: "creature",
-          native_kind: "monster",
-          name: { canonical: m.name, original: m.name },
-          source_identity: {
-            source_id: ctx.binding.source_id,
-            native_id: m.nativeId,
-            path: GLOBALS_C,
-          },
-          activation: "active" as const,
-          attributes: {
-            glyph: m.glyph,
-            tile_coords: glyphToTileCoords(m.glyph, glyphMap),
-            sprite_path: await extractSprite(m.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, m.nativeId),
-            max_hp: m.maxHp,
-            defense: m.defense,
-            accuracy: m.accuracy,
-            damage: m.damage,
-            turns_between_regen: m.turnsBetweenRegen,
-            movement_speed: m.movementSpeed,
-            attack_speed: m.attackSpeed,
-            is_large: m.isLarge,
-            blood_type: m.bloodType,
-            flags: m.flags,
-            ability_flags: m.abilityFlags,
-          },
-          evidence_refs: [] as string[],
-        };
-
-        ctx.output.writeRecord(record);
-
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: {
-            symbol: "monsterCatalog",
-            line_start: m.lineStart,
-            line_end: m.lineEnd,
-            byte_start: null,
-            byte_end: null,
-            data_key: m.nativeId,
-          },
-          fragmentLines: { lineStart: m.lineStart, lineEnd: m.lineEnd },
-        });
-        ctx.output.writeEvidence(resolved.id, evidence);
-        creatureCount++;
-      }
-
       const tiles = parseTileCatalog(globalsC);
-      for (const t of tiles) {
-        const slug = t.nativeId.toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("terrain", slug, t.nativeId);
-        const envelope = makeRecordEnvelope(
-          ctx.binding.source_id,
-          "terrain",
-          resolved.key,
-          resolved.id,
-          "broguece-factual",
-        );
+      const dungeonFeatures = parseDungeonFeatureCatalog(globalsC);
+      const lights = parseLightCatalog(globalsC);
+      const mutations = parseMutationCatalog(globalsC);
+      const monsterClasses = parseMonsterClassCatalog(globalsC);
+      const statusEffects = parseStatusEffectCatalog(globalsC);
+      const monsterBehaviors = parseMonsterBehaviorCatalog(globalsC);
+      const monsterAbilities = parseMonsterAbilityCatalog(globalsC);
 
-        const record = {
-          ...envelope,
-          kind: "terrain",
-          native_kind: "tileType",
-          name: { canonical: t.description || t.nativeId, original: t.nativeId },
-          source_identity: {
-            source_id: ctx.binding.source_id,
-            native_id: t.nativeId,
-            path: GLOBALS_C,
-          },
-          activation: "active" as const,
-          attributes: {
-            glyph: t.glyph,
-            tile_coords: glyphToTileCoords(t.glyph, glyphMap),
-            sprite_path: await extractSprite(t.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, `terrain-${t.nativeId.toLowerCase()}`),
-            draw_priority: t.drawPriority,
-            flags: t.flags,
-            mech_flags: t.mechFlags,
-            flavor_text: t.flavorText,
-          },
-          evidence_refs: [] as string[],
-        };
-
-        ctx.output.writeRecord(record);
-
-        const evidence = ctx.evidence.create({
-          artifactPath: GLOBALS_C,
-          locator: {
-            symbol: "tileCatalog",
-            line_start: t.lineStart,
-            line_end: t.lineEnd,
-            byte_start: null,
-            byte_end: null,
-            data_key: t.nativeId,
-          },
-          fragmentLines: { lineStart: t.lineStart, lineEnd: t.lineEnd },
-        });
-        ctx.output.writeEvidence(resolved.id, evidence);
-        terrainCount++;
-      }
-
+      // --- Build item specs (multiple tables share kind "item") ---
       const itemTables: Array<{ name: string; array: string; source: string }> = [
         { name: "weapon", array: "weaponTable", source: GLOBALS_C },
         { name: "armor", array: "armorTable", source: GLOBALS_C },
@@ -437,155 +289,101 @@ export function createBrogueCEExtractor(): Extractor {
         { name: "charm", array: "charmTable_Brogue", source: GLOBALS_BROGUE_C },
       ];
 
+      const itemSpecs: EntitySpec<any>[] = [];
       for (const table of itemTables) {
         const tableSource = ctx.source.readText(table.source);
         const items = parseItemTable(tableSource, table.name, table.array);
-        for (const item of items) {
-          const slug = `${table.name}/${item.nativeId}`;
-          const resolved = ctx.ids.resolveOrCreate("item", slug, `${table.name}:${item.nativeId}`);
-          const envelope = makeRecordEnvelope(
-            ctx.binding.source_id,
-            "item",
-            resolved.key,
-            resolved.id,
-            "broguece-factual",
-          );
-
-          const record = {
-            ...envelope,
-            kind: "item",
-            native_kind: table.name,
-            name: { canonical: item.name, original: item.name },
-            source_identity: {
-              source_id: ctx.binding.source_id,
-              native_id: `${table.name}:${item.nativeId}`,
-              path: table.source,
-            },
-            activation: "active" as const,
-            attributes: {
-              glyph: item.glyph,
-              tile_coords: glyphToTileCoords(item.glyph, glyphMap),
-              sprite_path: await extractSprite(item.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, `item-${table.name}-${item.nativeId}`),
-              frequency: item.frequency,
-              market_value: item.marketValue,
-              strength_required: item.strengthRequired,
-              power: item.power,
-              damage_range: item.damageRange,
-              description: item.description,
-            },
-            evidence_refs: [] as string[],
-          };
-
-          ctx.output.writeRecord(record);
-
-          const evidence = ctx.evidence.create({
-            artifactPath: table.source,
-            locator: {
-              symbol: table.array,
-              line_start: item.lineStart,
-              line_end: item.lineEnd,
-              byte_start: null,
-              byte_end: null,
-              data_key: `${table.name}:${item.nativeId}`,
-            },
-            fragmentLines: { lineStart: item.lineStart, lineEnd: item.lineEnd },
-          });
-          ctx.output.writeEvidence(resolved.id, evidence);
-          itemCount++;
-        }
+        itemSpecs.push(itemSpec(items, table.name, table.array, table.source, sprite));
       }
 
-      // --- Dungeon Features ---
-      const dungeonFeatures = parseDungeonFeatureCatalog(globalsC);
-      for (const df of dungeonFeatures) {
-        writeEntityRecord({
-          ctx, kind: "dungeon_feature", nativeKind: "dungeonFeature",
-          slug: df.nativeId.toLowerCase(), nativeIdPrefixed: `dungeonFeature:${df.nativeId}`,
-          canonicalName: df.description, originalName: df.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "dungeonFeatureCatalog",
-          attributes: { layer: df.layer, start: df.start, decay: df.decay, flags: df.flags },
-          lineStart: df.lineStart, lineEnd: df.lineEnd, dataKey: df.nativeId,
-        });
-      }
+      // --- Build all entity specs in order ---
+      const specs: EntitySpec<any>[] = [
+        creatureSpec(monsters, GLOBALS_C, sprite),
+        terrainSpec(tiles, GLOBALS_C, sprite),
+        ...itemSpecs,
+        simpleSpec("dungeon_feature", "dungeonFeature", dungeonFeatures, GLOBALS_C, "dungeonFeatureCatalog", {
+          getSlug: (df: DungeonFeatureEntry) => df.nativeId.toLowerCase(),
+          getNativeId: (df: DungeonFeatureEntry) => `dungeonFeature:${df.nativeId}`,
+          getCanonicalName: (df: DungeonFeatureEntry) => df.description,
+          getOriginalName: (df: DungeonFeatureEntry) => df.nativeId,
+          getAttributes: (df: DungeonFeatureEntry) => ({ layer: df.layer, start: df.start, decay: df.decay, flags: df.flags }),
+          getLineRange: (df: DungeonFeatureEntry) => ({ lineStart: df.lineStart, lineEnd: df.lineEnd }),
+          getDataKey: (df: DungeonFeatureEntry) => df.nativeId,
+        }),
+        simpleSpec("light", "lightSource", lights, GLOBALS_C, "lightCatalog", {
+          getSlug: (l: LightEntry) => l.nativeId.toLowerCase(),
+          getNativeId: (l: LightEntry) => `lightSource:${l.nativeId}`,
+          getCanonicalName: (l: LightEntry) => l.description,
+          getOriginalName: (l: LightEntry) => l.nativeId,
+          getAttributes: (l: LightEntry) => ({ color: l.color, radius_min: l.radiusMin, radius_max: l.radiusMax, fade_percent: l.fadePercent, pass_through_creatures: l.passThroughCreatures }),
+          getLineRange: (l: LightEntry) => ({ lineStart: l.lineStart, lineEnd: l.lineEnd }),
+          getDataKey: (l: LightEntry) => l.nativeId,
+        }),
+        simpleSpec("mutation", "mutation", mutations, GLOBALS_C, "mutationCatalog", {
+          getSlug: (m: MutationEntry) => m.nativeId,
+          getNativeId: (m: MutationEntry) => `mutation:${m.nativeId}`,
+          getCanonicalName: (m: MutationEntry) => m.name,
+          getOriginalName: (m: MutationEntry) => m.nativeId,
+          getAttributes: (m: MutationEntry) => ({ health_factor: m.healthFactor, move_speed_mult: m.moveSpeedMult, attack_speed_mult: m.attackSpeedMult, defense_mult: m.defenseMult, damage_mult: m.damageMult, description: m.description, can_be_negated: m.canBeNegated }),
+          getLineRange: (m: MutationEntry) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+          getDataKey: (m: MutationEntry) => m.nativeId,
+        }),
+        simpleSpec("monster_class", "monsterClass", monsterClasses, GLOBALS_C, "monsterClassCatalog", {
+          getSlug: (mc: MonsterClassEntry) => mc.nativeId,
+          getNativeId: (mc: MonsterClassEntry) => `monsterClass:${mc.nativeId}`,
+          getCanonicalName: (mc: MonsterClassEntry) => mc.name,
+          getOriginalName: (mc: MonsterClassEntry) => mc.nativeId,
+          getAttributes: (mc: MonsterClassEntry) => ({ frequency: mc.frequency, max_depth: mc.maxDepth, members: mc.members }),
+          getLineRange: (mc: MonsterClassEntry) => ({ lineStart: mc.lineStart, lineEnd: mc.lineEnd }),
+          getDataKey: (mc: MonsterClassEntry) => mc.nativeId,
+        }),
+        simpleSpec("status_effect", "statusEffect", statusEffects, GLOBALS_C, "statusEffectCatalog", {
+          getSlug: (se: StatusEffectEntry) => se.nativeId.toLowerCase(),
+          getNativeId: (se: StatusEffectEntry) => `statusEffect:${se.nativeId}`,
+          getCanonicalName: (se: StatusEffectEntry) => se.name || se.nativeId,
+          getOriginalName: (se: StatusEffectEntry) => se.nativeId,
+          getAttributes: (se: StatusEffectEntry) => ({ is_buff: se.isBuff, display_in_sidebar: se.displayInSidebar }),
+          getLineRange: (se: StatusEffectEntry) => ({ lineStart: se.lineStart, lineEnd: se.lineEnd }),
+          getDataKey: (se: StatusEffectEntry) => se.nativeId,
+        }),
+        simpleSpec("monster_behavior", "monsterBehavior", monsterBehaviors, GLOBALS_C, "monsterBehaviorCatalog", {
+          getSlug: (mb: MonsterBehaviorEntry) => mb.nativeId.toLowerCase(),
+          getNativeId: (mb: MonsterBehaviorEntry) => `monsterBehavior:${mb.nativeId}`,
+          getCanonicalName: (mb: MonsterBehaviorEntry) => mb.description || mb.nativeId,
+          getOriginalName: (mb: MonsterBehaviorEntry) => mb.nativeId,
+          getAttributes: (mb: MonsterBehaviorEntry) => ({ description: mb.description, is_always_active: mb.isAlwaysActive }),
+          getLineRange: (mb: MonsterBehaviorEntry) => ({ lineStart: mb.lineStart, lineEnd: mb.lineEnd }),
+          getDataKey: (mb: MonsterBehaviorEntry) => mb.nativeId,
+        }),
+        simpleSpec("monster_ability", "monsterAbility", monsterAbilities, GLOBALS_C, "monsterAbilityCatalog", {
+          getSlug: (ma: MonsterAbilityEntry) => ma.nativeId.toLowerCase(),
+          getNativeId: (ma: MonsterAbilityEntry) => `monsterAbility:${ma.nativeId}`,
+          getCanonicalName: (ma: MonsterAbilityEntry) => ma.description || ma.nativeId,
+          getOriginalName: (ma: MonsterAbilityEntry) => ma.nativeId,
+          getAttributes: (ma: MonsterAbilityEntry) => ({ description: ma.description, is_always_active: ma.isAlwaysActive }),
+          getLineRange: (ma: MonsterAbilityEntry) => ({ lineStart: ma.lineStart, lineEnd: ma.lineEnd }),
+          getDataKey: (ma: MonsterAbilityEntry) => ma.nativeId,
+        }),
+      ];
 
-      // --- Lights ---
-      const lights = parseLightCatalog(globalsC);
-      for (const light of lights) {
-        writeEntityRecord({
-          ctx, kind: "light", nativeKind: "lightSource",
-          slug: light.nativeId.toLowerCase(), nativeIdPrefixed: `lightSource:${light.nativeId}`,
-          canonicalName: light.description, originalName: light.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "lightCatalog",
-          attributes: { color: light.color, radius_min: light.radiusMin, radius_max: light.radiusMax, fade_percent: light.fadePercent, pass_through_creatures: light.passThroughCreatures },
-          lineStart: light.lineStart, lineEnd: light.lineEnd, dataKey: light.nativeId,
-        });
-      }
+      // --- Run entity pipeline ---
+      const { counts } = await runEntityPipeline(ctx, specs, sprite);
 
-      // --- Mutations ---
-      const mutations = parseMutationCatalog(globalsC);
-      for (const mut of mutations) {
-        writeEntityRecord({
-          ctx, kind: "mutation", nativeKind: "mutation",
-          slug: mut.nativeId, nativeIdPrefixed: `mutation:${mut.nativeId}`,
-          canonicalName: mut.name, originalName: mut.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "mutationCatalog",
-          attributes: { health_factor: mut.healthFactor, move_speed_mult: mut.moveSpeedMult, attack_speed_mult: mut.attackSpeedMult, defense_mult: mut.defenseMult, damage_mult: mut.damageMult, description: mut.description, can_be_negated: mut.canBeNegated },
-          lineStart: mut.lineStart, lineEnd: mut.lineEnd, dataKey: mut.nativeId,
-        });
-      }
+      // Spec indices: 0=creature, 1=terrain, 2..11=item tables, 12=dungeon_feature, 13=light, 14=mutation, 15=monster_class, 16=status_effect, 17=monster_behavior, 18=monster_ability
+      const creatureCount = counts[0] ?? 0;
+      const terrainCount = counts[1] ?? 0;
+      const itemCount = itemSpecs.reduce((sum, _, i) => sum + (counts[2 + i] ?? 0), 0);
+      const itemStartIdx = 2;
+      const simpleStartIdx = itemStartIdx + itemSpecs.length;
+      const dungeonFeatureCount = counts[simpleStartIdx] ?? 0;
+      const lightCount = counts[simpleStartIdx + 1] ?? 0;
+      const mutationCount = counts[simpleStartIdx + 2] ?? 0;
+      const monsterClassCount = counts[simpleStartIdx + 3] ?? 0;
+      const statusEffectCount = counts[simpleStartIdx + 4] ?? 0;
+      const monsterBehaviorCount = counts[simpleStartIdx + 5] ?? 0;
+      const monsterAbilityCount = counts[simpleStartIdx + 6] ?? 0;
 
-      // --- Monster Classes ---
-      const monsterClasses = parseMonsterClassCatalog(globalsC);
-      for (const mc of monsterClasses) {
-        writeEntityRecord({
-          ctx, kind: "monster_class", nativeKind: "monsterClass",
-          slug: mc.nativeId, nativeIdPrefixed: `monsterClass:${mc.nativeId}`,
-          canonicalName: mc.name, originalName: mc.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "monsterClassCatalog",
-          attributes: { frequency: mc.frequency, max_depth: mc.maxDepth, members: mc.members },
-          lineStart: mc.lineStart, lineEnd: mc.lineEnd, dataKey: mc.nativeId,
-        });
-      }
-
-      // --- Status Effects ---
-      const statusEffects = parseStatusEffectCatalog(globalsC);
-      for (const se of statusEffects) {
-        writeEntityRecord({
-          ctx, kind: "status_effect", nativeKind: "statusEffect",
-          slug: se.nativeId.toLowerCase(), nativeIdPrefixed: `statusEffect:${se.nativeId}`,
-          canonicalName: se.name || se.nativeId, originalName: se.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "statusEffectCatalog",
-          attributes: { is_buff: se.isBuff, display_in_sidebar: se.displayInSidebar },
-          lineStart: se.lineStart, lineEnd: se.lineEnd, dataKey: se.nativeId,
-        });
-      }
-
-      // --- Monster Behaviors ---
-      const monsterBehaviors = parseMonsterBehaviorCatalog(globalsC);
-      for (const mb of monsterBehaviors) {
-        writeEntityRecord({
-          ctx, kind: "monster_behavior", nativeKind: "monsterBehavior",
-          slug: mb.nativeId.toLowerCase(), nativeIdPrefixed: `monsterBehavior:${mb.nativeId}`,
-          canonicalName: mb.description || mb.nativeId, originalName: mb.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "monsterBehaviorCatalog",
-          attributes: { description: mb.description, is_always_active: mb.isAlwaysActive },
-          lineStart: mb.lineStart, lineEnd: mb.lineEnd, dataKey: mb.nativeId,
-        });
-      }
-
-      // --- Monster Abilities ---
-      const monsterAbilities = parseMonsterAbilityCatalog(globalsC);
-      for (const ma of monsterAbilities) {
-        writeEntityRecord({
-          ctx, kind: "monster_ability", nativeKind: "monsterAbility",
-          slug: ma.nativeId.toLowerCase(), nativeIdPrefixed: `monsterAbility:${ma.nativeId}`,
-          canonicalName: ma.description || ma.nativeId, originalName: ma.nativeId,
-          sourcePath: GLOBALS_C, symbolName: "monsterAbilityCatalog",
-          attributes: { description: ma.description, is_always_active: ma.isAlwaysActive },
-          lineStart: ma.lineStart, lineEnd: ma.lineEnd, dataKey: ma.nativeId,
-        });
-      }
-
+      // --- Image assets (separate flow — walks the source tree, not a catalog) ---
       let imageAssetCount = 0;
       const imageFiles = ctx.source.walk((p) => {
         const ext = p.toLowerCase().match(/\.[^.]+$/)?.[0] ?? "";
@@ -595,9 +393,8 @@ export function createBrogueCEExtractor(): Extractor {
         const fileName = imgPath.split("/").pop() ?? imgPath;
         const slug = imgPath.replace(/\.[^.]+$/, "").replace(/[/\s]+/g, "-").toLowerCase();
         const resolved = ctx.ids.resolveOrCreate("image_asset", slug, imgPath);
-        const envelope = makeRecordEnvelope(
+        const envelope = createRecordEnvelope(
           ctx.binding.source_id,
-          "image_asset",
           resolved.key,
           resolved.id,
           "broguece-factual",
@@ -643,35 +440,40 @@ export function createBrogueCEExtractor(): Extractor {
         imageAssetCount++;
       }
 
+      // --- Populations ---
       ctx.output.writePopulation("creatures", 67, creatureCount);
       ctx.output.writePopulation("terrain", 214, terrainCount);
       ctx.output.writePopulation("items", 97, itemCount);
       ctx.output.writePopulation("image_assets", imageFiles.length, imageAssetCount);
-      ctx.output.writePopulation("dungeon_features", 58, dungeonFeatures.length);
-      ctx.output.writePopulation("lights", 63, lights.length);
-      ctx.output.writePopulation("mutations", 16, mutations.length);
-      ctx.output.writePopulation("monster_classes", 15, monsterClasses.length);
-      ctx.output.writePopulation("status_effects", 26, statusEffects.length);
-      ctx.output.writePopulation("monster_behaviors", 29, monsterBehaviors.length);
-      ctx.output.writePopulation("monster_abilities", 18, monsterAbilities.length);
+      ctx.output.writePopulation("dungeon_features", 58, dungeonFeatureCount);
+      ctx.output.writePopulation("lights", 63, lightCount);
+      ctx.output.writePopulation("mutations", 16, mutationCount);
+      ctx.output.writePopulation("monster_classes", 15, monsterClassCount);
+      ctx.output.writePopulation("status_effects", 26, statusEffectCount);
+      ctx.output.writePopulation("monster_behaviors", 29, monsterBehaviorCount);
+      ctx.output.writePopulation("monster_abilities", 18, monsterAbilityCount);
+
+      const recordCount = creatureCount + terrainCount + itemCount + imageAssetCount
+        + dungeonFeatureCount + lightCount + mutationCount + monsterClassCount
+        + statusEffectCount + monsterBehaviorCount + monsterAbilityCount;
 
       return {
         extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "broguece-run",
-        recordCount: creatureCount + terrainCount + itemCount + imageAssetCount + dungeonFeatures.length + lights.length + mutations.length + monsterClasses.length + statusEffects.length + monsterBehaviors.length + monsterAbilities.length,
+        recordCount,
         populationCounts: [
           { dimension: "creatures", expected: 67, extracted: creatureCount },
           { dimension: "terrain", expected: 214, extracted: terrainCount },
           { dimension: "items", expected: 97, extracted: itemCount },
           { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
-          { dimension: "dungeon_features", expected: 58, extracted: dungeonFeatures.length },
-          { dimension: "lights", expected: 63, extracted: lights.length },
-          { dimension: "mutations", expected: 16, extracted: mutations.length },
-          { dimension: "monster_classes", expected: 15, extracted: monsterClasses.length },
-          { dimension: "status_effects", expected: 26, extracted: statusEffects.length },
-          { dimension: "monster_behaviors", expected: 29, extracted: monsterBehaviors.length },
-          { dimension: "monster_abilities", expected: 18, extracted: monsterAbilities.length },
+          { dimension: "dungeon_features", expected: 58, extracted: dungeonFeatureCount },
+          { dimension: "lights", expected: 63, extracted: lightCount },
+          { dimension: "mutations", expected: 16, extracted: mutationCount },
+          { dimension: "monster_classes", expected: 15, extracted: monsterClassCount },
+          { dimension: "status_effects", expected: 26, extracted: statusEffectCount },
+          { dimension: "monster_behaviors", expected: 29, extracted: monsterBehaviorCount },
+          { dimension: "monster_abilities", expected: 18, extracted: monsterAbilityCount },
         ],
         diagnostics: [],
       };

@@ -10,8 +10,137 @@
   <item>Initial creation: parsers for enum, monsterCatalog, tileCatalog, and item tables with line-range tracking.</item>
   <item>Added variant item table glyphs (potion, scroll, wand, charm).</item>
   <item>Added parsers for dungeonFeatureCatalog, lightCatalog, mutationCatalog, monsterClassCatalog, statusEffectCatalog, monsterBehaviorCatalog, monsterAbilityCatalog.</item>
+  <item>Deepened into Catalog Parser factory: shared scanCatalogEntries/scanArrayEntries infrastructure, parseEntryFields reused across all parsers.</item>
 </CHANGE_SUMMARY>
 */
+
+// --- Shared scanning infrastructure ---
+
+interface CatalogScanSpec {
+  startMarker: string | ((line: string) => boolean);
+  entryPattern: RegExp;
+  isComplete: (fullLine: string) => boolean;
+}
+
+interface ScannedEntry {
+  fullLine: string;
+  lineStart: number;
+  lineEnd: number;
+  match: RegExpMatchArray;
+}
+
+function scanCatalogEntries(source: string, spec: CatalogScanSpec): ScannedEntry[] {
+  const results: ScannedEntry[] = [];
+  const lines = source.split("\n");
+  let inCatalog = false;
+
+  const startTest = typeof spec.startMarker === "string"
+    ? (line: string) => line.includes(spec.startMarker as string)
+    : (spec.startMarker as (line: string) => boolean);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (startTest(line)) {
+      inCatalog = true;
+      continue;
+    }
+    if (!inCatalog) continue;
+    if (line.trim() === "};") break;
+
+    const match = line.match(spec.entryPattern);
+    if (!match) continue;
+
+    const lineStart = i + 1;
+    let fullLine = line;
+    let lineEnd = lineStart;
+
+    if (!spec.isComplete(fullLine)) {
+      for (let j = i + 1; j < lines.length; j++) {
+        fullLine += " " + lines[j].trim();
+        lineEnd = j + 1;
+        if (spec.isComplete(fullLine)) break;
+      }
+    }
+
+    results.push({ fullLine, lineStart, lineEnd, match });
+  }
+
+  return results;
+}
+
+interface ScannedArrayEntry {
+  entryLines: string[];
+  lineStart: number;
+}
+
+function scanArrayEntries(
+  source: string,
+  startMarker: string,
+  entryStartTest: (line: string) => boolean,
+): ScannedArrayEntry[] {
+  const results: ScannedArrayEntry[] = [];
+  const lines = source.split("\n");
+  let inTable = false;
+  let currentEntry: ScannedArrayEntry | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.includes(startMarker)) {
+      if (line.includes("[")) {
+        inTable = true;
+      }
+      continue;
+    }
+
+    if (!inTable) continue;
+
+    if (line.trim() === "};") {
+      if (currentEntry) results.push(currentEntry);
+      break;
+    }
+
+    if (entryStartTest(line)) {
+      if (currentEntry) results.push(currentEntry);
+      currentEntry = { lineStart: i + 1, entryLines: [line] };
+    } else if (currentEntry) {
+      currentEntry.entryLines.push(line);
+    }
+  }
+
+  return results;
+}
+
+function parseEntryFields(text: string): string[] {
+  const fields: string[] = [];
+  let depth = 0;
+  let current = "";
+  let inString = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"' && (i === 0 || text[i - 1] !== '\\')) {
+      inString = !inString;
+      current += ch;
+    } else if (ch === '{' && !inString) {
+      depth++;
+      current += ch;
+    } else if (ch === '}' && !inString) {
+      depth--;
+      current += ch;
+    } else if (ch === ',' && depth === 0 && !inString) {
+      fields.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) fields.push(current.trim());
+  return fields;
+}
+
+// --- Types and parsers ---
+
 export interface EnumEntry {
   name: string;
   values: string[];
@@ -74,50 +203,20 @@ export interface MonsterEntry {
 }
 
 export function parseMonsterCatalog(source: string): MonsterEntry[] {
-  const entries: MonsterEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanArrayEntries(
+    source,
+    "creatureType monsterCatalog[NUMBER_MONSTER_KINDS] = {",
+    (line) => line.trim().startsWith("{0,"),
+  );
 
-  let inCatalog = false;
-  let currentEntry: Partial<MonsterEntry> & { lineStart: number } | null = null;
-  let entryLines: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (line.includes("creatureType monsterCatalog[NUMBER_MONSTER_KINDS] = {")) {
-      inCatalog = true;
-      continue;
-    }
-
-    if (!inCatalog) continue;
-
-    if (line.trim() === "};") {
-      if (currentEntry) {
-        const entry = finalizeMonsterEntry(currentEntry, entryLines, lines);
-        if (entry) entries.push(entry);
-      }
-      break;
-    }
-
-    if (line.trim().startsWith("{0,")) {
-      if (currentEntry) {
-        const entry = finalizeMonsterEntry(currentEntry, entryLines, lines);
-        if (entry) entries.push(entry);
-      }
-      currentEntry = { lineStart: i + 1 };
-      entryLines = [line];
-    } else if (currentEntry) {
-      entryLines.push(line);
-    }
-  }
-
-  return entries;
+  return scanned
+    .map(({ entryLines, lineStart }) => finalizeMonsterEntry(entryLines, lineStart))
+    .filter((e): e is MonsterEntry => e !== null);
 }
 
 function finalizeMonsterEntry(
-  partial: Partial<MonsterEntry> & { lineStart: number },
   entryLines: string[],
-  allLines: string[],
+  lineStart: number,
 ): MonsterEntry | null {
   const fullText = entryLines.join(" ");
   const nameMatch = fullText.match(/\{0,\s*"([^"]+)"/);
@@ -164,7 +263,7 @@ function finalizeMonsterEntry(
   const abilityMatch = fullText.match(/\((MA_[^)]+)\)/g);
   const abilityFlags = abilityMatch ? abilityMatch.map((f) => f.replace(/[()]/g, "")).join(" | ") : "";
 
-  const lineEnd = partial.lineStart + entryLines.length - 1;
+  const lineEnd = lineStart + entryLines.length - 1;
 
   return {
     nativeId,
@@ -181,7 +280,7 @@ function finalizeMonsterEntry(
     bloodType,
     flags,
     abilityFlags,
-    lineStart: partial.lineStart,
+    lineStart,
     lineEnd,
   };
 }
@@ -199,70 +298,36 @@ export interface TileEntry {
 }
 
 export function parseTileCatalog(source: string): TileEntry[] {
-  const entries: TileEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "tileCatalog[NUMBER_TILETYPES] = {",
+    entryPattern: /\/\*([A-Z_][A-Z0-9_]*)\*\//,
+    isComplete: (full) => {
+      const quoteCount = full.match(/"/g)?.length ?? 0;
+      return full.includes('"}') && quoteCount >= 4;
+    },
+  });
 
-  let inCatalog = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (line.includes("tileCatalog[NUMBER_TILETYPES] = {")) {
-      inCatalog = true;
-      continue;
-    }
-
-    if (!inCatalog) continue;
-
-    if (line.trim() === "};") break;
-
-    const commentMatch = line.match(/\/\*([A-Z_][A-Z0-9_]*)\*\//);
-    if (!commentMatch) continue;
-
-    const nativeId = commentMatch[1];
-    const lineStart = i + 1;
-
-    let fullLine = line;
-    let lineEnd = lineStart;
-
-    if (!line.includes('"}') || (line.match(/"/g)?.length ?? 0) < 4) {
-      for (let j = i + 1; j < lines.length; j++) {
-        fullLine += " " + lines[j].trim();
-        lineEnd = j + 1;
-        if (lines[j].includes('"}') || (fullLine.match(/"/g)?.length ?? 0) >= 4) break;
-      }
-    }
+  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
+    const nativeId = match[1];
 
     const glyphMatch = fullLine.match(/\/\*[A-Z_][A-Z0-9_]*\*\/\s*\{\s*(G_[A-Z_][A-Z0-9_]*|'[^']')/);
-    const glyph = glyphMatch ? glyphMatch[1] : null;
-
     const descMatch = fullLine.match(/"([^"]+)"\s*,\s*"([^"]*)"/);
-    const description = descMatch ? descMatch[1] : "";
-    const flavorText = descMatch ? descMatch[2] : "";
-
     const priorityMatch = fullLine.match(/\/\*[A-Z_][A-Z0-9_]*\*\/\s*\{[^,]+,\s*[^,]+,\s*[^,]+,\s*(\d+)/);
-    const drawPriority = priorityMatch ? parseInt(priorityMatch[1], 10) : 0;
-
     const flagsMatch = fullLine.match(/\((T_[A-Z][^)]+)\)/g);
-    const flags = flagsMatch ? flagsMatch.map((f) => f.replace(/[()]/g, "")).join(" | ") : "0";
-
     const mechFlagsMatch = fullLine.match(/\((TM_[A-Z][^)]+)\)/g);
-    const mechFlags = mechFlagsMatch ? mechFlagsMatch.map((f) => f.replace(/[()]/g, "")).join(" | ") : "0";
 
-    entries.push({
+    return {
       nativeId,
-      glyph,
-      description,
-      flavorText,
-      drawPriority,
-      flags,
-      mechFlags,
+      glyph: glyphMatch ? glyphMatch[1] : null,
+      description: descMatch ? descMatch[1] : "",
+      flavorText: descMatch ? descMatch[2] : "",
+      drawPriority: priorityMatch ? parseInt(priorityMatch[1], 10) : 0,
+      flags: flagsMatch ? flagsMatch.map((f) => f.replace(/[()]/g, "")).join(" | ") : "0",
+      mechFlags: mechFlagsMatch ? mechFlagsMatch.map((f) => f.replace(/[()]/g, "")).join(" | ") : "0",
       lineStart,
       lineEnd,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 export interface ItemTableEntry {
@@ -285,79 +350,20 @@ export function parseItemTable(
   tableName: string,
   arrayName: string,
 ): ItemTableEntry[] {
-  const entries: ItemTableEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanArrayEntries(
+    source,
+    `itemTable ${arrayName}[`,
+    (line) => line.trim().startsWith("{"),
+  );
 
-  let inTable = false;
-  let currentEntry: Partial<ItemTableEntry> & { lineStart: number } | null = null;
-  let entryLines: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (line.includes(`itemTable ${arrayName}[`) || line.includes(`itemTable *${arrayName};`)) {
-      if (line.includes("[")) {
-        inTable = true;
-      }
-      continue;
-    }
-
-    if (!inTable) continue;
-
-    if (line.trim() === "};") {
-      if (currentEntry) {
-        const entry = finalizeItemEntry(currentEntry, entryLines, tableName);
-        if (entry) entries.push(entry);
-      }
-      break;
-    }
-
-    if (line.trim().startsWith("{")) {
-      if (currentEntry) {
-        const entry = finalizeItemEntry(currentEntry, entryLines, tableName);
-        if (entry) entries.push(entry);
-      }
-      currentEntry = { lineStart: i + 1 };
-      entryLines = [line];
-    } else if (currentEntry) {
-      entryLines.push(line);
-    }
-  }
-
-  return entries;
-}
-
-function parseEntryFields(text: string): string[] {
-  const fields: string[] = [];
-  let depth = 0;
-  let current = "";
-  let inString = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === '"' && (i === 0 || text[i - 1] !== '\\')) {
-      inString = !inString;
-      current += ch;
-    } else if (ch === '{' && !inString) {
-      depth++;
-      current += ch;
-    } else if (ch === '}' && !inString) {
-      depth--;
-      current += ch;
-    } else if (ch === ',' && depth === 0 && !inString) {
-      fields.push(current.trim());
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  if (current.trim()) fields.push(current.trim());
-  return fields;
+  return scanned
+    .map(({ entryLines, lineStart }) => finalizeItemEntry(entryLines, lineStart, tableName))
+    .filter((e): e is ItemTableEntry => e !== null);
 }
 
 function finalizeItemEntry(
-  partial: Partial<ItemTableEntry> & { lineStart: number },
   entryLines: string[],
+  lineStart: number,
   tableName: string,
 ): ItemTableEntry | null {
   const fullText = entryLines.join(" ");
@@ -401,7 +407,7 @@ function finalizeItemEntry(
   const allQuoted = [...fullText.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
   const description = allQuoted.filter((s) => s.length > 20).pop() ?? "";
 
-  const lineEnd = partial.lineStart + entryLines.length - 1;
+  const lineEnd = lineStart + entryLines.length - 1;
 
   return {
     nativeId,
@@ -414,7 +420,7 @@ function finalizeItemEntry(
     damageRange,
     description,
     tableName,
-    lineStart: partial.lineStart,
+    lineStart,
     lineEnd,
   };
 }
@@ -433,61 +439,37 @@ export interface DungeonFeatureEntry {
 }
 
 export function parseDungeonFeatureCatalog(source: string): DungeonFeatureEntry[] {
-  const entries: DungeonFeatureEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "dungeonFeatureCatalog[NUMBER_DUNGEON_FEATURES] = {",
+    entryPattern: /\/\/\s*(.+)/,
+    isComplete: (full) => {
+      const opens = full.match(/{/g)?.length ?? 0;
+      const closes = full.match(/}/g)?.length ?? 0;
+      return closes >= opens && full.includes("}");
+    },
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("dungeonFeatureCatalog[NUMBER_DUNGEON_FEATURES] = {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
-
-    const commentMatch = line.match(/\/\/\s*(.+)/);
-    const comment = commentMatch ? commentMatch[1].trim() : null;
-    if (!comment) continue;
-
+  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
+    const comment = match[1].trim();
     const nativeId = comment.replace(/\s+/g, "_").toUpperCase();
-    const lineStart = i + 1;
-
-    let fullLine = line;
-    let lineEnd = lineStart;
-    if (!line.includes("}") || (line.match(/{/g)?.length ?? 0) > (line.match(/}/g)?.length ?? 0)) {
-      for (let j = i + 1; j < lines.length; j++) {
-        fullLine += " " + lines[j].trim();
-        lineEnd = j + 1;
-        const opens = fullLine.match(/{/g)?.length ?? 0;
-        const closes = fullLine.match(/}/g)?.length ?? 0;
-        if (closes >= opens && fullLine.includes("}")) break;
-      }
-    }
 
     const braceMatch = fullLine.match(/\{([^}]+)\}/);
-    if (!braceMatch) continue;
-    const fields = braceMatch[1].split(",").map((s) => s.trim());
+    const fields = braceMatch ? parseEntryFields(braceMatch[1]) : [];
 
-    const layer = fields[1] ?? null;
-    const start = fields[2] ? parseInt(fields[2], 10) || null : null;
-    const decay = fields[3] ? parseInt(fields[3], 10) || null : null;
     const flagsMatch = fullLine.match(/(DFF_[A-Z_][A-Z0-9_| ]*)/);
     const flags = flagsMatch ? flagsMatch[1].trim() : null;
 
-    entries.push({
+    return {
       nativeId,
       description: comment,
-      layer,
-      start,
-      decay,
+      layer: fields[1] ?? null,
+      start: fields[2] ? parseInt(fields[2], 10) || null : null,
+      decay: fields[3] ? parseInt(fields[3], 10) || null : null,
       flags,
       lineStart,
       lineEnd,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Light Catalog ---
@@ -505,63 +487,33 @@ export interface LightEntry {
 }
 
 export function parseLightCatalog(source: string): LightEntry[] {
-  const entries: LightEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "lightCatalog[NUMBER_LIGHT_KINDS] = {",
+    entryPattern: /\/\/\s*(.+)/,
+    isComplete: (full) => full.includes("true") || full.includes("false"),
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("lightCatalog[NUMBER_LIGHT_KINDS] = {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
-
-    const commentMatch = line.match(/\/\/\s*(.+)/);
-    const comment = commentMatch ? commentMatch[1].trim() : null;
-    if (!comment) continue;
-
+  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
+    const comment = match[1].trim();
     const nativeId = comment.replace(/\s+/g, "_").toUpperCase();
-    const lineStart = i + 1;
-
-    let fullLine = line;
-    let lineEnd = lineStart;
-    if (!line.includes("true") && !line.includes("false") && !line.includes("}")) {
-      for (let j = i + 1; j < lines.length; j++) {
-        fullLine += " " + lines[j].trim();
-        lineEnd = j + 1;
-        if (lines[j].includes("true") || lines[j].includes("false")) break;
-      }
-    }
 
     const colorMatch = fullLine.match(/&([a-zA-Z_]+)/);
-    const color = colorMatch ? colorMatch[1] : null;
-
     const radiusMatch = fullLine.match(/\{(\d+),\s*(\d+),\s*\d+\}/);
-    const radiusMin = radiusMatch ? parseInt(radiusMatch[1], 10) : null;
-    const radiusMax = radiusMatch ? parseInt(radiusMatch[2], 10) : null;
-
     const fadeMatch = fullLine.match(/\}\s*,\s*(\d+)/);
-    const fadePercent = fadeMatch ? parseInt(fadeMatch[1], 10) : null;
-
     const passMatch = fullLine.match(/(true|false)\s*\)/);
-    const passThroughCreatures = passMatch ? passMatch[1] === "true" : null;
 
-    entries.push({
+    return {
       nativeId,
       description: comment,
-      color,
-      radiusMin,
-      radiusMax,
-      fadePercent,
-      passThroughCreatures,
+      color: colorMatch ? colorMatch[1] : null,
+      radiusMin: radiusMatch ? parseInt(radiusMatch[1], 10) : null,
+      radiusMax: radiusMatch ? parseInt(radiusMatch[2], 10) : null,
+      fadePercent: fadeMatch ? parseInt(fadeMatch[1], 10) : null,
+      passThroughCreatures: passMatch ? passMatch[1] === "true" : null,
       lineStart,
       lineEnd,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Mutation Catalog ---
@@ -581,63 +533,37 @@ export interface MutationEntry {
 }
 
 export function parseMutationCatalog(source: string): MutationEntry[] {
-  const entries: MutationEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "mutationCatalog[NUMBER_MUTATORS] = {",
+    entryPattern: /"([^"]+)"/,
+    isComplete: (full) => full.includes("true}") || full.includes("false}"),
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("mutationCatalog[NUMBER_MUTATORS] = {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
-
-    const nameMatch = line.match(/"([^"]+)"/);
-    if (!nameMatch) continue;
-
-    const name = nameMatch[1];
+  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
+    const name = match[1];
     const nativeId = name.replace(/\s+/g, "_").toLowerCase();
-    const lineStart = i + 1;
-
-    let fullLine = line;
-    let lineEnd = lineStart;
-    for (let j = i + 1; j < lines.length; j++) {
-      fullLine += " " + lines[j].trim();
-      lineEnd = j + 1;
-      if (lines[j].includes("true}") || lines[j].includes("false}")) break;
-    }
 
     const allQuoted = [...fullLine.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
     const description = allQuoted.filter((s) => s.length > 20).pop() ?? "";
     const canBeNegatedMatch = fullLine.match(/(true|false)\s*\}/);
-    const canBeNegated = canBeNegatedMatch ? canBeNegatedMatch[1] === "true" : null;
 
     const braceMatch = fullLine.match(/\{([^}]+)\}/);
-    const fields = braceMatch ? braceMatch[1].split(",").map((s) => s.trim()) : [];
-    const healthFactor = fields[2] ? parseInt(fields[2], 10) || null : null;
-    const moveSpeedMult = fields[3] ? parseInt(fields[3], 10) || null : null;
-    const attackSpeedMult = fields[4] ? parseInt(fields[4], 10) || null : null;
-    const defenseMult = fields[5] ? parseInt(fields[5], 10) || null : null;
-    const damageMult = fields[6] ? parseInt(fields[6], 10) || null : null;
+    const fields = braceMatch ? parseEntryFields(braceMatch[1]) : [];
 
-    entries.push({
+    return {
       nativeId,
       name,
-      healthFactor,
-      moveSpeedMult,
-      attackSpeedMult,
-      defenseMult,
-      damageMult,
+      healthFactor: fields[2] ? parseInt(fields[2], 10) || null : null,
+      moveSpeedMult: fields[3] ? parseInt(fields[3], 10) || null : null,
+      attackSpeedMult: fields[4] ? parseInt(fields[4], 10) || null : null,
+      defenseMult: fields[5] ? parseInt(fields[5], 10) || null : null,
+      damageMult: fields[6] ? parseInt(fields[6], 10) || null : null,
       description,
-      canBeNegated,
+      canBeNegated: canBeNegatedMatch ? canBeNegatedMatch[1] === "true" : null,
       lineStart,
       lineEnd,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Monster Class Catalog ---
@@ -653,56 +579,34 @@ export interface MonsterClassEntry {
 }
 
 export function parseMonsterClassCatalog(source: string): MonsterClassEntry[] {
-  const entries: MonsterClassEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "monsterClassCatalog[MONSTER_CLASS_COUNT] = {",
+    entryPattern: /"([^"]+)"/,
+    isComplete: (full) => full.includes("}}"),
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("monsterClassCatalog[MONSTER_CLASS_COUNT] = {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
-
-    const nameMatch = line.match(/"([^"]+)"/);
-    if (!nameMatch) continue;
-
-    const name = nameMatch[1];
+  return scanned.map(({ fullLine, lineStart, lineEnd, match }) => {
+    const name = match[1];
     const nativeId = name.replace(/\s+/g, "_").toLowerCase();
-    const lineStart = i + 1;
-
-    let fullLine = line;
-    let lineEnd = lineStart;
-    for (let j = i + 1; j < lines.length; j++) {
-      fullLine += " " + lines[j].trim();
-      lineEnd = j + 1;
-      if (lines[j].includes("}}")) break;
-    }
 
     const braceMatch = fullLine.match(/\{([^}]+)\}/);
-    const fields = braceMatch ? braceMatch[1].split(",").map((s) => s.trim()) : [];
-    const frequency = fields[1] ? parseInt(fields[1], 10) || null : null;
-    const maxDepth = fields[2] ? parseInt(fields[2], 10) || null : null;
+    const fields = braceMatch ? parseEntryFields(braceMatch[1]) : [];
 
     const membersMatch = fullLine.match(/\{([^}]+)\}/);
     const members = membersMatch
       ? membersMatch[1].split(",").map((s) => s.trim()).filter((s) => s.startsWith("MK_"))
       : [];
 
-    entries.push({
+    return {
       nativeId,
       name,
-      frequency,
-      maxDepth,
+      frequency: fields[1] ? parseInt(fields[1], 10) || null : null,
+      maxDepth: fields[2] ? parseInt(fields[2], 10) || null : null,
       members,
       lineStart,
       lineEnd,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Status Effect Catalog ---
@@ -717,44 +621,27 @@ export interface StatusEffectEntry {
 }
 
 export function parseStatusEffectCatalog(source: string): StatusEffectEntry[] {
-  const entries: StatusEffectEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: "statusEffectCatalog[NUMBER_OF_STATUS_EFFECTS] = {",
+    entryPattern: /\/\/\s*(STATUS_[A-Z_]+)/,
+    isComplete: () => true,
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("statusEffectCatalog[NUMBER_OF_STATUS_EFFECTS] = {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
+  return scanned.map(({ fullLine, lineStart, match }) => {
+    const nativeId = match[1];
+    const nameMatch = fullLine.match(/"([^"]*)"/);
+    const boolMatch = fullLine.match(/(true|false)/);
+    const numMatch = fullLine.match(/,\s*(\d+)\s*\}/);
 
-    const commentMatch = line.match(/\/\/\s*(STATUS_[A-Z_]+)/);
-    const nativeId = commentMatch ? commentMatch[1] : null;
-    if (!nativeId) continue;
-
-    const nameMatch = line.match(/"([^"]*)"/);
-    const name = nameMatch ? nameMatch[1] : "";
-    const lineStart = i + 1;
-
-    const boolMatch = line.match(/(true|false)/);
-    const isBuff = boolMatch ? boolMatch[1] === "true" : null;
-
-    const numMatch = line.match(/,\s*(\d+)\s*\}/);
-    const displayInSidebar = numMatch ? parseInt(numMatch[1], 10) : null;
-
-    entries.push({
+    return {
       nativeId,
-      name,
-      isBuff,
-      displayInSidebar,
+      name: nameMatch ? nameMatch[1] : "",
+      isBuff: boolMatch ? boolMatch[1] === "true" : null,
+      displayInSidebar: numMatch ? parseInt(numMatch[1], 10) : null,
       lineStart,
       lineEnd: lineStart,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Monster Behavior Catalog ---
@@ -768,40 +655,25 @@ export interface MonsterBehaviorEntry {
 }
 
 export function parseMonsterBehaviorCatalog(source: string): MonsterBehaviorEntry[] {
-  const entries: MonsterBehaviorEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: (line) => line.includes("monsterBehaviorCatalog[") && line.includes("= {"),
+    entryPattern: /\/\/\s*(MONST_[A-Z0-9_]+)/,
+    isComplete: () => true,
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("monsterBehaviorCatalog[") && line.includes("= {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
+  return scanned.map(({ fullLine, lineStart, match }) => {
+    const nativeId = match[1];
+    const descMatch = fullLine.match(/"([^"]*)"/);
+    const boolMatch = fullLine.match(/(true|false)/);
 
-    const commentMatch = line.match(/\/\/\s*(MONST_[A-Z0-9_]+)/);
-    const nativeId = commentMatch ? commentMatch[1] : null;
-    if (!nativeId) continue;
-
-    const descMatch = line.match(/"([^"]*)"/);
-    const description = descMatch ? descMatch[1] : "";
-    const lineStart = i + 1;
-
-    const boolMatch = line.match(/(true|false)/);
-    const isAlwaysActive = boolMatch ? boolMatch[1] === "true" : null;
-
-    entries.push({
+    return {
       nativeId,
-      description,
-      isAlwaysActive,
+      description: descMatch ? descMatch[1] : "",
+      isAlwaysActive: boolMatch ? boolMatch[1] === "true" : null,
       lineStart,
       lineEnd: lineStart,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
 
 // --- Monster Ability Catalog ---
@@ -815,38 +687,23 @@ export interface MonsterAbilityEntry {
 }
 
 export function parseMonsterAbilityCatalog(source: string): MonsterAbilityEntry[] {
-  const entries: MonsterAbilityEntry[] = [];
-  const lines = source.split("\n");
+  const scanned = scanCatalogEntries(source, {
+    startMarker: (line) => line.includes("monsterAbilityCatalog[") && line.includes("= {"),
+    entryPattern: /\/\/\s*(MA_[A-Z0-9_]+)/,
+    isComplete: () => true,
+  });
 
-  let inCatalog = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes("monsterAbilityCatalog[") && line.includes("= {")) {
-      inCatalog = true;
-      continue;
-    }
-    if (!inCatalog) continue;
-    if (line.trim() === "};") break;
+  return scanned.map(({ fullLine, lineStart, match }) => {
+    const nativeId = match[1];
+    const descMatch = fullLine.match(/"([^"]*)"/);
+    const boolMatch = fullLine.match(/(true|false)/);
 
-    const commentMatch = line.match(/\/\/\s*(MA_[A-Z0-9_]+)/);
-    const nativeId = commentMatch ? commentMatch[1] : null;
-    if (!nativeId) continue;
-
-    const descMatch = line.match(/"([^"]*)"/);
-    const description = descMatch ? descMatch[1] : "";
-    const lineStart = i + 1;
-
-    const boolMatch = line.match(/(true|false)/);
-    const isAlwaysActive = boolMatch ? boolMatch[1] === "true" : null;
-
-    entries.push({
+    return {
       nativeId,
-      description,
-      isAlwaysActive,
+      description: descMatch ? descMatch[1] : "",
+      isAlwaysActive: boolMatch ? boolMatch[1] === "true" : null,
       lineStart,
       lineEnd: lineStart,
-    });
-  }
-
-  return entries;
+    };
+  });
 }
