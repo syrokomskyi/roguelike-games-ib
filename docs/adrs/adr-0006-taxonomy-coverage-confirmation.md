@@ -24,6 +24,8 @@ RFC-0001 Principle 9 requires that extractors map game-local data types to exist
 
 Confirm that the existing `game-content-taxonomy.yaml` covers all identified unextracted data types across the four game sources. No new canonical kinds are required for the planned extraction work.
 
+**Note**: `profession` was already used by existing extractors (crawl, cataclysm-bn) but was missing from the taxonomy. RFC-0001 addresses this gap directly by adding `profession` to the `abilities_character` category. This is not a taxonomy extension for new data types — it is a fix for existing technical debt.
+
 ## Coverage analysis
 
 ### Crawl — unextracted data types
