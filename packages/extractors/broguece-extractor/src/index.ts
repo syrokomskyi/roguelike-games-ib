@@ -41,4 +41,9 @@ export {
   createSpritePipeline,
   type SpritePipeline,
 } from "./sprite-pipeline.ts";
+export {
+  collectImageAssets,
+  imageAssetSpec,
+  type ImageAssetEntry,
+} from "./image-asset-adapter.ts";
 export { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";

@@ -97,29 +97,14 @@ function walkJsonFiles(allFiles: string[], dir: string): string[] {
   return allFiles.filter((p) => p.startsWith(dir + "/") && p.endsWith(".json"));
 }
 
-interface CataclysmEntry {
-  id: string;
-  type: string;
-  name: string;
-  path: string;
-  lineStart: number;
-  lineEnd: number;
-  attributes: Record<string, unknown>;
-  slug: string;
-  nativeId: string;
-  kind: string;
-  nativeKind: string;
-}
-
-function collectEntries(
+function collectEntries<E>(
   ctx: ExtractorContext,
   dirs: string[],
-  parser: (text: string, path: string, seenIds: Map<string, number>) => CataclysmEntry[],
-  dedupPrefix: string | null = null,
-): CataclysmEntry[] {
+  parser: (text: string, path: string, seenIds: Map<string, number>) => E[],
+): E[] {
   const allFiles = ctx.source.walk();
   const seenIds = new Map<string, number>();
-  const result: CataclysmEntry[] = [];
+  const result: E[] = [];
   for (const dir of dirs) {
     const files = walkJsonFiles(allFiles, dir);
     for (const file of files) {
@@ -134,29 +119,14 @@ function collectEntries(
   return result;
 }
 
-function collectProfessionEntries(ctx: ExtractorContext): CataclysmEntry[] {
+function collectProfessionEntries(ctx: ExtractorContext): ProfessionEntry[] {
   const allFiles = ctx.source.walk();
-  const result: CataclysmEntry[] = [];
+  const result: ProfessionEntry[] = [];
   for (const file of PROFESSION_FILES) {
     if (!allFiles.includes(file)) continue;
     const text = ctx.source.readText(file);
     try {
-      const professions = parseProfessionJson(text, file);
-      for (const prof of professions) {
-        result.push({
-          id: prof.id,
-          type: prof.type,
-          name: prof.name,
-          path: file,
-          lineStart: prof.lineStart,
-          lineEnd: prof.lineEnd,
-          attributes: {},
-          slug: prof.id.replace(/-/g, "_"),
-          nativeId: prof.id,
-          kind: "profession",
-          nativeKind: prof.type,
-        });
-      }
+      result.push(...parseProfessionJson(text, file));
     } catch {
       continue;
     }
@@ -164,15 +134,39 @@ function collectProfessionEntries(ctx: ExtractorContext): CataclysmEntry[] {
   return result;
 }
 
-function monsterParser(text: string, file: string, _seenIds: Map<string, number>): CataclysmEntry[] {
-  return parseMonsterJson(text, file).map((m) => ({
-    id: m.id,
-    type: m.type,
-    name: m.name,
-    path: file,
-    lineStart: m.lineStart,
-    lineEnd: m.lineEnd,
-    attributes: {
+function monsterParser(text: string, file: string, _seenIds: Map<string, number>): MonsterEntry[] {
+  return parseMonsterJson(text, file);
+}
+
+function itemParser(text: string, file: string, seenIds: Map<string, number>): ItemEntry[] {
+  return parseItemJson(text, file).map((item) => {
+    const { slug, nativeId } = namespaceDuplicateId(item.id, file, "items", seenIds);
+    return { ...item, id: nativeId, _slug: slug } as ItemEntry & { _slug: string };
+  });
+}
+
+function mutationParser(text: string, file: string, seenIds: Map<string, number>): MutationEntry[] {
+  return parseMutationJson(text, file).map((mut) => {
+    const { slug, nativeId } = namespaceDuplicateId(mut.id, file, "mutations", seenIds);
+    return { ...mut, id: nativeId, _slug: slug } as MutationEntry & { _slug: string };
+  });
+}
+
+function monsterSpec(entries: MonsterEntry[]): EntitySpec<MonsterEntry> {
+  return {
+    kind: "creature",
+    nativeKind: "MONSTER",
+    originActorId: "cataclysm-bn-factual",
+    entries,
+    getSourcePath: (m) => m.path,
+    getSymbolName: () => "MONSTER",
+    getSlug: (m) => m.id.replace(/^mon_/, "").replace(/-/g, "_"),
+    getNativeId: (m) => m.id,
+    getCanonicalName: (m) => m.name,
+    getOriginalName: (m) => m.id,
+    getLineRange: (m) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
+    getDataKey: (m) => m.id,
+    getAttributes: (m) => ({
       hp: m.hp,
       speed: m.speed,
       aggression: m.aggression,
@@ -190,80 +184,78 @@ function monsterParser(text: string, file: string, _seenIds: Map<string, number>
       species: m.species,
       categories: m.categories,
       flags: m.flags,
-    },
-    slug: m.id.replace(/^mon_/, "").replace(/-/g, "_"),
-    nativeId: m.id,
-    kind: "creature",
-    nativeKind: "MONSTER",
-  }));
+    }),
+    populationDimension: "monsters",
+  };
 }
 
-function itemParser(text: string, file: string, seenIds: Map<string, number>): CataclysmEntry[] {
-  return parseItemJson(text, file).map((item) => {
-    const { slug, nativeId } = namespaceDuplicateId(item.id, file, "items", seenIds);
-    return {
-      id: item.id,
-      type: item.type,
-      name: item.name,
-      path: file,
-      lineStart: item.lineStart,
-      lineEnd: item.lineEnd,
-      attributes: {
-        symbol: item.symbol,
-        color: item.color,
-        price: item.price,
-        volume: item.volume,
-        weight: item.weight,
-        material: item.material,
-        flags: item.flags,
-      },
-      slug,
-      nativeId,
-      kind: "item",
-      nativeKind: item.type,
-    };
-  });
-}
-
-function mutationParser(text: string, file: string, seenIds: Map<string, number>): CataclysmEntry[] {
-  return parseMutationJson(text, file).map((mut) => {
-    const { slug, nativeId } = namespaceDuplicateId(mut.id, file, "mutations", seenIds);
-    return {
-      id: mut.id,
-      type: mut.type,
-      name: mut.name,
-      path: file,
-      lineStart: mut.lineStart,
-      lineEnd: mut.lineEnd,
-      attributes: {
-        points: mut.points,
-        visibility: mut.visibility,
-        category: mut.category,
-        leads_to: mut.leadsTo,
-      },
-      slug,
-      nativeId,
-      kind: "mutation",
-      nativeKind: mut.type,
-    };
-  });
-}
-
-function cataclysmSpec(entries: CataclysmEntry[]): EntitySpec<CataclysmEntry> {
+function itemSpec(entries: ItemEntry[]): EntitySpec<ItemEntry> {
   return {
-    kind: entries[0]?.kind ?? "",
-    nativeKind: entries[0]?.nativeKind ?? "",
+    kind: "item",
+    nativeKind: entries[0]?.type ?? "",
     originActorId: "cataclysm-bn-factual",
     entries,
     getSourcePath: (e) => e.path,
-    getSymbolName: (e) => e.nativeKind,
-    getSlug: (e) => e.slug,
-    getNativeId: (e) => e.nativeId,
-    getCanonicalName: (e) => e.name || e.id,
+    getSymbolName: (e) => e.type,
+    getSlug: (e) => (e as ItemEntry & { _slug: string })._slug,
+    getNativeId: (e) => e.id,
+    getCanonicalName: (e) => e.name,
     getOriginalName: (e) => e.id,
     getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
     getDataKey: (e) => e.id,
-    getAttributes: (e) => e.attributes,
+    getAttributes: (e) => ({
+      symbol: e.symbol,
+      color: e.color,
+      price: e.price,
+      volume: e.volume,
+      weight: e.weight,
+      material: e.material,
+      flags: e.flags,
+    }),
+    populationDimension: "items",
+  };
+}
+
+function mutationSpec(entries: MutationEntry[]): EntitySpec<MutationEntry> {
+  return {
+    kind: "mutation",
+    nativeKind: entries[0]?.type ?? "",
+    originActorId: "cataclysm-bn-factual",
+    entries,
+    getSourcePath: (e) => e.path,
+    getSymbolName: (e) => e.type,
+    getSlug: (e) => (e as MutationEntry & { _slug: string })._slug,
+    getNativeId: (e) => e.id,
+    getCanonicalName: (e) => e.name,
+    getOriginalName: (e) => e.id,
+    getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+    getDataKey: (e) => e.id,
+    getAttributes: (e) => ({
+      points: e.points,
+      visibility: e.visibility,
+      category: e.category,
+      leads_to: e.leadsTo,
+    }),
+    populationDimension: "mutations",
+  };
+}
+
+function professionSpec(entries: ProfessionEntry[]): EntitySpec<ProfessionEntry> {
+  return {
+    kind: "profession",
+    nativeKind: entries[0]?.type ?? "",
+    originActorId: "cataclysm-bn-factual",
+    entries,
+    getSourcePath: (e) => e.path,
+    getSymbolName: (e) => e.type,
+    getSlug: (e) => e.id.replace(/-/g, "_"),
+    getNativeId: (e) => e.id,
+    getCanonicalName: (e) => e.name,
+    getOriginalName: (e) => e.id,
+    getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+    getDataKey: (e) => e.id,
+    getAttributes: () => ({}),
+    populationDimension: "professions",
   };
 }
 
@@ -277,24 +269,17 @@ export function createCataclysmBNExtractor(): Extractor {
       const professionEntries = collectProfessionEntries(ctx);
 
       const specs: EntitySpec<any>[] = [];
-      if (monsterEntries.length > 0) specs.push(cataclysmSpec(monsterEntries));
-      if (itemEntries.length > 0) specs.push(cataclysmSpec(itemEntries));
-      if (mutationEntries.length > 0) specs.push(cataclysmSpec(mutationEntries));
-      if (professionEntries.length > 0) specs.push(cataclysmSpec(professionEntries));
+      if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries));
+      if (itemEntries.length > 0) specs.push(itemSpec(itemEntries));
+      if (mutationEntries.length > 0) specs.push(mutationSpec(mutationEntries));
+      if (professionEntries.length > 0) specs.push(professionSpec(professionEntries));
 
-      const { counts } = await runEntityPipeline(ctx, specs);
-
-      // --- Populations (derived from manifest) ---
-      const popMap = new Map<string, number>();
-      popMap.set("monsters", counts[0] ?? 0);
-      popMap.set("items", counts[1] ?? 0);
-      popMap.set("mutations", counts[2] ?? 0);
-      popMap.set("professions", counts[3] ?? 0);
+      const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 
       const populationCounts = (manifest.exhaustivePopulations ?? []).map((p) => ({
         dimension: p.dimension,
         expected: p.expected ?? 0,
-        extracted: popMap.get(p.dimension) ?? 0,
+        extracted: dimensionCounts.get(p.dimension) ?? 0,
       }));
 
       for (const pop of populationCounts) {

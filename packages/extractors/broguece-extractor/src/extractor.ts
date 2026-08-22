@@ -21,7 +21,6 @@ import type {
   ExtractorRunResult,
   ExtractorManifest,
 } from "@roguelike-games-ib/extractor-sdk";
-import { createRecordEnvelope } from "@roguelike-games-ib/extractor-sdk";
 import {
   parseMonsterCatalog,
   parseTileCatalog,
@@ -47,46 +46,18 @@ import {
 import {
   buildGlyphIndexMap,
   createSpritePipeline,
-  readPngDimensions,
   type SpritePipeline,
 } from "./sprite-pipeline.ts";
+import {
+  collectImageAssets,
+  imageAssetSpec,
+} from "./image-asset-adapter.ts";
 import { runEntityPipeline, type EntitySpec } from "@roguelike-games-ib/extractor-sdk";
-import { join } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";
 const GLOBALS_BROGUE_C = "src/variants/GlobalsBrogue.c";
-const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"];
 
-const MIME_MAP: Record<string, string> = {
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
-  ".svg": "image/svg+xml",
-  ".webp": "image/webp",
-  ".bmp": "image/bmp",
-};
-
-function readImageMedia(
-  source: { readBytes: (path: string) => Buffer },
-  relativePath: string,
-): { mime_type: string; width: number | null; height: number | null; alt_text: string | null } {
-  const ext = relativePath.toLowerCase().match(/\.[^.]+$/)?.[0] ?? "";
-  const mime_type = MIME_MAP[ext] ?? "application/octet-stream";
-  let width: number | null = null;
-  let height: number | null = null;
-  if (ext === ".png") {
-    const buf = source.readBytes(relativePath);
-    const dims = readPngDimensions(buf);
-    if (dims) {
-      width = dims.width;
-      height = dims.height;
-    }
-  }
-  const fileName = relativePath.split("/").pop() ?? relativePath;
-  return { mime_type, width, height, alt_text: `Image asset: ${fileName}` };
-}
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
@@ -147,6 +118,7 @@ function creatureSpec(
       flags: m.flags,
       ability_flags: m.abilityFlags,
     }),
+    populationDimension: "creatures",
   };
 }
 
@@ -177,6 +149,7 @@ function terrainSpec(
       mech_flags: t.mechFlags,
       flavor_text: t.flavorText,
     }),
+    populationDimension: "terrain",
   };
 }
 
@@ -211,6 +184,7 @@ function itemSpec(
       damage_range: item.damageRange,
       description: item.description,
     }),
+    populationDimension: "items",
   };
 }
 
@@ -220,6 +194,7 @@ function simpleSpec<E>(
   entries: E[],
   sourcePath: string,
   symbolName: string,
+  populationDimension: string,
   opts: {
     getSlug: (e: E) => string;
     getNativeId: (e: E) => string;
@@ -244,6 +219,7 @@ function simpleSpec<E>(
     getLineRange: opts.getLineRange,
     getDataKey: opts.getDataKey,
     getAttributes: async (e) => opts.getAttributes(e),
+    populationDimension,
   };
 }
 
@@ -263,7 +239,7 @@ export function createBrogueCEExtractor(): Extractor {
       } catch {
         // tiles.png not found — sprites will not be extracted
       }
-      const SPRITE_DIR = join(process.cwd(), "knowledge/evidence/broguece/sprites");
+      const SPRITE_DIR = `${process.cwd()}/knowledge/evidence/broguece/sprites`;
       const SPRITE_REL_PREFIX = "knowledge/evidence/broguece/sprites";
 
       const sprite = createSpritePipeline(glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX);
@@ -305,7 +281,7 @@ export function createBrogueCEExtractor(): Extractor {
         creatureSpec(monsters, GLOBALS_C, sprite),
         terrainSpec(tiles, GLOBALS_C, sprite),
         ...itemSpecs,
-        simpleSpec("dungeon_feature", "dungeonFeature", dungeonFeatures, GLOBALS_C, "dungeonFeatureCatalog", {
+        simpleSpec("dungeon_feature", "dungeonFeature", dungeonFeatures, GLOBALS_C, "dungeonFeatureCatalog", "dungeon_features", {
           getSlug: (df: DungeonFeatureEntry) => df.nativeId.toLowerCase(),
           getNativeId: (df: DungeonFeatureEntry) => `dungeonFeature:${df.nativeId}`,
           getCanonicalName: (df: DungeonFeatureEntry) => df.description,
@@ -314,7 +290,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (df: DungeonFeatureEntry) => ({ lineStart: df.lineStart, lineEnd: df.lineEnd }),
           getDataKey: (df: DungeonFeatureEntry) => df.nativeId,
         }),
-        simpleSpec("light", "lightSource", lights, GLOBALS_C, "lightCatalog", {
+        simpleSpec("light", "lightSource", lights, GLOBALS_C, "lightCatalog", "lights", {
           getSlug: (l: LightEntry) => l.nativeId.toLowerCase(),
           getNativeId: (l: LightEntry) => `lightSource:${l.nativeId}`,
           getCanonicalName: (l: LightEntry) => l.description,
@@ -323,7 +299,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (l: LightEntry) => ({ lineStart: l.lineStart, lineEnd: l.lineEnd }),
           getDataKey: (l: LightEntry) => l.nativeId,
         }),
-        simpleSpec("mutation", "mutation", mutations, GLOBALS_C, "mutationCatalog", {
+        simpleSpec("mutation", "mutation", mutations, GLOBALS_C, "mutationCatalog", "mutations", {
           getSlug: (m: MutationEntry) => m.nativeId,
           getNativeId: (m: MutationEntry) => `mutation:${m.nativeId}`,
           getCanonicalName: (m: MutationEntry) => m.name,
@@ -332,7 +308,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (m: MutationEntry) => ({ lineStart: m.lineStart, lineEnd: m.lineEnd }),
           getDataKey: (m: MutationEntry) => m.nativeId,
         }),
-        simpleSpec("monster_class", "monsterClass", monsterClasses, GLOBALS_C, "monsterClassCatalog", {
+        simpleSpec("monster_class", "monsterClass", monsterClasses, GLOBALS_C, "monsterClassCatalog", "monster_classes", {
           getSlug: (mc: MonsterClassEntry) => mc.nativeId,
           getNativeId: (mc: MonsterClassEntry) => `monsterClass:${mc.nativeId}`,
           getCanonicalName: (mc: MonsterClassEntry) => mc.name,
@@ -341,7 +317,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (mc: MonsterClassEntry) => ({ lineStart: mc.lineStart, lineEnd: mc.lineEnd }),
           getDataKey: (mc: MonsterClassEntry) => mc.nativeId,
         }),
-        simpleSpec("status_effect", "statusEffect", statusEffects, GLOBALS_C, "statusEffectCatalog", {
+        simpleSpec("status_effect", "statusEffect", statusEffects, GLOBALS_C, "statusEffectCatalog", "status_effects", {
           getSlug: (se: StatusEffectEntry) => se.nativeId.toLowerCase(),
           getNativeId: (se: StatusEffectEntry) => `statusEffect:${se.nativeId}`,
           getCanonicalName: (se: StatusEffectEntry) => se.name || se.nativeId,
@@ -350,7 +326,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (se: StatusEffectEntry) => ({ lineStart: se.lineStart, lineEnd: se.lineEnd }),
           getDataKey: (se: StatusEffectEntry) => se.nativeId,
         }),
-        simpleSpec("monster_behavior", "monsterBehavior", monsterBehaviors, GLOBALS_C, "monsterBehaviorCatalog", {
+        simpleSpec("monster_behavior", "monsterBehavior", monsterBehaviors, GLOBALS_C, "monsterBehaviorCatalog", "monster_behaviors", {
           getSlug: (mb: MonsterBehaviorEntry) => mb.nativeId.toLowerCase(),
           getNativeId: (mb: MonsterBehaviorEntry) => `monsterBehavior:${mb.nativeId}`,
           getCanonicalName: (mb: MonsterBehaviorEntry) => mb.description || mb.nativeId,
@@ -359,7 +335,7 @@ export function createBrogueCEExtractor(): Extractor {
           getLineRange: (mb: MonsterBehaviorEntry) => ({ lineStart: mb.lineStart, lineEnd: mb.lineEnd }),
           getDataKey: (mb: MonsterBehaviorEntry) => mb.nativeId,
         }),
-        simpleSpec("monster_ability", "monsterAbility", monsterAbilities, GLOBALS_C, "monsterAbilityCatalog", {
+        simpleSpec("monster_ability", "monsterAbility", monsterAbilities, GLOBALS_C, "monsterAbilityCatalog", "monster_abilities", {
           getSlug: (ma: MonsterAbilityEntry) => ma.nativeId.toLowerCase(),
           getNativeId: (ma: MonsterAbilityEntry) => `monsterAbility:${ma.nativeId}`,
           getCanonicalName: (ma: MonsterAbilityEntry) => ma.description || ma.nativeId,
@@ -370,110 +346,30 @@ export function createBrogueCEExtractor(): Extractor {
         }),
       ];
 
-      // --- Run entity pipeline ---
-      const { counts } = await runEntityPipeline(ctx, specs);
-
-      // Spec indices: 0=creature, 1=terrain, 2..11=item tables, 12=dungeon_feature, 13=light, 14=mutation, 15=monster_class, 16=status_effect, 17=monster_behavior, 18=monster_ability
-      const creatureCount = counts[0] ?? 0;
-      const terrainCount = counts[1] ?? 0;
-      const itemCount = itemSpecs.reduce((sum, _, i) => sum + (counts[2 + i] ?? 0), 0);
-      const itemStartIdx = 2;
-      const simpleStartIdx = itemStartIdx + itemSpecs.length;
-      const dungeonFeatureCount = counts[simpleStartIdx] ?? 0;
-      const lightCount = counts[simpleStartIdx + 1] ?? 0;
-      const mutationCount = counts[simpleStartIdx + 2] ?? 0;
-      const monsterClassCount = counts[simpleStartIdx + 3] ?? 0;
-      const statusEffectCount = counts[simpleStartIdx + 4] ?? 0;
-      const monsterBehaviorCount = counts[simpleStartIdx + 5] ?? 0;
-      const monsterAbilityCount = counts[simpleStartIdx + 6] ?? 0;
-
-      // --- Image assets (separate flow — walks the source tree, not a catalog) ---
-      let imageAssetCount = 0;
-      const imageFiles = ctx.source.walk((p) => {
-        const ext = p.toLowerCase().match(/\.[^.]+$/)?.[0] ?? "";
-        return IMAGE_EXTENSIONS.includes(ext);
-      });
-      for (const imgPath of imageFiles) {
-        const fileName = imgPath.split("/").pop() ?? imgPath;
-        const slug = imgPath.replace(/\.[^.]+$/, "").replace(/[/\s]+/g, "-").toLowerCase();
-        const resolved = ctx.ids.resolveOrCreate("image_asset", slug, imgPath);
-        const envelope = createRecordEnvelope(
-          ctx.binding.source_id,
-          resolved.key,
-          resolved.id,
-          "broguece-factual",
-        );
-
-        const media = readImageMedia(ctx.source, imgPath);
-
-        const record = {
-          ...envelope,
-          kind: "image_asset",
-          native_kind: "image",
-          name: { canonical: fileName, original: fileName },
-          source_identity: {
-            source_id: ctx.binding.source_id,
-            native_id: imgPath,
-            path: imgPath,
-          },
-          activation: "active" as const,
-          attributes: {
-            mime_type: media.mime_type,
-            width: media.width,
-            height: media.height,
-          },
-          evidence_refs: [] as string[],
-        };
-
-        ctx.output.writeRecord(record);
-
-        const evidence = ctx.evidence.create({
-          artifactPath: imgPath,
-          evidenceKind: "asset",
-          media,
-          locator: {
-            symbol: null,
-            line_start: null,
-            line_end: null,
-            byte_start: null,
-            byte_end: null,
-            data_key: imgPath,
-          },
-        });
-        ctx.output.writeEvidence(resolved.id, evidence);
-        imageAssetCount++;
+      // --- Collect image assets via adapter ---
+      const imageEntries = collectImageAssets(ctx.source);
+      if (imageEntries.length > 0) {
+        specs.push(imageAssetSpec(imageEntries));
       }
 
-      // --- Populations (derived from manifest + image assets) ---
-      const popMap = new Map<string, number>();
-      popMap.set("creatures", creatureCount);
-      popMap.set("terrain", terrainCount);
-      popMap.set("items", itemCount);
-      popMap.set("image_assets", imageAssetCount);
-      popMap.set("dungeon_features", dungeonFeatureCount);
-      popMap.set("lights", lightCount);
-      popMap.set("mutations", mutationCount);
-      popMap.set("monster_classes", monsterClassCount);
-      popMap.set("status_effects", statusEffectCount);
-      popMap.set("monster_behaviors", monsterBehaviorCount);
-      popMap.set("monster_abilities", monsterAbilityCount);
+      // --- Run entity pipeline ---
+      const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 
+      // --- Populations (derived from manifest + image assets) ---
       const populationCounts = [
         ...(manifest.exhaustivePopulations ?? []).map((p) => ({
           dimension: p.dimension,
           expected: p.expected ?? 0,
-          extracted: popMap.get(p.dimension) ?? 0,
+          extracted: dimensionCounts.get(p.dimension) ?? 0,
         })),
-        { dimension: "image_assets", expected: imageFiles.length, extracted: imageAssetCount },
+        { dimension: "image_assets", expected: imageEntries.length, extracted: dimensionCounts.get("image_assets") ?? 0 },
       ];
 
       for (const pop of populationCounts) {
         ctx.output.writePopulation(pop.dimension, pop.expected, pop.extracted);
       }
 
-      const recordCount = creatureCount + terrainCount + itemCount + imageAssetCount
-        + dungeonFeatureCount + lightCount + mutationCount + monsterClassCount
-        + statusEffectCount + monsterBehaviorCount + monsterAbilityCount;
+      const recordCount = populationCounts.reduce((sum, p) => sum + p.extracted, 0);
 
       return {
         extractorId: manifest.extractorId,

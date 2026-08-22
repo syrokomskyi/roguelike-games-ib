@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — packages/extractors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+    <style>
+      .seam {
+        stroke-dasharray: 4 4;
+      }
+      .leak {
+        stroke: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+      }
+      .diagram {
+        min-height: 320px;
+      }
+      .mass-interface {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+      }
+      .mass-implementation {
+        background: #0f172a;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 font-sans text-slate-900">
+    <main class="mx-auto max-w-6xl space-y-12 px-6 py-12">
+      <header class="space-y-6 border-b border-slate-200 pb-10">
+        <div
+          class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-700"
+            >
+              Package architecture review
+            </p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">
+              packages/extractors
+            </h1>
+          </div>
+          <p class="font-mono text-sm text-slate-500">
+            2026-08-22 &middot; packages/extractors
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-4">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">~2,646</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              lines of source
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">3</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              game extractors
+            </p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-2xl font-bold">17</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500">
+              entity kinds extracted
+            </p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p class="text-2xl font-bold text-red-700">1</p>
+            <p class="text-xs uppercase tracking-wider text-red-700">
+              dead module (106 lines)
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+          <span class="flex items-center gap-2"
+            ><span
+              class="h-4 w-7 rounded border border-slate-500 bg-white"
+            ></span>
+            solid box = module</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="w-7 border-t border-dashed border-slate-500"></span>
+            dashed line = seam</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="text-lg text-red-600">&rarr;</span> red arrow =
+            leakage</span
+          >
+          <span class="flex items-center gap-2"
+            ><span class="h-4 w-7 rounded bg-slate-900"></span> dark box = deep
+            module</span
+          >
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+        <article
+          id="dead-entity-pipeline"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 01
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Delete dead broguece entity-pipeline.ts
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800"
+                >dead code</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/entity-pipeline.ts (106
+              lines) &middot;
+              packages/extractors/broguece-extractor/src/extractor.ts:53 (import
+              from SDK) &middot;
+              packages/extractors/broguece-extractor/src/index.ts:44 (re-export
+              from SDK)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; two pipelines, one dead
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\nentity-pipeline.ts\nEntitySpec + runEntityPipeline"]
+                  BE["broguece\nentity-pipeline.ts\n(106 lines, DEAD)"]
+                  BTS["broguece\nextractor.ts\nimports from SDK"]
+                  BIX["broguece\nindex.ts\nre-exports from SDK"]
+                  BE -. "not imported by anyone" .-> BTS
+                  BTS -->|"uses"| SDK
+                  BIX -->|"re-exports"| SDK
+                  BE -->|"confuses readers\nwho see two pipelines"| X["which pipeline\nis real?"]
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class BE,X leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; one pipeline, one source of truth
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SDK["extractor-sdk\nentity-pipeline.ts\nEntitySpec + runEntityPipeline"]
+                  BTS["broguece\nextractor.ts"]
+                  BIX["broguece\nindex.ts"]
+                  BTS -->|"uses"| SDK
+                  BIX -->|"re-exports"| SDK
+                  class SDK deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The broguece-extractor package contains
+                <code>entity-pipeline.ts</code> (106 lines) with its own
+                <code>EntitySpec</code> interface and
+                <code>runEntityPipeline</code> function. But
+                <code>extractor.ts</code> line 53 imports
+                <code>runEntityPipeline</code> and <code>EntitySpec</code> from
+                <code>@roguelike-games-ib/extractor-sdk</code>, not from the
+                local file. The local <code>entity-pipeline.ts</code> is dead
+                code &mdash; a leftover from when the pipeline was lifted into
+                the SDK (see cataclysm-bn review Candidate 03, now implemented).
+                The two <code>EntitySpec</code> interfaces have diverged: the
+                SDK version uses <code>getSourcePath()</code> and
+                <code>getSymbolName()</code> as functions; the dead local
+                version uses <code>sourcePath</code> and
+                <code>symbolName</code> as string fields, couples with
+                <code>SpritePipeline</code>, and hard-codes
+                <code>originActorId: "broguece-factual"</code>. A reader
+                encountering both files must waste time determining which is
+                live.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Delete
+                <code>packages/extractors/broguece-extractor/src/entity-pipeline.ts</code>.
+                The SDK's <code>entity-pipeline.ts</code> is the single source
+                of truth. The broguece <code>index.ts</code> already re-exports
+                from the SDK, so no downstream imports break. Apply the deletion
+                test: deleting the dead file concentrates understanding
+                &mdash; one pipeline, one <code>EntitySpec</code> shape, no
+                divergence to reason about.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: one pipeline module, not two</li>
+              <li>depth: no shallow duplicate to confuse readers</li>
+              <li>leverage: SDK pipeline is the only shape to learn</li>
+              <li>tests: no dead test surface to maintain</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="population-in-spec"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 02
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Embed population dimension in EntitySpec
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                >Strong</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >all 3 extractors</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractor-sdk/src/entity-pipeline.ts:16&ndash;31
+              (EntitySpec) &middot;
+              packages/extractors/broguece-extractor/src/extractor.ts:376&ndash;388
+              (positional mapping) &middot;
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts:288&ndash;292
+              (positional mapping) &middot;
+              packages/extractors/nethack-extractor/src/extractor.ts:124&ndash;131
+              (ternary mapping)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; fragile positional index arithmetic
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  P["runEntityPipeline\nreturns counts: number[]"]
+                  P -->|"counts[0]"| B0["broguece: creatureCount"]
+                  P -->|"counts[1]"| B1["broguece: terrainCount"]
+                  P -->|"counts[2..11]"| B2["broguece: itemCount\n(reduce over itemSpecs)"]
+                  P -->|"counts[simpleStartIdx + N]"| B3["broguece: 7 simple counts\n(hardcoded offsets)"]
+                  P -->|"counts[0]"| C0["cataclysm: monsters"]
+                  P -->|"counts[1]"| C1["cataclysm: items"]
+                  P -->|"counts[2]"| C2["cataclysm: mutations"]
+                  P -->|"counts[3]"| C3["cataclysm: professions"]
+                  P -->|"counts[0] / counts[1]"| N0["nethack: ternary\nif dimension==creatures"]
+                  CM["comment: 0=creature, 1=terrain,\n2..11=item tables, 12=dungeon_feature..."] -. "must stay in sync\nwith spec list order" .-> P
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class CM,B3,N0 leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; spec carries its dimension, pipeline returns a map
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  S1["EntitySpec\n+ populationDimension?: string"]
+                  S2["EntitySpec\n+ populationDimension?: string"]
+                  S3["EntitySpec\n+ populationDimension?: string"]
+                  P["runEntityPipeline\nreturns Map<dimension, count>"]
+                  S1 --> P
+                  S2 --> P
+                  S3 --> P
+                  P -->|"dimension → count"| E1["extractor: populationCounts\nfrom manifest + map"]
+                  P -->|"dimension → count"| E2["extractor: populationCounts\nfrom manifest + map"]
+                  P -->|"dimension → count"| E3["extractor: populationCounts\nfrom manifest + map"]
+                  class P deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>runEntityPipeline</code> returns
+                <code>counts: number[]</code> &mdash; a positional array
+                indexed by spec order. Each extractor then maps these positions
+                to population dimensions with fragile arithmetic. BrogueCE uses
+                <code>counts[0]</code>, <code>counts[1]</code>,
+                <code>counts[2 + i]</code> for variable-length item specs, and
+                <code>counts[simpleStartIdx + N]</code> for 7 simple specs
+                &mdash; with a comment listing the indices. Cataclysm-BN uses
+                <code>counts[0]</code> through <code>counts[3]</code>. NetHack
+                uses a ternary on the dimension string. If the spec list order
+                changes, the mapping breaks silently &mdash; no type error, just
+                wrong population counts. The pipeline knows the spec order but
+                throws that information away by returning a bare array.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Add an optional <code>populationDimension?: string</code> field
+                to <code>EntitySpec</code>. When present, the pipeline includes
+                the count in a <code>Map&lt;string, number&gt;</code> returned
+                alongside the existing <code>counts</code> array (for backward
+                compatibility). Each extractor's spec already knows its
+                dimension &mdash; it just doesn't declare it on the spec. The
+                population mapping at the end of <code>run()</code> becomes a
+                simple lookup against <code>manifest.exhaustivePopulations</code>
+                using the map, eliminating all positional arithmetic. BrogueCE's
+                13-line index calculation, cataclysm-bn's 4-line positional
+                mapping, and nethack's ternary all collapse into one
+                <code>for...of</code> loop over the manifest.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: dimension lives on the spec, not in a separate mapping</li>
+              <li>depth: pipeline returns semantically keyed counts, not a bare array</li>
+              <li>leverage: all 3 extractors drop positional arithmetic</li>
+              <li>tests: spec-level population assertion, no index math</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="image-asset-flow"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 03
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen the BrogueCE image asset flow into a pipeline variant
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >broguece only</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/extractor.ts:390&ndash;445
+              (image asset flow) &middot;
+              packages/extractor-sdk/src/entity-pipeline.ts (Entity Pipeline)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; inline 55-line flow bypassing the pipeline
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  EP["Entity Pipeline\n(specs → records + evidence)"]
+                  IA["image asset flow\n(55 lines inline in run())"]
+                  subgraph IF["duplicated record/evidence writing"]
+                    W["ctx.source.walk(filter images)"]
+                    L["for each image:\nresolveOrCreate → envelope → record → writeRecord"]
+                    E["evidence.create → writeEvidence"]
+                    C["imageAssetCount++"]
+                    W --> L --> E --> C
+                  end
+                  IA -.contains.-> IF
+                  IA -. "bypasses pipeline" .-> EP
+                  RIM["readImageMedia\n(20 lines, called once)"] -.leak.-> L
+                  MM["MIME_MAP + IMAGE_EXTENSIONS\n(static constants)"] -.leak.-> W
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class IA,IF,RIM,MM leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; image asset spec feeds the pipeline
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  EP["Entity Pipeline\n(specs → records + evidence)"]
+                  IAS["Image Asset Spec\n(walk → entries → EntitySpec)"]
+                  IAS -->|"same seam as catalog specs"| EP
+                  subgraph IAD["deep image adapter"]
+                    W["file walker\n(filter by extension)"]
+                    M["media reader\n(MIME + dimensions)"]
+                    E["entry builder\n(path → ImageAssetEntry)"]
+                    W --> E
+                    M --> E
+                  end
+                  IAS -.contains.-> IAD
+                  class EP,IAD deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The BrogueCE extractor handles image assets with a 55-line
+                inline flow in <code>run()</code> (lines 390&ndash;445) that
+                walks the source tree, creates record envelopes, builds
+                evidence, and counts &mdash; all duplicated from the Entity
+                Pipeline pattern. The flow uses a different source strategy
+                (tree walk vs. catalog parse) but the record/evidence writing is
+                identical. <code>readImageMedia</code> (20 lines) and
+                <code>MIME_MAP</code>/<code>IMAGE_EXTENSIONS</code> are defined
+                at module scope but only used here. The image flow has no
+                locality &mdash; understanding it requires reading the inline
+                code, the module constants, and the <code>readImageMedia</code>
+                function separately.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Create an image asset adapter that walks the source tree and
+                produces <code>ImageAssetEntry[]</code> &mdash; each entry
+                carries path, MIME type, dimensions, and file name. Feed these
+                entries into the Entity Pipeline as a regular
+                <code>EntitySpec</code> with <code>kind: "image_asset"</code>.
+                The adapter owns the <code>MIME_MAP</code>,
+                <code>IMAGE_EXTENSIONS</code>, and
+                <code>readImageMedia</code> logic behind a single seam. The
+                pipeline handles record/evidence writing, eliminating the
+                duplicated flow. The <code>run()</code> method becomes a spec
+                list + pipeline call with no special-case branching for image
+                assets.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: image walk + media reading in one adapter</li>
+              <li>depth: run() has no special-case flow for images</li>
+              <li>leverage: pipeline handles record/evidence for all kinds</li>
+              <li>tests: image adapter testable in isolation</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="cataclysm-entry-intermediate"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 04
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Collapse the CataclysmEntry intermediate type
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+                >Worth exploring</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >cataclysm-bn only</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/cataclysm-bn-extractor/src/extractor.ts:100&ndash;112
+              (CataclysmEntry) &middot; lines 114&ndash;165 (collectEntries,
+              collectProfessionEntries) &middot; lines 167&ndash;250 (parser
+              functions) &middot; lines 252&ndash;268 (cataclysmSpec)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; three-step mapping with shallow intermediate
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  J["JSON text"] --> P["parseMonsterJson\n/ parseItemJson\n/ parseMutationJson"]
+                  P -->|"MonsterEntry / ItemEntry\n/ MutationEntry"| CE["CataclysmEntry\n(intermediate type)"]
+                  CE --> CS["cataclysmSpec\n(1:1 field mapping)"]
+                  CS -->|"EntitySpec"| EP["Entity Pipeline"]
+                  subgraph SHALLOW["cataclysmSpec: 16 lines, no logic"]
+                    F1["getSlug: e.slug"]
+                    F2["getNativeId: e.nativeId"]
+                    F3["getCanonicalName: e.name || e.id"]
+                    F4["getAttributes: e.attributes"]
+                  end
+                  CS -.contains.-> SHALLOW
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class CE,SHALLOW leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; parsers produce EntitySpec directly
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  J["JSON text"] --> P["parseMonsterSpec\n/ parseItemSpec\n/ parseMutationSpec"]
+                  P -->|"EntitySpec\n(kind + entries + callbacks)"| EP["Entity Pipeline"]
+                  subgraph DEEP["parser owns the full mapping"]
+                    F["parseJsonEntries\n(filter + extract)"]
+                    S["spec builder\n(entries → EntitySpec)"]
+                    F --> S
+                  end
+                  P -.contains.-> DEEP
+                  class P,DEEP deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                The cataclysm-bn extractor maps data through three layers: JSON
+                parsers produce typed entries (<code>MonsterEntry</code>,
+                <code>ItemEntry</code>, etc.), then
+                <code>collectEntries</code>/<code>collectProfessionEntries</code>
+                convert them to <code>CataclysmEntry</code> (a generic
+                intermediate with <code>attributes: Record&lt;string,
+                unknown&gt;</code>), then <code>cataclysmSpec</code> maps
+                <code>CataclysmEntry</code> fields 1:1 to
+                <code>EntitySpec</code> callbacks. The
+                <code>cataclysmSpec</code> function is 16 lines of pure
+                pass-through &mdash; <code>getSlug: (e) =&gt; e.slug</code>,
+                <code>getNativeId: (e) =&gt; e.nativeId</code>, etc. The
+                <code>CataclysmEntry</code> type erases all type information
+                from the parsed entries (attributes becomes a generic record).
+                Deletion test: deleting <code>CataclysmEntry</code> and
+                <code>cataclysmSpec</code> would concentrate the mapping into the
+                parser functions, which already know the field names.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Have each parser function produce an <code>EntitySpec</code>
+                directly, using the existing typed entry interfaces
+                (<code>MonsterEntry</code>, <code>ItemEntry</code>, etc.) as the
+                generic parameter. The <code>collectEntries</code> function
+                returns <code>EntitySpec[]</code> instead of
+                <code>CataclysmEntry[]</code>. The <code>CataclysmEntry</code>
+                interface, <code>cataclysmSpec</code> function, and the
+                <code>collectProfessionEntries</code> special-case all collapse.
+                Each parser's spec builder encodes its kind, slug strategy,
+                nativeId, and attribute mapping &mdash; the same information
+                that <code>monsterParser</code>/<code>itemParser</code> currently
+                produce as <code>CataclysmEntry</code> fields. The
+                <code>namespaceDuplicateId</code> call stays in the parser, where
+                it already lives.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: parser owns the full entry→spec mapping</li>
+              <li>depth: no shallow pass-through layer</li>
+              <li>leverage: type safety preserved from JSON to EntitySpec</li>
+              <li>tests: parser tests produce specs, not intermediates</li>
+            </ul>
+          </div>
+        </article>
+
+        <article
+          id="simple-spec-adapter"
+          class="scroll-mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+              >
+                Candidate 05
+              </p>
+              <h2 class="mt-1 text-2xl font-bold">
+                Deepen or inline the simpleSpec factory
+              </h2>
+            </div>
+            <div class="flex gap-2">
+              <span
+                class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                >Speculative</span
+              >
+              <span
+                class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >broguece only</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Files
+            </h3>
+            <p class="mt-2 font-mono text-sm text-slate-700">
+              packages/extractors/broguece-extractor/src/extractor.ts:217&ndash;248
+              (simpleSpec) &middot; lines 308&ndash;370 (7 call sites)
+            </p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-2">
+            <div
+              class="diagram rounded-xl border border-red-200 bg-red-50/40 p-4"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-700"
+              >
+                Before &middot; 7-callback factory wrapping callbacks
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  SS["simpleSpec(kind, nativeKind, entries,\nsourcePath, symbolName, opts)"]
+                  subgraph OPTS["opts: 7 callbacks"]
+                    O1["getSlug"]
+                    O2["getNativeId"]
+                    O3["getCanonicalName"]
+                    O4["getOriginalName"]
+                    O5["getAttributes"]
+                    O6["getLineRange"]
+                    O7["getDataKey"]
+                  end
+                  SS -->|"wraps in closure"| ES["EntitySpec"]
+                  SS -->|"adds: originActorId\n+ async wrapper"| ES
+                  OPTS -. "all passed through\nunchanged" .-> ES
+                  classDef leak stroke:#dc2626,stroke-width:2px;
+                  class SS,OPTS leak
+              </pre>
+            </div>
+            <div
+              class="diagram rounded-xl border border-slate-800 bg-slate-950 p-4 text-white"
+            >
+              <p
+                class="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-300"
+              >
+                After &middot; either inline or deepen with population dimension
+              </p>
+              <pre class="mermaid">
+                flowchart TD
+                  direction LR
+                  subgraph OPTION_A["Option A: inline (delete)"]
+                    A1["7 call sites\nbuild EntitySpec directly\n+ originActorId + async"]
+                  end
+                  subgraph OPTION_B["Option B: deepen (add population + evidence kind)"]
+                    B1["simpleSpec(kind, nativeKind, entries,\nsourcePath, symbolName, dimension, opts)"]
+                    B2["owns: originActorId\n+ async wrapper\n+ population dimension\n+ evidence kind"]
+                    B1 --> B2
+                  end
+                  class OPTION_B deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-1">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Problem
+              </h3>
+              <p class="mt-2 text-sm">
+                <code>simpleSpec</code> is a 31-line factory that accepts 7
+                callbacks in an <code>opts</code> object and wraps them in a
+                closure that returns an <code>EntitySpec</code>. The only
+                transformation it performs is injecting
+                <code>originActorId: "broguece-factual"</code> and wrapping
+                <code>getAttributes</code> in <code>async</code>. The interface
+                (7 callbacks in, 7 callbacks out) is nearly as complex as the
+                implementation. Deletion test: deleting <code>simpleSpec</code>
+                and inlining the 7 call sites would add
+                <code>originActorId</code> and <code>async</code> at each site
+                &mdash; not enough complexity to concentrate. The function is a
+                shallow adapter that doesn't hide meaningful complexity.
+              </p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-4 md:col-span-2">
+              <h3
+                class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >
+                Solution
+              </h3>
+              <p class="mt-2 text-sm">
+                Two options. <strong>Option A (inline):</strong> Delete
+                <code>simpleSpec</code> and build <code>EntitySpec</code>
+                objects directly at each call site. The 7 call sites already
+                provide all callbacks &mdash; adding
+                <code>originActorId</code> and <code>async</code> is 2 lines per
+                site. This removes a shallow layer without losing anything.
+                <strong>Option B (deepen):</strong> If Candidate 02 is
+                implemented, <code>simpleSpec</code> becomes deeper by also
+                owning the <code>populationDimension</code> and potentially the
+                evidence kind. Then it hides meaningful complexity &mdash; the
+                caller provides callbacks + dimension, and
+                <code>simpleSpec</code> assembles the full spec. Option B is
+                preferred if Candidate 02 proceeds; Option A is the fallback.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >
+              Benefits
+            </h3>
+            <ul class="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <li>locality: spec construction at the call site (A) or deeper factory (B)</li>
+              <li>depth: no shallow pass-through (A) or meaningful assembly (B)</li>
+              <li>leverage: 7 call sites simplified either way</li>
+              <li>tests: specs testable directly</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="top-recommendation"
+        class="rounded-2xl border border-violet-300 bg-gradient-to-br from-violet-950 to-slate-950 p-8 text-white shadow-xl"
+      >
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.25em] text-violet-300"
+        >
+          Top recommendation
+        </p>
+        <h2 class="mt-2 text-3xl font-bold">
+          <a class="hover:text-violet-200" href="#dead-entity-pipeline"
+            >Delete the dead broguece entity-pipeline.ts first</a
+          >
+        </h2>
+        <p class="mt-4 max-w-3xl text-slate-300">
+          The dead <code>entity-pipeline.ts</code> in broguece-extractor is the
+          lowest-risk, highest-clarity change. It's 106 lines of code that no
+          one imports &mdash; a leftover from when the pipeline was lifted into
+          the SDK. Every reader who opens the broguece package sees two
+          pipeline files and must determine which is live. Deleting it costs
+          nothing and immediately concentrates understanding. After that,
+          Candidate 02 (population dimension in EntitySpec) delivers the most
+          cross-extractor leverage: it eliminates fragile positional arithmetic
+          in all three extractors and makes the spec-to-population mapping
+          type-safe. Candidates 03 and 04 are package-local improvements that
+          can follow.
+        </p>
+        <div class="mt-7 grid gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">1.</span> Delete dead pipeline
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">2.</span> Population dimension in spec
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">3.</span> Image asset pipeline variant
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <span class="text-violet-300">4.</span> Collapse CataclysmEntry
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 pt-6 text-xs text-slate-500">
+        Evidence sampled from all 3 extractor packages (broguece: c-parser.ts,
+        entity-pipeline.ts, extractor.ts, sprite-pipeline.ts, index.ts;
+        cataclysm-bn: extractor.ts, json-parser.ts, index.ts; nethack:
+        c-parser.ts, extractor.ts, field-extractor.ts, macro-scanner.ts,
+        index.ts), extractor-sdk/src/* (13 modules), ADR-0003, ADR-0004, and
+        prior per-extractor architecture reviews on 2026-08-22.
+      </footer>
+    </main>
+  </body>
+</html>

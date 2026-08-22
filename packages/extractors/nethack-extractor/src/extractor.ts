@@ -95,6 +95,7 @@ export function createNetHackExtractor(): Extractor {
           difficulty: m.difficulty,
           color: m.color,
         }),
+        populationDimension: "creatures",
       };
 
       const itemSpec: EntitySpec<ObjectEntry> = {
@@ -118,16 +119,15 @@ export function createNetHackExtractor(): Extractor {
           material: o.material,
           color: o.color,
         }),
+        populationDimension: "items",
       };
 
-      const { counts } = await runEntityPipeline(ctx, [creatureSpec, itemSpec]);
-      const creatureCount = counts[0] ?? 0;
-      const itemCount = counts[1] ?? 0;
+      const { dimensionCounts } = await runEntityPipeline(ctx, [creatureSpec, itemSpec]);
 
       const populationCounts = (manifest.exhaustivePopulations ?? []).map((p) => ({
         dimension: p.dimension,
         expected: p.expected ?? 0,
-        extracted: p.dimension === "creatures" ? creatureCount : p.dimension === "items" ? itemCount : 0,
+        extracted: dimensionCounts.get(p.dimension) ?? 0,
       }));
 
       for (const pop of populationCounts) {
@@ -138,7 +138,7 @@ export function createNetHackExtractor(): Extractor {
         extractorId: manifest.extractorId,
         extractorVersion: "1.0.0",
         runId: "nethack-run",
-        recordCount: creatureCount + itemCount,
+        recordCount: populationCounts.reduce((sum, p) => sum + p.extracted, 0),
         populationCounts,
         diagnostics: [],
       };

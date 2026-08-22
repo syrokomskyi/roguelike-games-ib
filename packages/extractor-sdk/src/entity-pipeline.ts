@@ -28,6 +28,7 @@ export interface EntitySpec<E> {
   getLineRange: (entry: E) => { lineStart: number; lineEnd: number };
   getDataKey: (entry: E) => string;
   skip?: (entry: E) => boolean;
+  populationDimension?: string;
 }
 
 export interface PopulationEntry {
@@ -39,9 +40,9 @@ export interface PopulationEntry {
 export async function runEntityPipeline(
   ctx: ExtractorContext,
   specs: EntitySpec<any>[],
-): Promise<{ counts: number[]; populations: PopulationEntry[] }> {
+): Promise<{ counts: number[]; dimensionCounts: Map<string, number> }> {
   const counts: number[] = [];
-  const populations: PopulationEntry[] = [];
+  const dimensionCounts = new Map<string, number>();
 
   for (let idx = 0; idx < specs.length; idx++) {
     const spec = specs[idx];
@@ -98,7 +99,11 @@ export async function runEntityPipeline(
     }
 
     counts[idx] = count;
+    if (spec.populationDimension) {
+      const prev = dimensionCounts.get(spec.populationDimension) ?? 0;
+      dimensionCounts.set(spec.populationDimension, prev + count);
+    }
   }
 
-  return { counts, populations };
+  return { counts, dimensionCounts };
 }
