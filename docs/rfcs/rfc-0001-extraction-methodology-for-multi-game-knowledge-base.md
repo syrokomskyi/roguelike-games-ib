@@ -400,14 +400,14 @@ The existing SDK types already support the methodology. No new types are needed:
 
 ## Acceptance criteria
 
-- [ ] RFC-0001 validated with `rfc.validate` and passes
-- [ ] ADR-0005 (new game onboarding process) created and references this RFC
-- [ ] ADR-0006 (taxonomy coverage confirmation) created and references this RFC
-- [ ] `profession` added to `game-content-taxonomy.yaml` in the `abilities_character` category
-- [ ] Existing extractors reviewed for compliance with all 11 principles
-- [ ] `fo-create-extractor` skill updated to reference this RFC as methodology source
-- [ ] First new extraction (Crawl vaults or Cataclysm-BN bionics) follows the methodology and passes conformance
-- [ ] `AGENTS.md` updated with a reference to this RFC for extractor creation
+- [x] RFC-0001 validated with `rfc.validate` and passes (evidence: rfc.validate --id RFC-0001 --json → status: pass, 0 violations)
+- [x] ADR-0005 (new game onboarding process) created and references this RFC (evidence: docs/adrs/adr-0005-new-game-onboarding-process.md, status: accepted, related: [RFC-0001])
+- [x] ADR-0006 (taxonomy coverage confirmation) created and references this RFC (evidence: docs/adrs/adr-0006-taxonomy-coverage-confirmation.md, status: accepted, related: [RFC-0001])
+- [x] `profession` added to `game-content-taxonomy.yaml` in the `abilities_character` category (evidence: knowledge/ontology/game-content-taxonomy.yaml:11)
+- [x] Existing extractors reviewed for compliance with all 11 principles (evidence: docs/audits/rfc-0001-extractor-compliance-review.md)
+- [x] `fo-create-extractor` skill updated to reference this RFC as methodology source (evidence: .agents/skills/fo-create-extractor/SKILL.md:33)
+- [ ] First new extraction (Crawl vaults or Cataclysm-BN bionics) follows the methodology and passes conformance — deferred to future work per plan
+- [x] `AGENTS.md` updated with a reference to this RFC for extractor creation (evidence: AGENTS.md:13-27)
 
 ## Implementation notes for agents
 
