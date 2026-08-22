@@ -56,6 +56,10 @@ export async function getStaticPaths() {
 
 const { pageRows, filteredCount, totalCount, types, sources, activeType, activeSource, currentPage, totalPages, meta } = Astro.props;
 
+const PAGE_SIZE = 25;
+const rangeStart = (currentPage - 1) * PAGE_SIZE + 1;
+const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredCount);
+
 function compareUrl(type: string, source: string, page: number): string {
   if (type === "all" && source === "all" && page === 1) return `/compare/`;
   return `/compare/${type}/${source}/${page}/`;
@@ -65,7 +69,7 @@ function compareUrl(type: string, source: string, page: number): string {
 <Base title="Compare" metadata={meta} activeNav="compare">
   <div class="space-y-6">
     <h1 class="text-2xl font-bold text-ib-text">Compare Records</h1>
-    <p class="text-ib-muted">{filteredCount} of {totalCount} records</p>
+    <p class="text-ib-muted">{rangeStart}–{rangeEnd} of {filteredCount} records{filteredCount !== totalCount ? ` (${totalCount} total)` : ""}</p>
 
     <div class="flex flex-wrap gap-2">
       <a href={compareUrl("all", activeSource, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeType === "all" ? "border border-ib-accent bg-ib-accent/15 text-ib-accent" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>All</a>
