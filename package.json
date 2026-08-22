@@ -56,6 +56,7 @@
     "yaml": "^2.7.0"
   },
   "dependencies": {
-    "@roguelike-games-ib/nethack-extractor": "workspace:*"
+    "@roguelike-games-ib/nethack-extractor": "workspace:*",
+    "sharp": "^0.35.3"
   }
 }

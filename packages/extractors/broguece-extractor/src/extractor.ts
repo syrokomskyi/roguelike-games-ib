@@ -25,6 +25,9 @@ import {
   type TileEntry,
   type ItemTableEntry,
 } from "./c-parser.ts";
+import sharp from "sharp";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 
 const ROGUE_H = "src/brogue/Rogue.h";
 const GLOBALS_C = "src/brogue/Globals.c";
@@ -83,6 +86,30 @@ function glyphToTileCoords(glyph: string | null, glyphMap: Map<string, number>):
   const row = Math.floor(tileIndex / TILE_COLS);
   const col = tileIndex % TILE_COLS;
   return { x: col * TILE_WIDTH, y: row * TILE_HEIGHT, w: TILE_WIDTH, h: TILE_HEIGHT };
+}
+
+async function extractSprite(
+  glyph: string | null,
+  glyphMap: Map<string, number>,
+  tilesPngBuf: Buffer | null,
+  outDir: string,
+  relPrefix: string,
+  creatureSlug: string,
+): Promise<string | null> {
+  if (!glyph || !tilesPngBuf) return null;
+  const coords = glyphToTileCoords(glyph, glyphMap);
+  if (!coords) return null;
+
+  const fileName = `${creatureSlug}.png`;
+  const outPath = join(outDir, fileName);
+  const relPath = `${relPrefix}/${fileName}`;
+
+  mkdirSync(outDir, { recursive: true });
+  await sharp(tilesPngBuf)
+    .extract({ left: coords.x, top: coords.y, width: coords.w, height: coords.h })
+    .toFile(outPath);
+
+  return relPath;
 }
 
 function readImageMedia(
@@ -174,6 +201,16 @@ export function createBrogueCEExtractor(): Extractor {
 
       const glyphMap = buildGlyphIndexMap(rogueH);
 
+      const TILES_PNG_PATH = "bin/assets/tiles.png";
+      let tilesPngBuf: Buffer | null = null;
+      try {
+        tilesPngBuf = ctx.source.readBytes(TILES_PNG_PATH);
+      } catch {
+        // tiles.png not found — sprites will not be extracted
+      }
+      const SPRITE_DIR = join(process.cwd(), "knowledge/evidence/broguece/sprites");
+      const SPRITE_REL_PREFIX = "knowledge/evidence/broguece/sprites";
+
       let creatureCount = 0;
       let terrainCount = 0;
       let itemCount = 0;
@@ -205,6 +242,7 @@ export function createBrogueCEExtractor(): Extractor {
           attributes: {
             glyph: m.glyph,
             tile_coords: glyphToTileCoords(m.glyph, glyphMap),
+            sprite_path: await extractSprite(m.glyph, glyphMap, tilesPngBuf, SPRITE_DIR, SPRITE_REL_PREFIX, m.nativeId),
             max_hp: m.maxHp,
             defense: m.defense,
             accuracy: m.accuracy,
