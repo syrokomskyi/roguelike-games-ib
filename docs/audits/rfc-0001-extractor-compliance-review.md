@@ -37,7 +37,7 @@ The broguece extractor declares 6 recordKinds not present in `game-content-taxon
 
 These were added before the taxonomy was formalized. They are documented as existing technical debt in RFC-0001's nonGoals. A separate taxonomy cleanup effort should address them — either by adding them to the taxonomy or by remapping to existing canonical kinds with `native_kind` differentiation.
 
-**Status**: Known technical debt, out of scope for RFC-0001 implementation.
+**Status**: Resolved by ADR-0007 (remap to existing canonical kinds). No taxonomy extensions needed.
 
 ### cataclysm-bn — ADR-0004 compliance
 

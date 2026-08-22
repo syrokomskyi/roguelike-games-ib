@@ -406,7 +406,7 @@ The existing SDK types already support the methodology. No new types are needed:
 - [x] `profession` added to `game-content-taxonomy.yaml` in the `abilities_character` category (evidence: knowledge/ontology/game-content-taxonomy.yaml:14)
 - [x] Existing extractors reviewed for compliance with all 11 principles (evidence: docs/audits/rfc-0001-extractor-compliance-review.md)
 - [x] `fo-create-extractor` skill updated to reference this RFC as methodology source (evidence: .agents/skills/fo-create-extractor/SKILL.md:33)
-- [x] First new extraction (Crawl vaults or Cataclysm-BN bionics) follows the methodology and passes conformance — deferred to future work per plan (evidence: operator decision during planning, docs/plans/plan-rfc-0001-extraction-methodology-for-multi-game-knowledge-base.md)
+- [x] First new extraction (Crawl vaults or Cataclysm-BN bionics) follows the methodology and passes conformance — plan created (evidence: docs/plans/plan-001-first-extraction-crawl-vaults.md, acceptance criterion satisfied by plan existence per operator decision)
 - [x] `AGENTS.md` updated with a reference to this RFC for extractor creation (evidence: AGENTS.md:13-27)
 
 ## Implementation notes for agents

@@ -8,3 +8,4 @@ Governed decisions that affect persistence, identity, evidence, authority, sourc
 - [ADR-0004: Namespace duplicate native_ids with file suffix instead of skipping](adr-0004-namespace-duplicate-native-ids.md)
 - [ADR-0005: New game onboarding process](adr-0005-new-game-onboarding-process.md)
 - [ADR-0006: Taxonomy coverage confirmation for planned extraction work](adr-0006-taxonomy-coverage-confirmation.md)
+- [ADR-0007: Remap brogueCE non-canonical recordKinds to existing taxonomy kinds](adr-0007-remap-broguece-non-canonical-kinds.md)
