@@ -538,6 +538,8 @@ SHA-256 checksums
 
 Third-party source payloads are excluded from dataset releases unless redistribution rights explicitly permit them.
 
+For structured dataset metadata, see [`DATASET_CARD.md`](DATASET_CARD.md). For academic citation, see [`CITATION.bib`](CITATION.bib).
+
 ---
 
 ## Licensing
