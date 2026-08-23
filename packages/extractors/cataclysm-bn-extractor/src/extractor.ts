@@ -38,12 +38,18 @@ import {
   parseEffectJson,
   parseNpcFactionJson,
   parseMonsterFactionJson,
+  parseMartialArtsJson,
+  parseNpcClassesJson,
+  parseMonsterGroupsJson,
   type BionicEntry,
   type TrapEntry as CBTrapEntry,
   type RecipeEntry,
   type SkillEntry as CBSkillEntry,
   type EffectEntry,
   type FactionEntry,
+  type MartialArtEntry,
+  type NpcClassEntry,
+  type MonsterGroupEntry,
 } from "./extra-json-parsers.ts";
 
 const manifest: ExtractorManifest = {
@@ -51,7 +57,7 @@ const manifest: ExtractorManifest = {
   extractorId: "cataclysm-bn-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "item", "mutation", "profession", "ability", "trap", "recipe", "skill", "effect", "faction"],
+  recordKinds: ["creature", "item", "mutation", "profession", "ability", "trap", "recipe", "skill", "effect", "faction", "npc", "spawn_table"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -115,6 +121,24 @@ const manifest: ExtractorManifest = {
       expected: 71,
       description: "All faction entries: 17 NPC factions (npcs/factions.json) + 54 monster factions (monster_factions.json)",
     },
+    {
+      dimension: "martial_arts",
+      denominatorKind: "extractor_population",
+      expected: 31,
+      description: "All martial_art entries in martialarts.json",
+    },
+    {
+      dimension: "npc_classes",
+      denominatorKind: "extractor_population",
+      expected: 30,
+      description: "All npc_class entries in npcs/classes.json",
+    },
+    {
+      dimension: "monster_groups",
+      denominatorKind: "extractor_population",
+      expected: 200,
+      description: "All monstergroup entries in monstergroups/*.json",
+    },
   ],
 };
 
@@ -150,6 +174,9 @@ const SKILLS_FILE = "skills.json";
 const EFFECTS_FILE = "effects.json";
 const NPC_FACTIONS_FILE = "npcs/factions.json";
 const MONSTER_FACTIONS_FILE = "monster_factions.json";
+const MARTIAL_ARTS_FILE = "martialarts.json";
+const NPC_CLASSES_FILE = "npcs/classes.json";
+const MONSTER_GROUPS_DIR = "monstergroups";
 const RECIPE_DIRS = ["recipes"];
 
 function walkJsonFiles(allFiles: string[], dir: string): string[] {
@@ -555,6 +582,76 @@ function factionSpec(entries: FactionEntry[]): EntitySpec<FactionEntry> {
   };
 }
 
+function martialArtSpec(entries: MartialArtEntry[]): EntitySpec<MartialArtEntry> {
+  return {
+    kind: "ability",
+    entries,
+    adapter: {
+      nativeKind: "martial_art",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "martial_art",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `martial_art:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        description: e.description,
+      }),
+      populationDimension: "martial_arts",
+    },
+  };
+}
+
+function npcClassSpec(entries: NpcClassEntry[]): EntitySpec<NpcClassEntry> {
+  return {
+    kind: "npc",
+    entries,
+    adapter: {
+      nativeKind: "npc_class",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "npc_class",
+      getSlug: (e) => e.id.replace(/-/g, "_"),
+      getNativeId: (e) => `npc_class:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        job_description: e.jobDescription,
+      }),
+      populationDimension: "npc_classes",
+    },
+  };
+}
+
+function monsterGroupSpec(entries: MonsterGroupEntry[]): EntitySpec<MonsterGroupEntry> {
+  return {
+    kind: "spawn_table",
+    entries,
+    adapter: {
+      nativeKind: "monster_group",
+      originActorId: "cataclysm-bn-factual",
+      getSourcePath: (e) => e.path,
+      getSymbolName: () => "monstergroup",
+      getSlug: (e) => e.id.replace(/-/g, "_").toLowerCase(),
+      getNativeId: (e) => `monster_group:${e.id}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.id,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.id,
+      getAttributes: (e) => ({
+        is_safe: e.isSafe,
+        default_monster: e.defaultMonster,
+      }),
+      populationDimension: "monster_groups",
+    },
+  };
+}
+
 export function createCataclysmBNExtractor(): Extractor {
   return {
     manifest,
@@ -569,6 +666,9 @@ export function createCataclysmBNExtractor(): Extractor {
       const skillEntries = collectSingleFileEntries(ctx, SKILLS_FILE, parseSkillJson);
       const effectEntries = collectSingleFileEntries(ctx, EFFECTS_FILE, parseEffectJson);
       const factionEntries = collectFactionEntries(ctx);
+      const martialArtEntries = collectSingleFileEntries(ctx, MARTIAL_ARTS_FILE, parseMartialArtsJson);
+      const npcClassEntries = collectSingleFileEntries(ctx, NPC_CLASSES_FILE, parseNpcClassesJson);
+      const monsterGroupEntries = collectEntries(ctx, [MONSTER_GROUPS_DIR], (text, file) => parseMonsterGroupsJson(text, file));
 
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries));
@@ -581,6 +681,9 @@ export function createCataclysmBNExtractor(): Extractor {
       if (skillEntries.length > 0) specs.push(skillSpec(skillEntries));
       if (effectEntries.length > 0) specs.push(effectSpec(effectEntries));
       if (factionEntries.length > 0) specs.push(factionSpec(factionEntries));
+      if (martialArtEntries.length > 0) specs.push(martialArtSpec(martialArtEntries));
+      if (npcClassEntries.length > 0) specs.push(npcClassSpec(npcClassEntries));
+      if (monsterGroupEntries.length > 0) specs.push(monsterGroupSpec(monsterGroupEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 

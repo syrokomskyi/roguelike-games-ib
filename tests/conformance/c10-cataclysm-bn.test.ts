@@ -309,6 +309,9 @@ describe("C10: Cataclysm-BN scale trial", () => {
     expect(popMap.get("cb_skills")).toBe(28);
     expect(popMap.get("effects")).toBe(237);
     expect(popMap.get("factions")).toBe(71);
+    expect(popMap.get("martial_arts")).toBe(31);
+    expect(popMap.get("npc_classes")).toBe(30);
+    expect(popMap.get("monster_groups")).toBe(200);
   });
 
   it("materialization produces valid SQLite for cataclysm-bn records", () => {

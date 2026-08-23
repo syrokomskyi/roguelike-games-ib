@@ -275,3 +275,80 @@ export function parseMonsterFactionJson(text: string, path: string): FactionEntr
     }),
   });
 }
+
+export interface MartialArtEntry {
+  id: string;
+  type: string;
+  name: string;
+  description: string;
+  path: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMartialArtsJson(text: string, path: string): MartialArtEntry[] {
+  return parseJsonEntries(text, path, {
+    filter: (o) => o.id != null && o.type === "martial_art",
+    extract: (o, path, lineStart, lineEnd) => ({
+      id: o.id as string,
+      type: o.type as string,
+      name: extractName(o.name),
+      description: (o.description as string) ?? "",
+      path,
+      lineStart,
+      lineEnd,
+    }),
+  });
+}
+
+export interface NpcClassEntry {
+  id: string;
+  type: string;
+  name: string;
+  jobDescription: string;
+  path: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseNpcClassesJson(text: string, path: string): NpcClassEntry[] {
+  return parseJsonEntries(text, path, {
+    filter: (o) => o.id != null && o.type === "npc_class",
+    extract: (o, path, lineStart, lineEnd) => ({
+      id: o.id as string,
+      type: o.type as string,
+      name: extractName(o.name),
+      jobDescription: (o.job_description as string) ?? "",
+      path,
+      lineStart,
+      lineEnd,
+    }),
+  });
+}
+
+export interface MonsterGroupEntry {
+  id: string;
+  type: string;
+  name: string;
+  isSafe: boolean;
+  defaultMonster: string;
+  path: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMonsterGroupsJson(text: string, path: string): MonsterGroupEntry[] {
+  return parseJsonEntries(text, path, {
+    filter: (o) => o.name != null && o.type === "monstergroup",
+    extract: (o, path, lineStart, lineEnd) => ({
+      id: o.name as string,
+      type: o.type as string,
+      name: o.name as string,
+      isSafe: (o.is_safe as boolean) ?? false,
+      defaultMonster: (o.default as string) ?? "",
+      path,
+      lineStart,
+      lineEnd,
+    }),
+  });
+}
