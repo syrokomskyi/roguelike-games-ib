@@ -38,7 +38,7 @@ successSignals:
   - Graph filters by concept type, relation type, and game presence
   - Graph data is pre-computed at build time and served as static JSON
 nonGoals:
-  - Does not use a heavyweight graph library — lightweight D3.js force simulation
+  - Does not use a heavyweight graph library — lightweight vanilla JS force simulation
   - Does not support graph editing — read-only exploration
   - Does not render 3D or VR — 2D force-directed layout
 ---
@@ -60,9 +60,9 @@ An interactive force-directed graph would let designers explore the design space
 
 ## Decision
 
-### D1: D3.js force-directed graph
+### D1: Vanilla JS force-directed graph
 
-Use D3.js (v7) force simulation for the graph layout. D3 is lightweight, well-documented, and already compatible with the Astro build pipeline. No additional npm dependency needed beyond `d3`.
+Use a lightweight vanilla JS force simulation for the graph layout. The web app follows progressive enhancement with vanilla JS in `<script>` tags — no frameworks (per AGENTS.md). A minimal force simulation (~100 lines) is sufficient for ~469 nodes. No additional npm dependency needed.
 
 ### D2: Pre-computed graph data at build time
 
@@ -130,35 +130,36 @@ New Astro page `apps/web/src/pages/design-graph.astro` with:
 
 - **Projection-only**: Graph data is derived from `ProjectionStore` at build time — no canonical mutations
 - **Astro static**: No server-side rendering needed — all data is serialized into the page
-- **D3 client-side**: D3 force simulation runs in the browser, no build-time layout computation
+- **Vanilla JS client-side**: Force simulation runs in the browser, no build-time layout computation
 - **Consistent with existing patterns**: Follows the same `buildDesignData` pattern used by `/design` and `/patterns` pages
 
 ## Rollout
 
 1. Create `apps/web/src/lib/graph-data.ts` — `buildGraphData(store)` returning `{ nodes, edges }`
 2. Create `apps/web/src/pages/design-graph.astro` — page with SVG, filters, detail panel
-3. Add D3 as a dependency in `apps/web/package.json`
+3. Implement force simulation in vanilla JS (no new dependencies)
 4. Add "Design Graph" to navigation in `Base.astro`
 5. Add conformance test verifying graph data contains expected node/edge types
 
 ## Alternatives
 
-- **Cytoscape.js** — more feature-rich but heavier dependency. D3 is sufficient for force-directed layout.
-- **WebGL (e.g. Sigma.js)** — better for very large graphs, but ~469 nodes is well within SVG/D3 performance budget.
-- **Server-side rendering** — unnecessary for a static graph; client-side D3 is simpler.
+- **Cytoscape.js** — more feature-rich but heavier dependency. Vanilla JS is sufficient for force-directed layout.
+- **D3.js** — well-documented but adds an npm dependency; the web app convention is vanilla JS only.
+- **WebGL (e.g. Sigma.js)** — better for very large graphs, but ~469 nodes is well within SVG performance budget.
+- **Server-side rendering** — unnecessary for a static graph; client-side vanilla JS is simpler.
 
 ## Implementation notes
 
-- D3 force simulation parameters: charge=-300, linkDistance=80, collision radius=20
+- Force simulation parameters: charge=-300, linkDistance=80, collision radius=20
 - Node radius proportional to degree (number of connected edges) — hub nodes appear larger
 - Edge stroke opacity by relation type (tensions_with more visible than IMPLEMENTED_AS)
-- Pan and zoom via D3 zoom behavior
+- Pan and zoom via SVG transform on a container group
 - Touch support for mobile (pinch-to-zoom, tap-to-select)
 
 ## Acceptance criteria
 
 - [ ] `/design-graph` page renders with all design concepts as nodes and design relations as edges
-- [ ] Nodes are color-coded by concept type per D3
+- [ ] Nodes are color-coded by concept type per D3 table
 - [ ] Clicking a node opens a detail panel with record info and links
 - [ ] Filters for concept type, relation type, and game presence work
 - [ ] Graph is responsive (mobile-friendly with collapsible sidebar)
