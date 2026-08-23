@@ -1,7 +1,7 @@
 ---
 id: RFC-0011
 title: "Game design pattern library — concrete examples, pattern combinations, and anti-patterns"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
