@@ -167,7 +167,7 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
 
 <script type="module">
   import { forceSimulation, forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
-  import { select, event as d3Event } from "d3-selection";
+  import { select } from "d3-selection";
   import { zoom, zoomIdentity } from "d3-zoom";
   import { scaleOrdinal } from "d3-scale";
 
@@ -176,6 +176,12 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
     // Nothing to render
   } else {
     const { nodes: rawNodes, edges: rawEdges, conceptTypes, relationTypes } = data;
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
 
     // Color scale
     const colorScale = scaleOrdinal()
@@ -362,7 +368,7 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
         const otherId = e.source === node.id ? e.target : e.source;
         const other = nodeMap.get(otherId);
         const direction = e.source === node.id ? "→" : "←";
-        return `<li class="text-xs"><span class="text-ib-accent2">${e.type}</span> ${direction} <a href="/records/${other?.key ?? ""}/" class="text-ib-accent hover:text-ib-accent2">${other?.label ?? otherId}</a></li>`;
+        return `<li class="text-xs"><span class="text-ib-accent2">${escapeHtml(e.type)}</span> ${direction} <a href="/records/${escapeHtml(other?.key ?? "")}/" class="text-ib-accent hover:text-ib-accent2">${escapeHtml(other?.label ?? otherId)}</a></li>`;
       }).join("");
 
       const qualityBadge = node.qualityScore !== null
@@ -372,9 +378,9 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
       content.innerHTML = `
         <div class="space-y-4">
           <div>
-            <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">${node.type}</div>
-            <h3 class="mt-1 text-lg font-semibold text-ib-text">${node.label}</h3>
-            <div class="mt-1 font-mono text-xs text-ib-accent">${node.key}</div>
+            <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">${escapeHtml(node.type)}</div>
+            <h3 class="mt-1 text-lg font-semibold text-ib-text">${escapeHtml(node.label)}</h3>
+            <div class="mt-1 font-mono text-xs text-ib-accent">${escapeHtml(node.key)}</div>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-ib-muted">Quality:</span> ${qualityBadge}
@@ -383,7 +389,7 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
             <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">Games Present</div>
             <div class="mt-1 flex flex-wrap gap-1">
               ${node.gamesPresent.length > 0
-                ? node.gamesPresent.map((g) => `<span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">${g}</span>`).join("")
+                ? node.gamesPresent.map((g) => `<span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">${escapeHtml(g)}</span>`).join("")
                 : '<span class="text-xs text-ib-muted">None</span>'}
             </div>
           </div>
@@ -391,7 +397,7 @@ const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
             <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">Connected Relations (${connectedEdges.length})</div>
             <ul class="mt-2 space-y-1">${edgeList || '<li class="text-xs text-ib-muted">None</li>'}</ul>
           </div>
-          <a href="/records/${node.key}/" class="block border border-ib-border px-3 py-2 text-center text-sm text-ib-accent transition-colors hover:bg-ib-surface2">View Full Record →</a>
+          <a href="/records/${escapeHtml(node.key)}/" class="block border border-ib-border px-3 py-2 text-center text-sm text-ib-accent transition-colors hover:bg-ib-surface2">View Full Record →</a>
         </div>
       `;
       panel.classList.remove("hidden");

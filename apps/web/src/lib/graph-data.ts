@@ -32,14 +32,13 @@ export function buildGraphData(store: ProjectionStore): { nodes: GraphNode[]; ed
   const allConcepts = store.records.filter((r) => r.record_type === "concept");
 
   const nodes: GraphNode[] = allConcepts.map((r) => {
-    const ra = r as Record<string, unknown>;
-    const anc = ra["ancestry"] as Record<string, unknown> | undefined;
-    const qs = ra["quality_score"] as { overall: number } | undefined;
+    const anc = r["ancestry"] as Record<string, unknown> | undefined;
+    const qs = r["quality_score"] as { overall: number } | undefined;
     return {
       id: r.id,
       key: r.key,
-      label: (ra["title"] as string | null) ?? r.key,
-      type: (ra["concept_type"] as string) ?? "unknown",
+      label: (r["title"] as string | null) ?? r.key,
+      type: (r["concept_type"] as string) ?? "unknown",
       qualityScore: qs?.overall ?? null,
       gamesPresent: (anc?.["source_games"] as string[]) ?? [],
     };
