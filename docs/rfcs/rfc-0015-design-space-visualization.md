@@ -1,7 +1,7 @@
 ---
 id: RFC-0015
 title: "Design space visualization — interactive graph of primitives, pressures, tensions, and patterns"
-status: accepted
+status: implemented
 kind: policy
 scope: workspace
 owners:
@@ -9,7 +9,8 @@ owners:
 reviewers:
   - human:andrii-syrokomskyi
 createdAt: 2026-08-24
-updatedAt: 2026-08-24
+updatedAt: 2026-08-23
+implementedAt: 2026-08-23
 enhancedAt: 2026-08-24
 closedAt:
 supersedes: []
