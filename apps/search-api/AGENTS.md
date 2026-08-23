@@ -6,7 +6,7 @@ Semantic search API for the Roguelike Inspiration Base. Uses Cloudflare Workers 
 
 ## Endpoints
 
-- `GET /api/search?q=...&source=...&type=...` — semantic search
+- `GET /api/search?q=...&source=...&type=...&kind=...&concept_type=...&limit=...` — semantic search with optional metadata filters (`type` filters by `record_type`, `concept_type` filters by concept type)
 - `GET /api/design-search?q=...` — design concept search
 - `POST /api/index` — bulk index records (requires `X-Indexing-Token` header or `?token=` param matching `INDEXING_TOKEN` secret)
 - `GET /api/health` — health check
