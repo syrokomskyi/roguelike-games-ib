@@ -1,7 +1,7 @@
 ---
 id: RFC-0006
 title: "Extractor expansion — next-tier data types for all four games"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
