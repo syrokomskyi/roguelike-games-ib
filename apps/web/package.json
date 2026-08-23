@@ -24,10 +24,18 @@
     "@roguelike-games-ib/projection-sdk": "workspace:*",
     "@roguelike-games-ib/search": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
+    "d3-force": "^3.0.0",
+    "d3-scale": "^4.0.0",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/d3-force": "^3.0.0",
+    "@types/d3-scale": "^4.0.0",
+    "@types/d3-selection": "^3.0.0",
+    "@types/d3-zoom": "^3.0.0",
     "astro": "^7.2.4",
     "better-sqlite3": "^12.2.0",
     "typescript": "^5.9.3",
