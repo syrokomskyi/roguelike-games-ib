@@ -323,15 +323,15 @@ interface ReleaseResult {
 
 ## Acceptance criteria
 
-- [ ] `knowledge/manifest.yaml` has `dataset_version: "1.0.0"` and `version_history`
-- [ ] `DATASET_CARD.md` exists with structured metadata
-- [ ] `CITATION.bib` exists with valid BibTeX
-- [ ] `/dataset` page shows dataset card sections, download links, license link
-- [ ] `scripts/create-release.ts` creates version tags with `--dry-run` support
-- [ ] `scripts/create-release.ts` handles edge cases (existing tag, dirty tree, empty history)
-- [ ] CI checks `dataset_version` format and `version_history` append-only
-- [ ] `pnpm exec turbo run build:check` passes
-- [ ] `pnpm exec vitest --run` passes
+- [x] `knowledge/manifest.yaml` has `dataset_version: "1.0.0"` and `version_history` (evidence: knowledge/manifest.yaml:4-11, c18-dataset-version.test.ts)
+- [x] `DATASET_CARD.md` exists with structured metadata (evidence: DATASET_CARD.md, c18-dataset-version.test.ts)
+- [x] `CITATION.bib` exists with valid BibTeX (evidence: CITATION.bib, c18-dataset-version.test.ts)
+- [x] `/dataset` page shows dataset card sections, download links, license link (evidence: apps/web/src/pages/dataset.astro:55-89, build:check pass)
+- [x] `scripts/create-release.ts` creates version tags with `--dry-run` support (evidence: scripts/create-release.ts:38-42, :160-170)
+- [x] `scripts/create-release.ts` handles edge cases (existing tag, dirty tree, empty history) (evidence: scripts/create-release.ts:83-100, :115-120)
+- [x] CI checks `dataset_version` format and `version_history` append-only (evidence: .github/workflows/ci.yml:42-77)
+- [x] `pnpm exec turbo run build:check` passes (evidence: 17/17 tasks successful, 2026-08-23)
+- [x] `pnpm exec vitest --run` passes (evidence: 757/757 tests passed, 101 test files, 2026-08-23)
 
 ## Risks
 
