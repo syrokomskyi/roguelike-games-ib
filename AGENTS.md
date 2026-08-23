@@ -46,3 +46,7 @@ The pre-commit hook (`scripts/pre-commit-quality.sh`) coexists with CI for local
 
 Deploy is opt-in via commit message containing `deploy:`. Required GitHub secrets: `CLOUDFLARE_API_TOKEN`, `SEARCH_API_URL`, `INDEXING_TOKEN`.
 
+## Binding Metadata Discipline
+
+Source binding metadata (fingerprint, binding_digest) MUST be read from `knowledge/sources/bindings.yaml` at runtime, not hardcoded in stage scripts or coverage scripts. Duplicating these values across files creates drift risk when the source tree changes — a single update to `bindings.yaml` must be sufficient. Scripts that need binding metadata should parse `bindings.yaml` directly (see `scripts/run-stage13-crawl.ts` for the established pattern).
+
