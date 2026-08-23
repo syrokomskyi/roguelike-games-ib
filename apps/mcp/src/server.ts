@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 
@@ -526,6 +526,22 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "get_concept_quality",
+    description: "Returns quality scores (coverage, evidence, richness, overall) for a single concept or all concepts above a threshold. Scores are computed during materialization.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        record_id: { type: "string" },
+        key: { type: "string" },
+        min_score: { type: "number", minimum: 0, maximum: 1 },
+      },
+      additionalProperties: false,
+    },
+    handler: getConceptQuality,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -577,4 +593,5 @@ export const REQUIRED_TOOLS = [
   "get_concept_coverage",
   "compare_concept_implementations",
   "find_concept_gaps",
+  "get_concept_quality",
 ];

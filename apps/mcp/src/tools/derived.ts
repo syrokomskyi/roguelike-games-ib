@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, and concept gap analysis.</purpose>
+<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, and concept quality scoring.</purpose>
 <non-goals>
   <item>Does not mutate or create records — all tools are read-only.</item>
 </non-goals>
@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: find_semantic_records and get_derived_summary tool handlers.</item>
   <item>RFC-0004: Added get_coverage_matrix, get_concept_coverage, compare_concept_implementations, find_concept_gaps tools.</item>
+  <item>RFC-0009: Added get_concept_quality tool for concept quality scoring.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -399,4 +400,114 @@ export function findConceptGaps(
       games_with_most_gaps: gamesWithMostGaps,
     },
   });
+}
+
+export function getConceptQuality(
+  ctx: McpContext,
+  input: { record_id?: string; key?: string; min_score?: number },
+) {
+  if (input.record_id && input.key) {
+    throw new ValidationError("Only one of record_id or key is allowed");
+  }
+
+  if (input.record_id || input.key) {
+    let concept;
+    if (input.record_id) {
+      concept = ctx.store.resolveRecordById(input.record_id!);
+    } else {
+      concept = ctx.store.resolveRecordByKey(input.key!);
+    }
+
+    if (!concept) {
+      throw new NotFoundError(`Concept not found: ${input.record_id ?? input.key}`);
+    }
+    if (concept.record_type !== "concept") {
+      throw new ValidationError(`Record is not a concept: ${concept.record_type}`);
+    }
+
+    const qualityScore = (concept as unknown as Record<string, unknown>)["quality_score"] as
+      | { coverage: number; evidence: number; richness: number; overall: number }
+      | undefined;
+
+    if (!qualityScore) {
+      return envelope(ctx, {
+        concept_key: concept.key,
+        quality_score: null,
+        message: "Quality scores not available. Run `pnpm materialize` to compute.",
+      });
+    }
+
+    return envelope(ctx, {
+      concept_key: concept.key,
+      quality_score: qualityScore,
+      coverage_detail: buildCoverageDetail(ctx, concept),
+      evidence_detail: buildEvidenceDetail(ctx, concept),
+      richness_detail: buildRichnessDetail(ctx, concept),
+    });
+  }
+
+  const minScore = input.min_score ?? 0;
+  const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  const results = concepts
+    .map((c) => ({
+      concept_key: c.key,
+      concept_type: (c as unknown as Record<string, unknown>)["concept_type"] ?? null,
+      quality_score: (c as unknown as Record<string, unknown>)["quality_score"] as
+        | { coverage: number; evidence: number; richness: number; overall: number }
+        | undefined,
+    }))
+    .filter((c) => c.quality_score && c.quality_score.overall >= minScore)
+    .sort((a, b) => (b.quality_score!.overall - a.quality_score!.overall));
+
+  return envelope(ctx, {
+    concepts: results,
+    total: results.length,
+  });
+}
+
+function buildCoverageDetail(
+  ctx: McpContext,
+  concept: typeof ctx.store.records[number],
+): { covered_games: string[]; missing_games: string[] } {
+  const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
+    Record<string, unknown> | undefined;
+  const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
+  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const covered = sourceGames.filter((g) => allSourceIds.includes(g));
+  const missing = allSourceIds.filter((sid) => !sourceGames.includes(sid));
+  return { covered_games: covered, missing_games: missing };
+}
+
+function buildEvidenceDetail(
+  ctx: McpContext,
+  concept: typeof ctx.store.records[number],
+): { ref_count: number; target: number } {
+  const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as
+    string[] | undefined;
+  if (!implRefs) return { ref_count: 0, target: 10 };
+  let validCount = 0;
+  for (const ref of implRefs) {
+    if (ctx.store.resolveRecordById(ref)) validCount++;
+  }
+  return { ref_count: validCount, target: 10 };
+}
+
+function buildRichnessDetail(
+  ctx: McpContext,
+  concept: typeof ctx.store.records[number],
+): { mutation_vectors: number; knobs: number; counterplay: number; failure_modes: number } {
+  const detail = { mutation_vectors: 0, knobs: 0, counterplay: 0, failure_modes: 0 };
+  const conceptType = (concept as unknown as Record<string, unknown>)["concept_type"] as string | undefined;
+  if (conceptType !== "design_primitive") return detail;
+
+  for (const rel of ctx.store.relations) {
+    if (rel.source_record_id !== concept.id) continue;
+    switch (rel.relation_type) {
+      case "HAS_MUTATION_VECTOR": detail.mutation_vectors++; break;
+      case "IMPLEMENTED_AS": detail.knobs++; break;
+      case "HAS_COUNTERPLAY": detail.counterplay++; break;
+      case "CAN_FAIL_AS": detail.failure_modes++; break;
+    }
+  }
+  return detail;
 }
