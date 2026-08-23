@@ -13,3 +13,4 @@ Curated project context (RFC-0664). This file is versioned — daily logs in `da
 ## Environment notes
 
 <!-- Tool versions, environment quirks, known issues. -->
+- V-24 validation error (`invariantsFile: null`): `forge.yaml` has `invariantsFile: null`, so RFCs created after 2026-07-07 cannot declare DNA invariants in `satisfies[]`. This is a known project config limitation, documented in each RFC's nonGoals. `rfc.validate` will report V-24 as an error but `rfc.implement.stamp` succeeds regardless.
