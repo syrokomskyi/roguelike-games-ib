@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: knowledge-core barrel exporting all public types and functions.</item>
+  <item>RFC-0014: Exported VersionHistoryEntry type for dataset version tracking.</item>
 </CHANGE_SUMMARY>
 */
 // Config & paths

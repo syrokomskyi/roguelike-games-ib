@@ -9,6 +9,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: materialize, readState, verifyState functions.</item>
   <item>RFC-0009: Added quality score computation step after canonical hash, before writing outputs.</item>
+  <item>RFC-0014: Pass version_history from manifest to createManifest for dataset version tracking.</item>
 </CHANGE_SUMMARY>
 */
 import { existsSync, mkdirSync, rmSync } from "node:fs";
