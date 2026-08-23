@@ -128,7 +128,7 @@ export function getDerivedSummary(
   });
 }
 
-function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.records[number]): Set<string> {
+export function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.records[number]): Set<string> {
   const result = new Set<string>();
   const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
     Record<string, unknown> | undefined;
@@ -147,6 +147,17 @@ function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.records[
     }
   }
   return result;
+}
+
+function resolveRefsBySource(ctx: McpContext, refIds: string[], sourceId: string) {
+  return refIds
+    .map((refId) => ctx.store.resolveRecordById(refId))
+    .filter((r): r is NonNullable<typeof r> => {
+      if (!r) return false;
+      const si = (r as unknown as Record<string, unknown>)["source_identity"] as
+        Record<string, unknown> | undefined;
+      return si?.["source_id"] === sourceId;
+    });
 }
 
 export function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>) {
@@ -215,14 +226,7 @@ export function getConceptCoverage(
   const gaps: string[] = [];
 
   for (const sid of allSourceIds) {
-    const gameRecords = allRefs
-      .map((refId) => ctx.store.resolveRecordById(refId))
-      .filter((r): r is NonNullable<typeof r> => {
-        if (!r) return false;
-        const si = (r as unknown as Record<string, unknown>)["source_identity"] as
-          Record<string, unknown> | undefined;
-        return si?.["source_id"] === sid;
-      });
+    const gameRecords = resolveRefsBySource(ctx, allRefs, sid);
 
     const hasSourceGame = sourceGames.includes(sid);
 
@@ -303,14 +307,7 @@ export function compareConceptImplementations(
 
   const comparisons = allSourceIds.map((sid) => {
     const note = notes[input.concept_key]?.[sid];
-    const exemplarRecords = allRefs
-      .map((refId) => ctx.store.resolveRecordById(refId))
-      .filter((r): r is NonNullable<typeof r> => {
-        if (!r) return false;
-        const si = (r as unknown as Record<string, unknown>)["source_identity"] as
-          Record<string, unknown> | undefined;
-        return si?.["source_id"] === sid;
-      })
+    const exemplarRecords = resolveRefsBySource(ctx, allRefs, sid)
       .slice(0, 5)
       .map((r) => ({
         record_id: r.id,

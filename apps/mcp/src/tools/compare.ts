@@ -13,6 +13,7 @@
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
+import { getConceptSourceIds } from "./derived.ts";
 
 export function compareRecords(
   ctx: McpContext,
@@ -57,26 +58,6 @@ export function compareGames(
     ? ctx.store.records.filter((r) => r.record_type === "concept")
     : [];
 
-  function conceptCoversGame(concept: typeof concepts[number], sourceId: string): boolean {
-    const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
-      Record<string, unknown> | undefined;
-    const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
-    if (sourceGames.includes(sourceId)) return true;
-
-    const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
-    if (implRefs) {
-      for (const refId of implRefs) {
-        const refRecord = ctx.store.resolveRecordById(refId);
-        if (refRecord) {
-          const si = (refRecord as unknown as Record<string, unknown>)["source_identity"] as
-            Record<string, unknown> | undefined;
-          if (si?.["source_id"] === sourceId) return true;
-        }
-      }
-    }
-    return false;
-  }
-
   const games = [];
   for (const sourceId of input.source_ids) {
     const source = ctx.store.findSourceById(sourceId);
@@ -110,7 +91,7 @@ export function compareGames(
     };
 
     if (input.include_concepts) {
-      const gameConcepts = concepts.filter((c) => conceptCoversGame(c, sourceId));
+      const gameConcepts = concepts.filter((c) => getConceptSourceIds(ctx, c).has(sourceId));
       const byType: Record<string, string[]> = {};
       for (const c of gameConcepts) {
         const ct = (c as unknown as Record<string, unknown>)["concept_type"] as string ?? "unknown";

@@ -222,11 +222,11 @@ Compares how two or more games implement the same concept, showing attribute dif
 }
 ```
 
-**Logic**: This is a curated comparison, not auto-generated. The tool reads a YAML data file at `apps/mcp/src/tools/concept-implementations.yaml` that provides human-written implementation summaries per game per concept. Storing curated content in a YAML data file (not inline TypeScript) separates content from code and simplifies maintenance.
+**Logic**: This is a curated comparison, not auto-generated. The tool reads a JSON data file at `apps/mcp/src/tools/concept-implementations.json` that provides human-written implementation summaries per game per concept. Storing curated content in a JSON data file (not inline TypeScript) separates content from code and simplifies maintenance.
 
 **Input**: `{ concept_key: string; source_ids?: string[] }` (defaults to all 4 games)
 
-**Files**: `apps/mcp/src/tools/derived.ts` — new `compareConceptImplementations()` function. `apps/mcp/src/tools/concept-implementations.yaml` — curated implementation summaries. Register in `server.ts`.
+**Files**: `apps/mcp/src/tools/derived.ts` — new `compareConceptImplementations()` function. `apps/mcp/src/tools/concept-implementations.json` — curated implementation summaries. Register in `server.ts`.
 
 ### D5: New tool `find_concept_gaps`
 
@@ -304,29 +304,34 @@ function findConceptGaps(
 ): Envelope<ConceptGapsOutput>;
 ```
 
-### Data file: `concept-implementations.yaml`
+### Data file: `concept-implementations.json`
 
-```yaml
-# Curated implementation summaries per game per concept
-# Human-authored content — not auto-generated
-design-permadeath:
-  nethack:
-    summary: "Death is fully permanent. No respawn, no recovery. Character save file is deleted."
-    distinguishingAttributes:
-      death_handling: permanent
-      respawn: none
-  broguece:
-    summary: "Death is fully permanent. Single-character game with no respawn mechanic."
-    distinguishingAttributes:
-      death_handling: permanent
-      respawn: none
+```json
+{
+  "permadeath": {
+    "nethack": {
+      "summary": "Death is fully permanent. No respawn, no recovery. Character save file is deleted.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent",
+        "respawn": "none"
+      }
+    },
+    "broguece": {
+      "summary": "Death is fully permanent. Single-character game with no respawn mechanic.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent",
+        "respawn": "none"
+      }
+    }
+  }
+}
 ```
 
 ### Edge cases
 
 - **Concept with no `ancestry` and no `implementation_refs`**: Return `member_count: 0`, empty arrays, include in gaps. No error.
 - **Dangling `implementation_refs`**: Handle gracefully (RFC-0002 addresses this). Report `member_count: 0` for unresolved refs.
-- **Concept not found in `concept-implementations.yaml`**: `compare_concept_implementations` returns `implementation_summary: null` and empty `distinguishing_attributes` for games without curated notes.
+- **Concept not found in `concept-implementations.json`**: `compare_concept_implementations` returns `implementation_summary: null` and empty `distinguishing_attributes` for games without curated notes.
 - **Game with no concepts of a type**: `get_coverage_matrix` returns `0` for that cell. `find_concept_gaps` includes all concepts of that type in `missing_from` for that game.
 
 ## Implementation plan
@@ -360,12 +365,12 @@ design-permadeath:
 
 ### Step 4: Implement `compare_concept_implementations` (D4)
 
-1. Create `apps/mcp/src/tools/concept-implementations.yaml` — a curated map of `{ conceptKey: { sourceId: { summary, distinguishingAttributes } } }`
+1. Create `apps/mcp/src/tools/concept-implementations.json` — a curated map of `{ conceptKey: { sourceId: { summary, distinguishingAttributes } } }`
 2. Start with 5 key design primitives (20 summaries) — for each, write 1-2 sentences per game describing how that game implements the primitive. This is human-authored content, not auto-generated.
-3. Add `compareConceptImplementations()` function to `apps/mcp/src/tools/derived.ts` that reads the YAML file
+3. Add `compareConceptImplementations()` function to `apps/mcp/src/tools/derived.ts` that reads the JSON file
 4. Register in `server.ts`
 
-**Files**: `apps/mcp/src/tools/derived.ts`, `apps/mcp/src/tools/concept-implementations.yaml`, `apps/mcp/src/server.ts`
+**Files**: `apps/mcp/src/tools/derived.ts`, `apps/mcp/src/tools/concept-implementations.json`, `apps/mcp/src/server.ts`
 
 ### Step 5: Implement `find_concept_gaps` (D5)
 
@@ -397,7 +402,7 @@ design-permadeath:
 
 **Adoption path**: No migration needed — all tools are new read-only additions. Existing tests continue to pass unchanged.
 
-**`concept-implementations.yaml` initial scope**: Start with 5 key design primitives (20 summaries). Expand incrementally. The tool gracefully handles missing entries (returns `null` summary).
+**`concept-implementations.json` initial scope**: Start with 5 key design primitives (20 summaries). Expand incrementally. The tool gracefully handles missing entries (returns `null` summary).
 
 ## Acceptance criteria
 
@@ -435,13 +440,13 @@ Add `include_gaps: true` and `include_observed_in: true` flags to the existing `
 
 Keep the curated summaries as a TypeScript object in `derived.ts`.
 
-**Rejected**: Curated content in TypeScript source is fragile and hard to maintain. A YAML data file separates content from code, allows non-developer edits, and simplifies incremental expansion. The tool reads the file at startup with minimal overhead.
+**Rejected**: Curated content in TypeScript source is fragile and hard to maintain. A JSON data file separates content from code, allows non-developer edits, and simplifies incremental expansion. The tool reads the file at startup with minimal overhead.
 
 ## Implementation notes for agents
 
 - **All 4 new tools are read-only**: Set `readOnly: true` in tool registration. The `assertNoWriteTools` function in `server.ts` must not flag any new tool names.
 - **Register in `REQUIRED_TOOLS`**: Add all 4 new tool names to the `REQUIRED_TOOLS` array in `server.ts`. The conformance test checks that all required tools are registered.
-- **No new dependencies**: The tools use existing `ProjectionStore` methods (`records`, `resolveRecordById`, `resolveRecordByKey`, `findSourceById`). No new imports needed beyond a YAML parser for `concept-implementations.yaml` (use `js-yaml` or read pre-parsed JSON).
-- **`concept-implementations.yaml` is human-authored content**: An agent can create the file structure and write the tool code, but the summaries themselves require human knowledge of each game's implementation. Start with 5 primitives, mark missing entries explicitly.
+- **No new dependencies**: The tools use existing `ProjectionStore` methods (`records`, `resolveRecordById`, `resolveRecordByKey`, `findSourceById`). No new imports needed — `concept-implementations.json` is parsed with native `JSON.parse`.
+- **`concept-implementations.json` is human-authored content**: An agent can create the file structure and write the tool code, but the summaries themselves require human knowledge of each game's implementation. Start with 5 primitives, mark missing entries explicitly.
 - **Test file**: `tests/mcp/mcp-012.test.ts` should follow the pattern of existing MCP tests (e.g., `mcp-011.test.ts`). Use the test fixture projection store.
 - **Edge cases are mandatory**: Every tool must handle concepts with no `ancestry`, no `implementation_refs`, and dangling refs gracefully. No tool may throw on missing data — return zeros and empty arrays.
