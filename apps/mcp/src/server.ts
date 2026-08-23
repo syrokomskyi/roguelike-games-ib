@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 
@@ -296,6 +296,7 @@ export function createMcpToolRegistry(): ToolRegistry {
       properties: {
         source_ids: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 8 },
         concept_key: { type: "string" },
+        include_concepts: { type: "boolean" },
       },
       required: ["source_ids"],
       additionalProperties: false,
@@ -466,6 +467,65 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "get_coverage_matrix",
+    description: "Returns a matrix of games × concept_types with counts. Shows how many concepts of each type are present in each game.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+    handler: getCoverageMatrix,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "get_concept_coverage",
+    description: "Returns detailed coverage for a single concept — which games implement it, member records, observed_in notes, and gaps.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        record_id: { type: "string" },
+        key: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      additionalProperties: false,
+    },
+    handler: getConceptCoverage,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "compare_concept_implementations",
+    description: "Compares how two or more games implement the same concept, showing curated implementation summaries and distinguishing attributes side by side.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        concept_key: { type: "string" },
+        source_ids: { type: "array", items: { type: "string" } },
+      },
+      required: ["concept_key"],
+      additionalProperties: false,
+    },
+    handler: compareConceptImplementations,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "find_concept_gaps",
+    description: "Identifies concepts that are missing from specific games. Useful for KB quality and game design analysis. Supports filtering by concept_type and source_id.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        concept_type: { type: "string" },
+        source_id: { type: "string" },
+      },
+      additionalProperties: false,
+    },
+    handler: findConceptGaps,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -513,4 +573,8 @@ export const REQUIRED_TOOLS = [
   "get_concept_members",
   "get_design_tensions",
   "find_by_attribute",
+  "get_coverage_matrix",
+  "get_concept_coverage",
+  "compare_concept_implementations",
+  "find_concept_gaps",
 ];

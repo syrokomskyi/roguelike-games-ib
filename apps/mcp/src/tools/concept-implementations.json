@@ -1,0 +1,152 @@
+{
+  "permadeath": {
+    "nethack": {
+      "summary": "Death is fully permanent. No respawn, no recovery. Character save file is deleted.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent",
+        "respawn": "none"
+      }
+    },
+    "broguece": {
+      "summary": "Death is fully permanent. Single-character game with no respawn mechanic.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent",
+        "respawn": "none"
+      }
+    },
+    "crawl": {
+      "summary": "Death is permanent. Save file is deleted upon death. No respawn or recovery mechanic.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent",
+        "respawn": "none"
+      }
+    },
+    "cataclysm-bn": {
+      "summary": "Death is permanent by default. World persists but character is gone. Optional respawn via NPC revival mechanics in some mods.",
+      "distinguishingAttributes": {
+        "death_handling": "permanent_default",
+        "respawn": "mod_optional"
+      }
+    }
+  },
+  "procedural_generation": {
+    "nethack": {
+      "summary": "Dungeon levels are procedurally generated with persistent features. Branches have fixed structure but level contents are random.",
+      "distinguishingAttributes": {
+        "generation_scope": "per_level",
+        "persistence": "level_persists"
+      }
+    },
+    "broguece": {
+      "summary": "Fully procedural dungeon. Each level is randomly generated with no persistence between descents.",
+      "distinguishingAttributes": {
+        "generation_scope": "per_level",
+        "persistence": "none"
+      }
+    },
+    "crawl": {
+      "summary": "Procedural dungeon generation with persistent branch structure. Levels regenerate if left and revisited after enough turns.",
+      "distinguishingAttributes": {
+        "generation_scope": "per_level",
+        "persistence": "branch_persists"
+      }
+    },
+    "cataclysm-bn": {
+      "summary": "Overworld map is procedurally generated with fixed city layouts. Building interiors are randomly generated on entry.",
+      "distinguishingAttributes": {
+        "generation_scope": "overworld_plus_interiors",
+        "persistence": "world_persists"
+      }
+    }
+  },
+  "inventory_management": {
+    "nethack": {
+      "summary": "Inventory is item-based with letter slots. Items can be in main inventory, containers, or wielded. No weight system.",
+      "distinguishingAttributes": {
+        "slot_system": "letter_slots",
+        "weight": "none"
+      }
+    },
+    "broguece": {
+      "summary": "Limited inventory slots. Items take specific slots. No weight system but slot count is constrained.",
+      "distinguishingAttributes": {
+        "slot_system": "fixed_slots",
+        "weight": "none"
+      }
+    },
+    "crawl": {
+      "summary": "Inventory uses letter slots with item stacking. No weight system. Containers available for storage.",
+      "distinguishingAttributes": {
+        "slot_system": "letter_slots",
+        "weight": "none"
+      }
+    },
+    "cataclysm-bn": {
+      "summary": "Grid-based inventory with volume and weight system. Items occupy space in containers and vehicles. Detailed crafting dependencies.",
+      "distinguishingAttributes": {
+        "slot_system": "grid_volume",
+        "weight": "yes"
+      }
+    }
+  },
+  "identification_system": {
+    "nethack": {
+      "summary": "Scrolls, potions, rings, and wands start unidentified. Player uses trial, scrolls of identify, or divination to learn item types.",
+      "distinguishingAttributes": {
+        "identification_method": "trial_and_scroll",
+        "price_id": "shopkeeper"
+      }
+    },
+    "broguece": {
+      "summary": "Potions and scrolls are unidentified. Player learns types by trial. No scroll of identify — discovery is risk-based.",
+      "distinguishingAttributes": {
+        "identification_method": "trial_only",
+        "price_id": "none"
+      }
+    },
+    "crawl": {
+      "summary": "Items are unidentified by default. Scrolls of identify, apportation, and shopkeepers help. Some items auto-id on use.",
+      "distinguishingAttributes": {
+        "identification_method": "scroll_and_use",
+        "price_id": "shopkeeper"
+      }
+    },
+    "cataclysm-bn": {
+      "summary": "No traditional identification system. Items are known by default. Knowledge is gated by skill levels and books rather than item ID.",
+      "distinguishingAttributes": {
+        "identification_method": "skill_gated",
+        "price_id": "none"
+      }
+    }
+  },
+  "religion_and_god": {
+    "nethack": {
+      "summary": "Polytheistic system with three gods (Lawful, Neutral, Chaotic). Sacrifices, prayers, and gifts. Piety affects protection and crowning.",
+      "distinguishingAttributes": {
+        "pantheon_size": "3",
+        "piety_mechanics": "sacrifice_and_prayer"
+      }
+    },
+    "broguece": {
+      "summary": "No religion system. BrogueCE focuses on pure dungeon crawling without divine mechanics.",
+      "distinguishingAttributes": {
+        "pantheon_size": "0",
+        "piety_mechanics": "none"
+      }
+    },
+    "crawl": {
+      "summary": "Polytheistic with many gods offering different gifts and penances. Piety gained through offerings and behavior. Gods grant abilities at piety thresholds.",
+      "distinguishingAttributes": {
+        "pantheon_size": "many",
+        "piety_mechanics": "offering_and_behavior"
+      }
+    },
+    "cataclysm-bn": {
+      "summary": "No traditional religion system. Some mods add cult or faith mechanics, but base game has no god worship.",
+      "distinguishingAttributes": {
+        "pantheon_size": "0",
+        "piety_mechanics": "none"
+      }
+    }
+  }
+}

@@ -1,12 +1,13 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Compares 2–10 records side by side, or 2–8 games (sources) with optional concept-key filter.</purpose>
+<purpose>Compares 2–10 records side by side, or 2–8 games (sources) with optional concept-key filter and concept coverage.</purpose>
 <non-goals>
   <item>Does not compute semantic similarity — returns structural counts and metadata only.</item>
 </non-goals>
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: compare_records and compare_games tool handlers.</item>
+  <item>RFC-0004: Added include_concepts parameter to compare_games for concept coverage per game.</item>
 </CHANGE_SUMMARY>
 */
 import type { McpContext } from "../context.ts";
@@ -46,10 +47,34 @@ export function compareRecords(
 
 export function compareGames(
   ctx: McpContext,
-  input: { source_ids: string[]; concept_key?: string },
+  input: { source_ids: string[]; concept_key?: string; include_concepts?: boolean },
 ) {
   if (input.source_ids.length < 2 || input.source_ids.length > 8) {
     throw new ValidationError("compare_games requires 2..8 source_ids");
+  }
+
+  const concepts = input.include_concepts
+    ? ctx.store.records.filter((r) => r.record_type === "concept")
+    : [];
+
+  function conceptCoversGame(concept: typeof concepts[number], sourceId: string): boolean {
+    const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
+      Record<string, unknown> | undefined;
+    const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
+    if (sourceGames.includes(sourceId)) return true;
+
+    const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
+    if (implRefs) {
+      for (const refId of implRefs) {
+        const refRecord = ctx.store.resolveRecordById(refId);
+        if (refRecord) {
+          const si = (refRecord as unknown as Record<string, unknown>)["source_identity"] as
+            Record<string, unknown> | undefined;
+          if (si?.["source_id"] === sourceId) return true;
+        }
+      }
+    }
+    return false;
   }
 
   const games = [];
@@ -68,7 +93,7 @@ export function compareGames(
       records = records.filter((r) => r.key === input.concept_key);
     }
 
-    games.push({
+    const gameEntry: Record<string, unknown> = {
       source_id: sourceId,
       declared_version: source.declared_version,
       record_count: records.length,
@@ -82,7 +107,25 @@ export function compareGames(
         record_type: r.record_type,
         title: (r as unknown as Record<string, unknown>)["title"] ?? null,
       })),
-    });
+    };
+
+    if (input.include_concepts) {
+      const gameConcepts = concepts.filter((c) => conceptCoversGame(c, sourceId));
+      const byType: Record<string, string[]> = {};
+      for (const c of gameConcepts) {
+        const ct = (c as unknown as Record<string, unknown>)["concept_type"] as string ?? "unknown";
+        if (!byType[ct]) byType[ct] = [];
+        byType[ct].push(c.key);
+      }
+      const conceptCoverage: Record<string, unknown> = {};
+      for (const [ct, keys] of Object.entries(byType)) {
+        conceptCoverage[ct] = keys;
+        conceptCoverage[`${ct}_count`] = keys.length;
+      }
+      gameEntry["concept_coverage"] = conceptCoverage;
+    }
+
+    games.push(gameEntry);
   }
 
   return envelope(ctx, { games });

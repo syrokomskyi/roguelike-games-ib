@@ -1,6 +1,21 @@
+/*
+<MODULE_CONTRACT>
+<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, and concept gap analysis.</purpose>
+<non-goals>
+  <item>Does not mutate or create records — all tools are read-only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: find_semantic_records and get_derived_summary tool handlers.</item>
+  <item>RFC-0004: Added get_coverage_matrix, get_concept_coverage, compare_concept_implementations, find_concept_gaps tools.</item>
+</CHANGE_SUMMARY>
+*/
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
+import { NotFoundError, ValidationError } from "../errors.ts";
 
 export function findSemanticRecords(
   ctx: McpContext,
@@ -110,5 +125,281 @@ export function getDerivedSummary(
     total_claims: claims.length,
     total_relations: relations.length,
     top_claim_predicates: topPredicates.map(([predicate, count]) => ({ predicate, count })),
+  });
+}
+
+function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.records[number]): Set<string> {
+  const result = new Set<string>();
+  const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
+    Record<string, unknown> | undefined;
+  const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
+  for (const sid of sourceGames) result.add(sid);
+
+  const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
+  if (implRefs) {
+    for (const refId of implRefs) {
+      const refRecord = ctx.store.resolveRecordById(refId);
+      if (refRecord) {
+        const si = (refRecord as unknown as Record<string, unknown>)["source_identity"] as
+          Record<string, unknown> | undefined;
+        if (si?.["source_id"]) result.add(si["source_id"] as string);
+      }
+    }
+  }
+  return result;
+}
+
+export function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>) {
+  const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  const sourceIds = ctx.store.sources.map((s) => s.source_id).sort();
+  const conceptTypes = new Set<string>();
+  const matrix: Record<string, Record<string, number>> = {};
+  for (const sid of sourceIds) {
+    matrix[sid] = {};
+  }
+
+  for (const concept of concepts) {
+    const ct = (concept as unknown as Record<string, unknown>)["concept_type"] as string ?? "unknown";
+    conceptTypes.add(ct);
+    const coveredGames = getConceptSourceIds(ctx, concept);
+    for (const sid of coveredGames) {
+      if (matrix[sid]) {
+        matrix[sid][ct] = (matrix[sid][ct] ?? 0) + 1;
+      }
+    }
+  }
+
+  return envelope(ctx, {
+    matrix,
+    concept_types: [...conceptTypes].sort(),
+    source_ids: sourceIds,
+  });
+}
+
+export function getConceptCoverage(
+  ctx: McpContext,
+  input: { record_id?: string; key?: string; limit?: number },
+) {
+  if (!input.record_id && !input.key) {
+    throw new ValidationError("Exactly one of record_id or key is required");
+  }
+  if (input.record_id && input.key) {
+    throw new ValidationError("Only one of record_id or key is allowed");
+  }
+
+  let concept;
+  if (input.record_id) {
+    concept = ctx.store.resolveRecordById(input.record_id);
+  } else {
+    concept = ctx.store.resolveRecordByKey(input.key!);
+  }
+
+  if (!concept) {
+    throw new NotFoundError(`Concept not found: ${input.record_id ?? input.key}`);
+  }
+  if (concept.record_type !== "concept") {
+    throw new ValidationError(`Record is not a concept: ${concept.record_type}`);
+  }
+
+  const limit = Math.min(Math.max(input.limit ?? 10, 1), 100);
+  const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
+    Record<string, unknown> | undefined;
+  const observedIn = (ancestry?.["observed_in"] as string[]) ?? [];
+  const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
+  const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
+  const derivedFrom = (ancestry?.["derived_from"] as string[]) ?? [];
+  const allRefs = [...new Set([...(implRefs ?? []), ...derivedFrom])];
+
+  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const coverageByGame: Record<string, unknown> = {};
+  const gaps: string[] = [];
+
+  for (const sid of allSourceIds) {
+    const gameRecords = allRefs
+      .map((refId) => ctx.store.resolveRecordById(refId))
+      .filter((r): r is NonNullable<typeof r> => {
+        if (!r) return false;
+        const si = (r as unknown as Record<string, unknown>)["source_identity"] as
+          Record<string, unknown> | undefined;
+        return si?.["source_id"] === sid;
+      });
+
+    const hasSourceGame = sourceGames.includes(sid);
+
+    if (gameRecords.length === 0 && !hasSourceGame) {
+      coverageByGame[sid] = {
+        member_count: 0,
+        sample_records: [],
+        observed_in_notes: [],
+      };
+      gaps.push(sid);
+    } else {
+      coverageByGame[sid] = {
+        member_count: gameRecords.length,
+        sample_records: gameRecords.slice(0, limit).map((r) => ({
+          record_id: r.id,
+          record_key: r.key,
+          title: (r as unknown as Record<string, unknown>)["title"] ?? null,
+        })),
+        observed_in_notes: observedIn,
+      };
+    }
+  }
+
+  return envelope(ctx, {
+    concept: {
+      record_id: concept.id,
+      record_key: concept.key,
+      concept_type: (concept as unknown as Record<string, unknown>)["concept_type"] ?? null,
+      title: (concept as unknown as Record<string, unknown>)["title"] ?? null,
+      definition: (concept as unknown as Record<string, unknown>)["definition"] ?? null,
+    },
+    coverage_by_game: coverageByGame,
+    gaps,
+  });
+}
+
+interface ImplementationNote {
+  summary: string;
+  distinguishingAttributes: Record<string, string>;
+}
+
+let implementationNotesCache: Record<string, Record<string, ImplementationNote>> | null = null;
+
+function loadImplementationNotes(): Record<string, Record<string, ImplementationNote>> {
+  if (implementationNotesCache !== null) return implementationNotesCache;
+  try {
+    const filePath = join(import.meta.dirname ?? ".", "concept-implementations.json");
+    const content = readFileSync(filePath, "utf-8");
+    implementationNotesCache = JSON.parse(content) as Record<string, Record<string, ImplementationNote>>;
+  } catch {
+    implementationNotesCache = {};
+  }
+  return implementationNotesCache;
+}
+
+export function compareConceptImplementations(
+  ctx: McpContext,
+  input: { concept_key: string; source_ids?: string[] },
+) {
+  if (!input.concept_key) {
+    throw new ValidationError("concept_key is required");
+  }
+
+  const concept = ctx.store.resolveRecordByKey(input.concept_key);
+  if (!concept) {
+    throw new NotFoundError(`Concept not found: ${input.concept_key}`);
+  }
+  if (concept.record_type !== "concept") {
+    throw new ValidationError(`Record is not a concept: ${concept.record_type}`);
+  }
+
+  const notes = loadImplementationNotes();
+  const allSourceIds = input.source_ids ?? ctx.store.sources.map((s) => s.source_id);
+  const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
+  const derivedFrom = ((concept as unknown as Record<string, unknown>)["ancestry"] as
+    Record<string, unknown> | undefined)?.["derived_from"] as string[] | undefined;
+  const allRefs = [...new Set([...(implRefs ?? []), ...(derivedFrom ?? [])])];
+
+  const comparisons = allSourceIds.map((sid) => {
+    const note = notes[input.concept_key]?.[sid];
+    const exemplarRecords = allRefs
+      .map((refId) => ctx.store.resolveRecordById(refId))
+      .filter((r): r is NonNullable<typeof r> => {
+        if (!r) return false;
+        const si = (r as unknown as Record<string, unknown>)["source_identity"] as
+          Record<string, unknown> | undefined;
+        return si?.["source_id"] === sid;
+      })
+      .slice(0, 5)
+      .map((r) => ({
+        record_id: r.id,
+        record_key: r.key,
+        title: (r as unknown as Record<string, unknown>)["title"] ?? null,
+      }));
+
+    return {
+      source_id: sid,
+      implementation_summary: note?.summary ?? null,
+      distinguishing_attributes: note?.distinguishingAttributes ?? {},
+      exemplar_records: exemplarRecords,
+    };
+  });
+
+  return envelope(ctx, {
+    concept: {
+      record_id: concept.id,
+      record_key: concept.key,
+      title: (concept as unknown as Record<string, unknown>)["title"] ?? null,
+    },
+    comparisons,
+  });
+}
+
+export function findConceptGaps(
+  ctx: McpContext,
+  input: { concept_type?: string; source_id?: string },
+) {
+  let concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  if (input.concept_type) {
+    concepts = concepts.filter(
+      (r) => (r as unknown as Record<string, unknown>)["concept_type"] === input.concept_type,
+    );
+  }
+
+  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const gaps: Array<{
+    concept_key: string;
+    concept_title: string | null;
+    concept_type: string | null;
+    missing_from: string[];
+    present_in: string[];
+  }> = [];
+
+  const gapCounts: Record<string, number> = {};
+  for (const sid of allSourceIds) gapCounts[sid] = 0;
+
+  for (const concept of concepts) {
+    const coveredGames = getConceptSourceIds(ctx, concept);
+    const missing = allSourceIds.filter((sid) => !coveredGames.has(sid));
+    const present = allSourceIds.filter((sid) => coveredGames.has(sid));
+
+    if (input.source_id) {
+      if (!coveredGames.has(input.source_id)) {
+        gaps.push({
+          concept_key: concept.key,
+          concept_title: (concept as unknown as Record<string, unknown>)["title"] as string ?? null,
+          concept_type: (concept as unknown as Record<string, unknown>)["concept_type"] as string ?? null,
+          missing_from: missing,
+          present_in: present,
+        });
+        gapCounts[input.source_id] = (gapCounts[input.source_id] ?? 0) + 1;
+      }
+    } else if (missing.length > 0) {
+      gaps.push({
+        concept_key: concept.key,
+        concept_title: (concept as unknown as Record<string, unknown>)["title"] as string ?? null,
+        concept_type: (concept as unknown as Record<string, unknown>)["concept_type"] as string ?? null,
+        missing_from: missing,
+        present_in: present,
+      });
+      for (const sid of missing) {
+        gapCounts[sid] = (gapCounts[sid] ?? 0) + 1;
+      }
+    }
+  }
+
+  const gamesWithMostGaps = Object.entries(gapCounts)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([sid, count]) => [sid, count] as [string, number]);
+
+  return envelope(ctx, {
+    gaps,
+    summary: {
+      total_concepts: concepts.length,
+      concepts_with_gaps: gaps.length,
+      games_with_most_gaps: gamesWithMostGaps,
+    },
   });
 }
