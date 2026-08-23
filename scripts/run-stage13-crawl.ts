@@ -14,16 +14,19 @@ import {
   applyPromotionTransaction,
   type TransactionOperation,
 } from "../packages/knowledge-core/src/index.ts";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { parse as parseYaml } from "yaml";
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 const SOURCE_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/crawl/crawl-ref/source/dat";
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 const STAGING_ROOT = join(WORKSPACE, "staging");
 
-const FINGERPRINT = "1f260ab621c0c5c5b572773e540224d3b56dc55f86ebdd73783e742779d28c38";
-const BINDING_DIGEST = "bc1ecb51a2ae22f4fdd65e84806d57c3235841f1eadb2ac88e2b1cffe3abfdb9";
+const bindings = parseYaml(readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8")) as { bindings: Array<{ source_id: string; fingerprint: { value: string }; binding_digest: string }> };
+const crawlBinding = bindings.bindings.find((b) => b.source_id === "crawl")!;
+const FINGERPRINT = crawlBinding.fingerprint.value;
+const BINDING_DIGEST = crawlBinding.binding_digest;
 
 async function main() {
   const t0 = Date.now();
