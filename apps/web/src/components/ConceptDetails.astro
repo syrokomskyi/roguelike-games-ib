@@ -1,0 +1,161 @@
+---
+import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
+import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";
+import CollapsibleSection from "./CollapsibleSection.astro";
+
+interface Props {
+  record: CanonicalRecord;
+  relations: RelationRecord[];
+  records: CanonicalRecord[];
+}
+
+const { record, relations, records } = Astro.props;
+const ra = record as Record<string, unknown>;
+
+const definition = ra["definition"] as string | null;
+const inclusionCriteria = ra["inclusion_criteria"] as string[] | null;
+const exclusionCriteria = ra["exclusion_criteria"] as string[] | null;
+const implementationRefs = (ra["implementation_refs"] as string[]) ?? [];
+const anc = ra["ancestry"] as Record<string, unknown> | undefined;
+const sourceGames = (anc?.["source_games"] as string[]) ?? [];
+const observedIn = (anc?.["observed_in"] as string[]) ?? [];
+const mutationDimensions = (anc?.["mutation_dimensions"] as string[]) ?? [];
+
+const idToRecord = new Map(records.map((r) => [r.id, r]));
+
+const designRelationTypes = new Set([
+  "CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with",
+  "HAS_MUTATION_VECTOR", "IMPLEMENTED_AS", "HAS_COUNTERPLAY", "CAN_FAIL_AS",
+]);
+
+const conceptRelations = relations.filter((r) => designRelationTypes.has(r.relation_type));
+const idToKey = new Map(records.map((r) => [r.id, r.key]));
+
+const implRefRecords = implementationRefs
+  .map((id) => idToRecord.get(id))
+  .filter((r): r is CanonicalRecord => r !== undefined);
+
+const implByGame = new Map<string, CanonicalRecord[]>();
+for (const r of implRefRecords) {
+  const rra = r as Record<string, unknown>;
+  const si = rra["source_identity"] as Record<string, unknown> | undefined;
+  const scope = rra["scope"] as Record<string, unknown> | undefined;
+  const sid = (si?.["source_id"] as string | undefined) ?? (scope?.["source_id"] as string | undefined) ?? "unknown";
+  const list = implByGame.get(sid) ?? [];
+  list.push(r);
+  implByGame.set(sid, list);
+}
+---
+
+{definition && (
+  <section class="space-y-2">
+    <h2 class="atlas-label text-ib-muted">Definition</h2>
+    <p class="text-sm text-ib-text">{definition}</p>
+  </section>
+)}
+
+{inclusionCriteria && inclusionCriteria.length > 0 && (
+  <CollapsibleSection title={`Inclusion criteria (${inclusionCriteria.length})`} open>
+    <ul class="space-y-1">
+      {inclusionCriteria.map((c) => (
+        <li class="flex gap-2 text-sm text-ib-text">
+          <span class="text-ib-green">+</span>
+          <span>{c}</span>
+        </li>
+      ))}
+    </ul>
+  </CollapsibleSection>
+)}
+
+{exclusionCriteria && exclusionCriteria.length > 0 && (
+  <CollapsibleSection title={`Exclusion criteria (${exclusionCriteria.length})`} open>
+    <ul class="space-y-1">
+      {exclusionCriteria.map((c) => (
+        <li class="flex gap-2 text-sm text-ib-text">
+          <span class="text-ib-red">−</span>
+          <span>{c}</span>
+        </li>
+      ))}
+    </ul>
+  </CollapsibleSection>
+)}
+
+{implRefRecords.length > 0 ? (
+  <CollapsibleSection title={`Implementation references (${implRefRecords.length})`}>
+    <div class="space-y-3">
+      {[...implByGame.entries()].map(([game, recs]) => (
+        <div>
+          <h3 class="text-xs font-medium text-ib-accent">{game} ({recs.length})</h3>
+          <div class="mt-1 flex flex-wrap gap-1">
+            {recs.map((r) => (
+              <a href={`/records/${r.key}/`} class="rounded border border-ib-border bg-ib-surface px-2 py-1 font-mono text-xs text-ib-text transition-colors hover:border-ib-accent">
+                {r.key}
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </CollapsibleSection>
+) : (
+  <CollapsibleSection title="Implementation references">
+    <p class="text-sm text-ib-muted">No implementation references.</p>
+  </CollapsibleSection>
+)}
+
+{(sourceGames.length > 0 || observedIn.length > 0 || mutationDimensions.length > 0) && (
+  <CollapsibleSection title="Ancestry">
+    <div class="space-y-3 text-sm">
+      {sourceGames.length > 0 && (
+        <div>
+          <h3 class="text-xs font-medium text-ib-muted">Source games</h3>
+          <div class="mt-1 flex flex-wrap gap-1">
+            {sourceGames.map((g) => (
+              <span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">{g}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {observedIn.length > 0 && (
+        <div>
+          <h3 class="text-xs font-medium text-ib-muted">Observed in</h3>
+          <div class="mt-1 flex flex-wrap gap-1">
+            {observedIn.map((o) => (
+              <span class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-muted">{o}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {mutationDimensions.length > 0 && (
+        <div>
+          <h3 class="text-xs font-medium text-ib-muted">Mutation dimensions</h3>
+          <div class="mt-1 flex flex-wrap gap-1">
+            {mutationDimensions.map((d) => (
+              <span class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-muted">{d}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </CollapsibleSection>
+)}
+
+{conceptRelations.length > 0 && (
+  <CollapsibleSection title={`Related concepts (${conceptRelations.length})`}>
+    <ul class="space-y-2">
+      {conceptRelations.map((rel) => {
+        const sourceKey = idToKey.get(rel.source_record_id) ?? rel.source_record_id;
+        const targetKey = idToKey.get(rel.target_record_id) ?? rel.target_record_id;
+        const isOutgoing = rel.source_record_id === record.id;
+        const otherKey = isOutgoing ? targetKey : sourceKey;
+        return (
+          <li class="flex items-center gap-2 text-sm">
+            <span class="font-mono text-xs text-ib-accent2">{rel.relation_type}</span>
+            <span class="text-ib-muted">{isOutgoing ? "→" : "←"}</span>
+            <a href={`/records/${otherKey}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{otherKey}</a>
+          </li>
+        );
+      })}
+    </ul>
+  </CollapsibleSection>
+)}

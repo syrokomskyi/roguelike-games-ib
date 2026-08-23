@@ -11,6 +11,7 @@ import RecordAttributes from "../../components/RecordAttributes.astro";
 import EvidenceList from "../../components/EvidenceList.astro";
 import RelationGraph from "../../components/RelationGraph.astro";
 import CollapsibleSection from "../../components/CollapsibleSection.astro";
+import ConceptDetails from "../../components/ConceptDetails.astro";
 
 const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
 
@@ -85,6 +86,10 @@ const breadcrumbs = recordSourceId
     )}
 
     <RecordAttributes record={record} />
+
+    {record.record_type === "concept" && (
+      <ConceptDetails record={record} relations={allRelations} records={ctx.store.records} />
+    )}
 
     <CollapsibleSection title={`02 / Claims (${claims.length})`}>
       {claims.length > 0 ? (
