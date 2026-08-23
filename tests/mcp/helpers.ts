@@ -1,5 +1,5 @@
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { createTestWorkspace, cleanupTempWorkspace } from "@roguelike-games-ib/test-fixtures";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";
 import { materialize } from "@roguelike-games-ib/materializer";
@@ -44,9 +44,9 @@ export async function setupMcpWorkspace(options: {
   const canonicalRoot = join(workspace, "knowledge");
 
   for (const record of options.records ?? []) {
-    const dir = join(canonicalRoot, record.record_type);
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, `${record.key}.jsonl`), canonicalJsonStringify(record) + "\n", "utf-8");
+    const filePath = join(canonicalRoot, record.record_type, `${record.key}.jsonl`);
+    mkdirSync(dirname(filePath), { recursive: true });
+    writeFileSync(filePath, canonicalJsonStringify(record) + "\n", "utf-8");
   }
 
   for (const claim of options.claims ?? []) {
@@ -113,7 +113,7 @@ export async function setupMcpWorkspace(options: {
   }
   writeFileSync(
     join(ontologyDir, "relation-types.yaml"),
-    `schema: rgkb/relation-ontology@2\nmodel_version: 2.0.0\nrelations:\n- id: similar_to\n  semantics: Source record is similar to target record.\n  direction: symmetric\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: related_to\n  semantics: Source record is related to target record.\n  direction: directed\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: implements\n  semantics: Source record implements target record.\n  direction: directed\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: pressures\n  semantics: Design pressure relation.\n  direction: directed\n  evidence_required: false\n  domain:\n  - design_primitive\n  - concept\n  range:\n  - design_primitive\n  - concept\n- id: tensions_with\n  semantics: Design tension relation.\n  direction: symmetric\n  evidence_required: false\n  domain:\n  - design_primitive\n  - concept\n  range:\n  - design_primitive\n  - concept\n`,
+    `schema: rgkb/relation-ontology@2\nmodel_version: 2.0.0\nrelations:\n- id: similar_to\n  semantics: Source record is similar to target record.\n  direction: symmetric\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: related_to\n  semantics: Source record is related to target record.\n  direction: directed\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: implements\n  semantics: Source record implements target record.\n  direction: directed\n  evidence_required: false\n  domain:\n  - creature\n  - mechanic\n  range:\n  - creature\n  - mechanic\n- id: pressures\n  semantics: Design pressure relation.\n  direction: directed\n  evidence_required: false\n  domain:\n  - design_primitive\n  - concept\n  range:\n  - design_primitive\n  - concept\n- id: tensions_with\n  semantics: Design tension relation.\n  direction: symmetric\n  evidence_required: false\n  domain:\n  - design_primitive\n  - concept\n  range:\n  - design_primitive\n  - concept\n- id: HAS_MUTATION_VECTOR\n  semantics: Design primitive has a mutation vector.\n  direction: directed\n  evidence_required: false\n  domain:\n  - concept\n  range:\n  - concept\n- id: IMPLEMENTED_AS\n  semantics: Mutation vector is implemented as a design knob.\n  direction: directed\n  evidence_required: false\n  domain:\n  - concept\n  range:\n  - concept\n`,
     "utf-8",
   );
 
