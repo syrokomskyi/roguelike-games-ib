@@ -18,7 +18,7 @@ describe("EXT-004: extractor SDK exposes no execute/write API", () => {
     const proto = Object.getPrototypeOf(reader);
     const methods = Object.getOwnPropertyNames(proto).filter((m) => m !== "constructor");
 
-    const allowed = ["resolveSafe", "exists", "readBytes", "readText", "stat", "walk", "parseJson", "parseYaml", "getRoot"];
+    const allowed = ["resolveSafe", "exists", "readBytes", "readText", "stat", "walk", "parseJson", "parseYaml", "getRoot", "getSupplementalRoots", "matchSupplemental", "resolveInRoot"];
     for (const method of methods) {
       expect(allowed).toContain(method);
     }
