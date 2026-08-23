@@ -30,6 +30,7 @@
     "prepare": "bash scripts/pre-commit-quality.sh --install 2>/dev/null || true"
   },
   "devDependencies": {
+    "@ai-sdk/openai": "^4.0.46",
     "@roguelike-games-ib/broguece-extractor": "workspace:*",
     "@roguelike-games-ib/cataclysm-bn-extractor": "workspace:*",
     "@roguelike-games-ib/crawl-extractor": "workspace:*",
@@ -49,6 +50,7 @@
     "@warpgogol/forge": "^2.9.4",
     "@warpgogol/werkstatt": "^1.4.0",
     "@warpgogol/werkstatt-knowledge": "^0.2.0",
+    "ai": "^7.0.77",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "better-sqlite3": "^12.2.0",

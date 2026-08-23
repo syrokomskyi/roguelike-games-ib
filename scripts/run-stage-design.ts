@@ -6,7 +6,10 @@ import {
 } from "../packages/knowledge-core/src/index.ts";
 import { readCanonicalState } from "../packages/materializer/src/index.ts";
 import { join } from "node:path";
-import { existsSync, rmSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, rmSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
@@ -56,6 +59,64 @@ function makeRelationEnvelope(key: string, id: string, relationType: string, sou
     evidence_refs: evidenceRefs,
     qualifiers,
   };
+}
+
+function loadEnv() {
+  const envPath = join(WORKSPACE, ".env");
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, "utf-8").split("\n")) {
+      const m = line.match(/^([^#=]+)=(.*)$/);
+      if (m && !process.env[m[1].trim()]) process.env[m[1].trim()] = m[2].trim();
+    }
+  }
+}
+loadEnv();
+
+const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const LLM_MODEL = "gpt-4o-mini";
+
+const CACHE_DIR = join(WORKSPACE, "systems-cache");
+const CACHE_PATH = join(CACHE_DIR, "llm-design-cache.json");
+let llmCache: Record<string, string> = {};
+function loadCache() {
+  if (existsSync(CACHE_PATH)) {
+    try { llmCache = JSON.parse(readFileSync(CACHE_PATH, "utf-8")); } catch { llmCache = {}; }
+  }
+}
+function saveCache() {
+  if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
+  writeFileSync(CACHE_PATH, JSON.stringify(llmCache, null, 2));
+}
+function hashKey(s: string) { return createHash("md5").update(s).digest("hex"); }
+
+async function llm(prompt: string): Promise<string> {
+  const k = hashKey(prompt);
+  if (llmCache[k]) return llmCache[k];
+  console.log(`  [LLM] calling ${LLM_MODEL}...`);
+  const result = await generateText({ model: openai(LLM_MODEL), prompt, temperature: 0.7 });
+  llmCache[k] = result.text;
+  saveCache();
+  return result.text;
+}
+
+async function llmJson<T>(prompt: string): Promise<T> {
+  const text = await llm(prompt + "\n\nRespond with valid JSON only, no markdown fences.");
+  const cleaned = text.replace(/^```json?\n?/g, "").replace(/\n?```$/g, "").trim();
+  return JSON.parse(cleaned) as T;
+}
+
+function findRecordsByKeywords(state: { records: any[] }, keywords: string[], limit = 5): string[] {
+  const matches: { id: string; score: number }[] = [];
+  for (const record of state.records) {
+    if (record.record_type !== "definition") continue;
+    const name = ((record as any).name || record.key || "").toLowerCase();
+    let score = 0;
+    for (const kw of keywords) {
+      if (name.includes(kw.toLowerCase())) score++;
+    }
+    if (score > 0) matches.push({ id: record.id, score });
+  }
+  return matches.sort((a, b) => b.score - a.score).slice(0, limit).map(m => m.id);
 }
 
 function makeEvidenceEnvelope(key: string, id: string) {
@@ -424,6 +485,7 @@ const DESIGN_PRIMITIVES: DesignPrimitive[] = [
 async function main() {
   console.log("Cleaning previous design data...");
   cleanDesignData();
+  loadCache();
 
   console.log("Reading canonical state...");
   const state = readCanonicalState(CANONICAL_ROOT);
@@ -444,13 +506,17 @@ async function main() {
     ...makeEvidenceEnvelope(designEvKey, designEvId),
   });
 
-  // Track pressure concept IDs by key to avoid duplicate concepts with different IDs
+  // Track concept IDs by key for relation creation
   const pressureConceptIds = new Map<string, string>();
+  const primitiveConceptIds = new Map<string, string>();
+  const mutationVectorIds = new Map<string, string>();
 
   // Create design primitive concepts
   for (const dp of DESIGN_PRIMITIVES) {
     const conceptId = createRecordId();
     const key = `cross-game/concept/design-${dp.slug}`;
+
+    primitiveConceptIds.set(dp.slug, conceptId);
 
     concepts.push({
       ...makeConceptEnvelope(key, conceptId),
@@ -544,7 +610,245 @@ async function main() {
     });
   }
 
-  console.log(`Created ${concepts.length} design concepts (${DESIGN_PRIMITIVES.length} primitives + pressure concepts)`);
+  // === Step 3: Generate mutation vectors ===
+  console.log("\n=== Generating mutation vectors ===");
+  for (const dp of DESIGN_PRIMITIVES) {
+    const primId = primitiveConceptIds.get(dp.slug)!;
+    for (const dim of dp.mutation_dimensions) {
+      const dimSlug = slugify(dim);
+      const mvId = createRecordId();
+      const mvKey = `cross-game/concept/mutation-${dp.slug}-${dimSlug}`;
+      mutationVectorIds.set(mvKey, mvId);
+
+      let fields: { title: string; definition: string; inclusion_criteria: string[]; exclusion_criteria: string[] };
+      try {
+        fields = await llmJson(`You are a game design expert analyzing roguelike games (NetHack, BrogueCE, Cataclysm-BN, Dungeon Crawl Stone Soup).
+
+Given the design primitive "${dp.title}" (definition: ${dp.definition}), generate a mutation vector concept for the dimension "${dim}".
+
+This dimension describes an axis along which this primitive can vary across different game implementations.
+
+Respond with JSON:
+{"title": "Human-readable title", "definition": "What this dimension controls and how it varies (1-2 sentences)", "inclusion_criteria": ["criterion1", "criterion2"], "exclusion_criteria": ["what is NOT this dimension"]}`);
+      } catch {
+        fields = {
+          title: dim.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+          definition: `How ${dp.title.toLowerCase()} varies along the ${dim.replace(/_/g, " ")} axis across games.`,
+          inclusion_criteria: [`Variation in ${dim.replace(/_/g, " ")} across implementations`],
+          exclusion_criteria: ["Unrelated dimensions"],
+        };
+      }
+
+      concepts.push({
+        ...makeConceptEnvelope(mvKey, mvId),
+        concept_type: "mutation_vector",
+        title: fields.title,
+        definition: fields.definition,
+        inclusion_criteria: fields.inclusion_criteria,
+        exclusion_criteria: fields.exclusion_criteria,
+        implementation_refs: [],
+        decision_refs: [],
+        evidence_refs: [],
+        ancestry: {
+          source_games: ["broguece", "cataclysm-bn", "crawl", "nethack"],
+          observed_in: [`${dp.title} design analysis`],
+          derived_from: [primId],
+          mutation_dimensions: [],
+        },
+      });
+
+      const relId = createRecordId();
+      const relKey = `cross-game/relation/${dp.slug}-has_mutation_vector-${dimSlug}`;
+      relations.push({
+        ...makeRelationEnvelope(relKey, relId, "HAS_MUTATION_VECTOR", primId, mvId, "cross_game", {
+          design_primitive: dp.slug,
+          dimension: dimSlug,
+        }, [designEvId]),
+      });
+    }
+  }
+  console.log(`Generated ${mutationVectorIds.size} mutation vectors`);
+
+  // === Step 4: Generate design knobs ===
+  console.log("\n=== Generating design knobs ===");
+  let knobCount = 0;
+  for (const dp of DESIGN_PRIMITIVES) {
+    for (const dim of dp.mutation_dimensions) {
+      const dimSlug = slugify(dim);
+      const mvKey = `cross-game/concept/mutation-${dp.slug}-${dimSlug}`;
+      const mvId = mutationVectorIds.get(mvKey)!;
+
+      let knobs: { slug: string; title: string; definition: string; source_games: string[]; search_keywords: string[] }[];
+      try {
+        knobs = await llmJson(`You are a game design expert analyzing roguelike games (NetHack, BrogueCE, Cataclysm-BN, Dungeon Crawl Stone Soup).
+
+Given the design primitive "${dp.title}" and mutation dimension "${dim}", generate 2-4 design knob concepts representing different implementation choices along this axis.
+
+Respond with JSON array:
+[{"slug": "short_id", "title": "Implementation Choice Name", "definition": "How this works (1-2 sentences)", "source_games": ["nethack"|"broguece"|"cataclysm-bn"|"crawl"], "search_keywords": ["keyword1", "keyword2"]}]`);
+      } catch {
+        knobs = [
+          { slug: "low", title: `Low ${dim}`, definition: `Minimal ${dim.replace(/_/g, " ")} setting.`, source_games: ["broguece"], search_keywords: [dim] },
+          { slug: "high", title: `High ${dim}`, definition: `Maximal ${dim.replace(/_/g, " ")} setting.`, source_games: ["nethack"], search_keywords: [dim] },
+        ];
+      }
+
+      for (const knob of knobs) {
+        const knobId = createRecordId();
+        const knobKey = `cross-game/concept/knob-${dp.slug}-${dimSlug}-${slugify(knob.slug)}`;
+        const implRefs = findRecordsByKeywords(state, knob.search_keywords || []);
+
+        concepts.push({
+          ...makeConceptEnvelope(knobKey, knobId),
+          concept_type: "design_knob",
+          title: knob.title,
+          definition: knob.definition,
+          inclusion_criteria: [],
+          exclusion_criteria: [],
+          implementation_refs: implRefs,
+          decision_refs: [],
+          evidence_refs: [],
+          ancestry: {
+            source_games: knob.source_games || [],
+            observed_in: [`${dp.title} / ${dim} analysis`],
+            derived_from: [mvId],
+            mutation_dimensions: [],
+          },
+        });
+
+        const relId = createRecordId();
+        const relKey = `cross-game/relation/${dp.slug}-${dimSlug}-implemented_as-${slugify(knob.slug)}`;
+        relations.push({
+          ...makeRelationEnvelope(relKey, relId, "IMPLEMENTED_AS", mvId, knobId, "cross_game", {
+            mutation_vector: dimSlug,
+            knob: slugify(knob.slug),
+          }, [designEvId]),
+        });
+        knobCount++;
+      }
+    }
+  }
+  console.log(`Generated ${knobCount} design knobs`);
+
+  // === Step 5: Generate counterplay patterns ===
+  console.log("\n=== Generating counterplay patterns ===");
+  let counterplayCount = 0;
+  const pressuresWithoutCounterplay: string[] = [];
+  for (const [pressureKey, pressureId] of pressureConceptIds) {
+    const pressureTitle = pressureKey.replace("cross-game/concept/pressure-", "").replace(/_/g, " ");
+
+    let patterns: { slug: string; title: string; definition: string; source_games: string[]; search_keywords: string[] }[];
+    try {
+      patterns = await llmJson(`You are a game design expert analyzing roguelike games (NetHack, BrogueCE, Cataclysm-BN, Dungeon Crawl Stone Soup).
+
+Given the design pressure "${pressureTitle}", generate 1-3 counterplay patterns — strategies, items, or mechanics that mitigate this pressure.
+
+If the pressure is abstract and has no meaningful counterplay, return an empty array [].
+
+Respond with JSON array:
+[{"slug": "short_id", "title": "Counterplay Name", "definition": "How this counterplay works (1-2 sentences)", "source_games": ["nethack"|"broguece"|"cataclysm-bn"|"crawl"], "search_keywords": ["keyword1", "keyword2"]}]`);
+    } catch {
+      patterns = [];
+    }
+
+    if (patterns.length === 0) {
+      pressuresWithoutCounterplay.push(pressureTitle);
+      continue;
+    }
+
+    for (const pattern of patterns) {
+      const cpId = createRecordId();
+      const cpKey = `cross-game/concept/counterplay-${slugify(pressureTitle)}-${slugify(pattern.slug)}`;
+      const implRefs = findRecordsByKeywords(state, pattern.search_keywords || []);
+
+      concepts.push({
+        ...makeConceptEnvelope(cpKey, cpId),
+        concept_type: "counterplay_pattern",
+        title: pattern.title,
+        definition: pattern.definition,
+        inclusion_criteria: [],
+        exclusion_criteria: [],
+        implementation_refs: implRefs,
+        decision_refs: [],
+        evidence_refs: [],
+        ancestry: {
+          source_games: pattern.source_games || [],
+          observed_in: [`${pressureTitle} counterplay analysis`],
+          derived_from: [pressureId],
+          mutation_dimensions: [],
+        },
+      });
+
+      const relId = createRecordId();
+      const relKey = `cross-game/relation/${slugify(pressureTitle)}-has_counterplay-${slugify(pattern.slug)}`;
+      relations.push({
+        ...makeRelationEnvelope(relKey, relId, "HAS_COUNTERPLAY", pressureId, cpId, "cross_game", {
+          pressure: slugify(pressureTitle),
+          counterplay: slugify(pattern.slug),
+        }, [designEvId]),
+      });
+      counterplayCount++;
+    }
+  }
+  console.log(`Generated ${counterplayCount} counterplay patterns`);
+  if (pressuresWithoutCounterplay.length > 0) {
+    console.log(`  Pressures without counterplay: ${pressuresWithoutCounterplay.join(", ")}`);
+  }
+
+  // === Step 6: Generate failure modes ===
+  console.log("\n=== Generating failure modes ===");
+  let failureModeCount = 0;
+  for (const dp of DESIGN_PRIMITIVES) {
+    const primId = primitiveConceptIds.get(dp.slug)!;
+
+    let modes: { slug: string; title: string; definition: string; inclusion_criteria: string[]; exclusion_criteria: string[] }[];
+    try {
+      modes = await llmJson(`You are a game design expert analyzing roguelike games (NetHack, BrogueCE, Cataclysm-BN, Dungeon Crawl Stone Soup).
+
+Given the design primitive "${dp.title}" (definition: ${dp.definition}), generate 1-2 failure mode concepts — conditions under which this primitive becomes trivial, dominant, opaque, degenerate, or otherwise fails.
+
+Respond with JSON array:
+[{"slug": "short_id", "title": "Failure Mode Name", "definition": "What goes wrong and why (1-2 sentences)", "inclusion_criteria": ["symptom1", "symptom2"], "exclusion_criteria": ["what is NOT this failure"]}]`);
+    } catch {
+      modes = [{ slug: "degenerate", title: `Degenerate ${dp.title}`, definition: `${dp.title} becomes trivial or dominant.`, inclusion_criteria: ["Game becomes trivial"], exclusion_criteria: ["Normal difficulty"] }];
+    }
+
+    for (const mode of modes) {
+      const fmId = createRecordId();
+      const fmKey = `cross-game/concept/failure-${dp.slug}-${slugify(mode.slug)}`;
+
+      concepts.push({
+        ...makeConceptEnvelope(fmKey, fmId),
+        concept_type: "failure_mode",
+        title: mode.title,
+        definition: mode.definition,
+        inclusion_criteria: mode.inclusion_criteria,
+        exclusion_criteria: mode.exclusion_criteria,
+        implementation_refs: [],
+        decision_refs: [],
+        evidence_refs: [],
+        ancestry: {
+          source_games: ["broguece", "cataclysm-bn", "crawl", "nethack"],
+          observed_in: [`${dp.title} failure analysis`],
+          derived_from: [primId],
+          mutation_dimensions: [],
+        },
+      });
+
+      const relId = createRecordId();
+      const relKey = `cross-game/relation/${dp.slug}-can_fail_as-${slugify(mode.slug)}`;
+      relations.push({
+        ...makeRelationEnvelope(relKey, relId, "CAN_FAIL_AS", primId, fmId, "cross_game", {
+          design_primitive: dp.slug,
+          failure_mode: slugify(mode.slug),
+        }, [designEvId]),
+      });
+      failureModeCount++;
+    }
+  }
+  console.log(`Generated ${failureModeCount} failure modes`);
+
+  console.log(`\nCreated ${concepts.length} design concepts (${DESIGN_PRIMITIVES.length} primitives + pressure + mutation + knob + counterplay + failure concepts)`);
   console.log(`Created ${relations.length} design-space relations`);
 
   // Build transaction

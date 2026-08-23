@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: find_cross_game_concepts, find_design_primitives, and query_design_space tool handlers.</item>
+  <item>RFC-0003: Added HAS_MUTATION_VECTOR, IMPLEMENTED_AS, HAS_COUNTERPLAY, CAN_FAIL_AS to designRelationTypes.</item>
 </CHANGE_SUMMARY>
 */
 import type { McpContext } from "../context.ts";
@@ -96,7 +97,10 @@ export function queryDesignSpace(
   );
 
   // Further filter to design-space relation types only
-  const designRelationTypes = new Set(["CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with"]);
+  const designRelationTypes = new Set([
+    "CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with",
+    "HAS_MUTATION_VECTOR", "IMPLEMENTED_AS", "HAS_COUNTERPLAY", "CAN_FAIL_AS",
+  ]);
   designRelations = designRelations.filter((r) => designRelationTypes.has(r.relation_type));
 
   if (input.primitive_key) {

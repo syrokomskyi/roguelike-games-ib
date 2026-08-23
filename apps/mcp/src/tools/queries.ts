@@ -220,6 +220,23 @@ export function getDesignTensions(
     tensions: items.map((r) => {
       const source = ctx.store.resolveRecordById(r.source_record_id);
       const target = ctx.store.resolveRecordById(r.target_record_id);
+
+      const sourceCounterplay = ctx.store.relations
+        .filter((cr) => cr.relation_type === "HAS_COUNTERPLAY" && cr.source_record_id === r.source_record_id)
+        .map((cr) => {
+          const cp = ctx.store.resolveRecordById(cr.target_record_id);
+          return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
+        })
+        .filter(Boolean);
+
+      const targetCounterplay = ctx.store.relations
+        .filter((cr) => cr.relation_type === "HAS_COUNTERPLAY" && cr.source_record_id === r.target_record_id)
+        .map((cr) => {
+          const cp = ctx.store.resolveRecordById(cr.target_record_id);
+          return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
+        })
+        .filter(Boolean);
+
       return {
         relation_id: r.id,
         source: source
@@ -228,6 +245,10 @@ export function getDesignTensions(
         target: target
           ? { record_id: target.id, record_key: target.key, title: (target as unknown as Record<string, unknown>)["title"] ?? null }
           : null,
+        counterplay: {
+          source: sourceCounterplay,
+          target: targetCounterplay,
+        },
       };
     }),
     cursor: nextCursor,
