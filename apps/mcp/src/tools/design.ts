@@ -8,9 +8,11 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: find_cross_game_concepts, find_design_primitives, and query_design_space tool handlers.</item>
   <item>RFC-0003: Added HAS_MUTATION_VECTOR, IMPLEMENTED_AS, HAS_COUNTERPLAY, CAN_FAIL_AS to designRelationTypes.</item>
+  <item>RFC-0009: find_cross_game_concepts and find_design_primitives now sort by quality_score.overall descending.</item>
 </CHANGE_SUMMARY>
 */
 import type { McpContext } from "../context.ts";
+import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 
@@ -28,6 +30,8 @@ export function findCrossGameConcepts(
       (r) => (r as unknown as Record<string, unknown>)["concept_type"] === input.concept_type,
     );
   }
+
+  concepts = sortByQuality(concepts);
 
   const { items, nextCursor } = paginate(
     concepts.map((r) => ({ ...r, key: r.key, id: r.id })),
@@ -62,8 +66,10 @@ export function findDesignPrimitives(
       (r as unknown as Record<string, unknown>)["concept_type"] === "design_primitive",
   );
 
+  const sortedPrimitives = sortByQuality(primitives);
+
   const { items, nextCursor } = paginate(
-    primitives.map((r) => ({ ...r, key: r.key, id: r.id })),
+    sortedPrimitives.map((r) => ({ ...r, key: r.key, id: r.id })),
     ctx.canonicalHash,
     filters,
     input.cursor,
@@ -142,4 +148,18 @@ export function queryDesignSpace(
 
 function resolveRecordByIdSafe(ctx: McpContext, id: string) {
   return ctx.store.records.find((r) => r.id === id);
+}
+
+function sortByQuality(records: CanonicalRecord[]) {
+  return [...records].sort((a, b) => {
+    const aScore = (a as unknown as Record<string, unknown>)["quality_score"] as
+      | { overall: number }
+      | undefined;
+    const bScore = (b as unknown as Record<string, unknown>)["quality_score"] as
+      | { overall: number }
+      | undefined;
+    const aOverall = aScore?.overall ?? -1;
+    const bOverall = bScore?.overall ?? -1;
+    return bOverall - aOverall;
+  });
 }
