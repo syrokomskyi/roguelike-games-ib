@@ -40,7 +40,7 @@ successSignals:
 nonGoals:
   - Does not redefine the concept record schema — uses existing rgkb/concept@2
   - Does not add new concept_types — all proposed types already exist in concept.schema.yaml and design-space.yaml
-  - Does not automate design layer generation — this is a curated analytical layer
+  - Does not manually curate design layer content — all concepts are generated algorithmically and via LLM prompts from game records
   - Does not align per-primitive mutation_dimensions with the abstract cross-cutting dimensions in design-space.yaml — they serve different purposes (concrete per-primitive vs abstract cross-cutting)
   - Does not add new relation types where existing ones suffice — uses existing HAS_COUNTERPLAY instead of proposing COUNTERED_BY
 ---
@@ -97,7 +97,7 @@ The design layer is currently a static taxonomy — it names primitives and pres
 
 ## Decision
 
-The design layer gains four new concept types (mutation_vector, design_knob, counterplay_pattern, failure_mode) and three new relation types (HAS_MUTATION_VECTOR, IMPLEMENTED_AS, CAN_FAIL_AS), using the existing HAS_COUNTERPLAY relation for counterplay. The `scripts/run-stage-design.ts` script generates these concepts and relations from curated data constants. MCP tools are extended to traverse the expanded graph.
+The design layer gains four new concept types (mutation_vector, design_knob, counterplay_pattern, failure_mode) and three new relation types (HAS_MUTATION_VECTOR, IMPLEMENTED_AS, CAN_FAIL_AS), using the existing HAS_COUNTERPLAY relation for counterplay. The `scripts/run-stage-design.ts` script generates these concepts and relations automatically using an LLM + algorithm approach: structure is computed algorithmically from canonical state (game records, attributes, existing primitives/pressures), and textual content (definitions, inclusion/exclusion criteria) is generated via LLM API calls. MCP tools are extended to traverse the expanded graph.
 
 ## Architectural fit
 
@@ -208,14 +208,16 @@ Add three new relation types to `knowledge/ontology/relation-types.yaml`. The ex
 | `HAS_COUNTERPLAY` (existing) | design_pressure → counterplay_pattern | cross_game | Pressure can be mitigated by this pattern |
 | `CAN_FAIL_AS` | design_primitive → failure_mode | cross_game | Primitive can degenerate into this failure mode |
 
-### D6: Extend `scripts/run-stage-design.ts` with new concept generators
+### D6: Extend `scripts/run-stage-design.ts` with LLM-driven concept generators
 
-Add four new sections to the design script:
+Add four new generation sections to the design script using an LLM + algorithm approach:
 
-1. **Mutation vector generation**: iterate over `DESIGN_PRIMITIVES`, for each `mutation_dimensions` entry, create a `mutation_vector` concept and `HAS_MUTATION_VECTOR` relation.
-2. **Design knob generation**: for each mutation vector, define 2-4 knob values with game-specific `implementation_refs`. This is a curated list, not auto-generated.
-3. **Counterplay pattern generation**: for each pressure concept, define 1-3 counterplay patterns with `HAS_COUNTERPLAY` relations. Curated.
-4. **Failure mode generation**: for each design primitive, define 1-2 failure modes with `CAN_FAIL_AS` relations. Curated.
+1. **Mutation vector generation**: iterate over `DESIGN_PRIMITIVES`, for each `mutation_dimensions` entry, create a `mutation_vector` concept and `HAS_MUTATION_VECTOR` relation. Definitions generated via LLM prompt: "Given the design primitive '{title}' and dimension '{dimension}', generate a definition, inclusion_criteria, and exclusion_criteria for this mutation vector."
+2. **Design knob generation**: for each mutation vector, algorithmically cluster game records by attribute values along the dimension axis to identify 2-4 knob values. LLM generates knob titles and definitions based on the clustered records. `implementation_refs` auto-computed from the clustered record IDs. `sourceGames` derived from record `source_identity`.
+3. **Counterplay pattern generation**: for each pressure concept, algorithmically search game records for items/abilities/spells that mitigate the pressure (using attribute matching and relation traversal). LLM generates counterplay pattern titles and definitions based on the matched records. `implementation_refs` auto-computed.
+4. **Failure mode generation**: for each design primitive, LLM generates 1-2 failure mode concepts with definitions, inclusion_criteria, and exclusion_criteria based on the primitive's description and known game mechanics.
+
+The script uses `@ai-sdk/openai` (Vercel AI SDK) with `OPENAI_API_KEY` from `.env`. LLM calls are batched and cached to minimize API usage.
 
 ### D7: Extend MCP tools
 
@@ -232,119 +234,73 @@ Add four new sections to the design script:
 
 **Files**: `knowledge/ontology/relation-types.yaml`
 
-### Step 2: Define mutation vector data
+### Step 2: Add LLM integration to design script
 
-For each of the 15 design primitives, expand `mutation_dimensions` from plain strings to structured objects with titles, definitions, and 2-4 knob values:
+Add `@ai-sdk/openai` import and LLM helper functions to `scripts/run-stage-design.ts`:
 
-```typescript
-const MUTATION_VECTORS: {
-  primitiveSlug: string;
-  dimensions: {
-    slug: string;
-    title: string;
-    definition: string;
-    knobs: {
-      slug: string;
-      title: string;
-      definition: string;
-      sourceGames: string[];
-      implementationRefs?: string[];  // record IDs from canonical state
-    }[];
-  }[];
-}[] = [
-  {
-    primitiveSlug: "permadeath",
-    dimensions: [
-      {
-        slug: "permanence_degree",
-        title: "Permanence Degree",
-        definition: "How irreversible death is — from fully permanent to recoverable.",
-        knobs: [
-          { slug: "hard", title: "Hard Permadeath", definition: "Death is fully irreversible. Character and all progress are lost.", sourceGames: ["nethack", "broguece"] },
-          { slug: "soft", title: "Soft Permadeath", definition: "Death is permanent but some progress carries over (e.g., world state, unlocks).", sourceGames: ["cataclysm-bn"] },
-        ],
-      },
-      // ... more dimensions
-    ],
-  },
-  // ... more primitives
-];
-```
+1. `generateText(prompt: string): Promise<string>` — calls OpenAI API with `OPENAI_API_KEY` from environment
+2. `generateConceptFields(prompt: string): Promise<{title, definition, inclusion_criteria, exclusion_criteria}>` — structured LLM call for concept fields
+3. LLM response cache in `systems-cache/llm-design-cache.json` — keyed by prompt hash
+4. Batch prompts: multiple concepts per LLM call to minimize API usage
 
-**Files**: `scripts/run-stage-design.ts` — new `MUTATION_VECTORS` constant.
+**Completion criterion**: LLM helper functions exist and can generate structured concept fields from a prompt.
 
-### Step 3: Define counterplay pattern data
+**Files**: `scripts/run-stage-design.ts`, `systems-cache/llm-design-cache.json`
 
-For each design pressure, define 1-3 counterplay patterns:
+### Step 3: Implement mutation vector generation
 
-```typescript
-const COUNTERPLAY_PATTERNS: {
-  pressureSlug: string;
-  patterns: {
-    slug: string;
-    title: string;
-    definition: string;
-    sourceGames: string[];
-  }[];
-}[] = [
-  {
-    pressureSlug: "information_asymmetry",
-    patterns: [
-      { slug: "identify_scroll", title: "Identification Items", definition: "Consumable items that reveal unknown item properties.", sourceGames: ["nethack", "crawl"] },
-      { slug: "trial_and_error", title: "Safe Trial", definition: "Testing unknown items in low-risk situations to learn their effects.", sourceGames: ["broguece", "nethack"] },
-    ],
-  },
-  // ... more pressures
-];
-```
+Add a mutation vector generation loop in `main()` after design primitive creation:
 
-**Files**: `scripts/run-stage-design.ts` — new `COUNTERPLAY_PATTERNS` constant.
+1. Iterate over `DESIGN_PRIMITIVES`, for each `mutation_dimensions` entry
+2. Algorithmically create the mutation vector structure (key, concept_type, ancestry)
+3. Call LLM to generate `title`, `definition`, `inclusion_criteria`, `exclusion_criteria` based on the primitive title and dimension name
+4. Create `HAS_MUTATION_VECTOR` relation (primitive → mutation_vector)
 
-### Step 4: Define failure mode data
+**Completion criterion**: Script generates mutation_vector concepts for all 15 primitives with LLM-generated text fields.
 
-For each design primitive, define 1-2 failure modes:
+**Files**: `scripts/run-stage-design.ts`
 
-```typescript
-const FAILURE_MODES: {
-  primitiveSlug: string;
-  modes: {
-    slug: string;
-    title: string;
-    definition: string;
-    inclusionCriteria: string[];
-    exclusionCriteria: string[];
-  }[];
-}[] = [
-  {
-    primitiveSlug: "hunger_clock",
-    modes: [
-      {
-        slug: "clock_dominance",
-        title: "Clock Dominance",
-        definition: "Hunger clock is too aggressive, forcing players to prioritize food acquisition over all other gameplay. The game becomes a food-management simulator rather than a dungeon exploration experience.",
-        inclusionCriteria: ["Players report feeling rushed constantly", "Food consumption dominates strategic decisions", "Exploration is penalized more than rewarded"],
-        exclusionCriteria: ["Normal time pressure that encourages forward momentum"],
-      },
-    ],
-  },
-  // ... more primitives
-];
-```
+### Step 4: Implement design knob generation
 
-**Files**: `scripts/run-stage-design.ts` — new `FAILURE_MODES` constant.
+Add a design knob generation loop after mutation vector creation:
 
-### Step 5: Implement generation logic
+1. For each mutation vector, algorithmically cluster game records from canonical state by attribute values along the dimension axis
+2. Identify 2-4 distinct knob values from the clusters
+3. Call LLM to generate knob `title` and `definition` based on the clustered records and their attributes
+4. Auto-compute `implementation_refs` from clustered record IDs
+5. Derive `sourceGames` from record `source_identity`
+6. Create `IMPLEMENTED_AS` relation (mutation_vector → design_knob)
 
-Add four generation loops in `main()`:
+**Completion criterion**: Script generates design_knob concepts with auto-computed implementation_refs for all mutation vectors.
 
-1. After creating design primitives → generate mutation vectors + `HAS_MUTATION_VECTOR` relations
-2. After creating mutation vectors → generate design knobs + `IMPLEMENTED_AS` relations
-3. After creating design pressures → generate counterplay patterns + `HAS_COUNTERPLAY` relations
-4. After creating design primitives → generate failure modes + `CAN_FAIL_AS` relations
+**Files**: `scripts/run-stage-design.ts`
 
-**Files**: `scripts/run-stage-design.ts` — `main()` function.
+### Step 5: Implement counterplay pattern generation
 
-### Step 6: Extend MCP `query_design_space` tool
+Add a counterplay pattern generation loop after design pressure creation:
+
+1. For each pressure, algorithmically search game records for items/abilities/spells that mitigate the pressure (attribute matching, relation traversal)
+2. If matches found, call LLM to generate counterplay pattern `title` and `definition` based on matched records
+3. Auto-compute `implementation_refs` from matched record IDs
+4. Create `HAS_COUNTERPLAY` relation (pressure → counterplay_pattern)
+5. If no matches found, skip and log the pressure as having no counterplay
+
+**Completion criterion**: Script generates counterplay_pattern concepts for ≥25 of 31 pressures. Pressures without counterplay are logged.
+
+**Files**: `scripts/run-stage-design.ts`
+
+### Step 6: Implement failure mode generation
+
+Add a failure mode generation loop after design primitive creation:
+
+1. For each primitive, call LLM to generate 1-2 failure mode concepts with `title`, `definition`, `inclusion_criteria`, `exclusion_criteria` based on the primitive description and game mechanics
+2. Create `CAN_FAIL_AS` relation (primitive → failure_mode)
+
+**Completion criterion**: Script generates failure_mode concepts for all 15 primitives.
+
+**Files**: `scripts/run-stage-design.ts`
+
+### Step 7: Extend MCP `query_design_space` tool
 
 Update the `designRelationTypes` set in `apps/mcp/src/tools/design.ts` to include the new relation types:
 
@@ -357,7 +313,7 @@ const designRelationTypes = new Set([
 
 **Files**: `apps/mcp/src/tools/design.ts`
 
-### Step 7: Run and verify
+### Step 8: Run and verify
 
 1. Run `scripts/run-stage-design.ts` — verify new concepts and relations are created. The script's `cleanDesignData()` function removes all previous records with `actor_id === "design-primitives"` before regeneration, ensuring idempotent runs.
 2. Run `scripts/run-materialize.ts` — verify materializer accepts new concept types and relation types
@@ -370,9 +326,10 @@ const designRelationTypes = new Set([
 | Path | Role |
 |---|---|
 | `knowledge/ontology/relation-types.yaml` | Add 3 new relation types (HAS_MUTATION_VECTOR, IMPLEMENTED_AS, CAN_FAIL_AS) |
-| `scripts/run-stage-design.ts` | New MUTATION_VECTORS, COUNTERPLAY_PATTERNS, FAILURE_MODES constants + generation loops in main() |
+| `scripts/run-stage-design.ts` | LLM integration, mutation vector/knob/counterplay/failure mode generation loops in main() |
 | `apps/mcp/src/tools/design.ts` | Extend designRelationTypes set in queryDesignSpace |
 | `apps/mcp/src/tools/queries.ts` | Extend getDesignTensions to follow HAS_COUNTERPLAY relations |
+| `systems-cache/llm-design-cache.json` | LLM response cache for idempotent re-runs |
 | `knowledge/concept/cross-game/` | Output: new concept records (mutation_vector, design_knob, counterplay_pattern, failure_mode) |
 | `knowledge/relation/cross-game/` | Output: new relation records (HAS_MUTATION_VECTOR, IMPLEMENTED_AS, HAS_COUNTERPLAY, CAN_FAIL_AS) |
 
@@ -380,7 +337,7 @@ const designRelationTypes = new Set([
 
 - [ ] Each of 15 design primitives has ≥1 mutation vector concept with `HAS_MUTATION_VECTOR` relation
 - [ ] Each mutation vector has ≥2 design knob concepts with `IMPLEMENTED_AS` relations
-- [ ] Each of 31 design pressures has ≥1 counterplay pattern concept with `HAS_COUNTERPLAY` relation
+- [ ] ≥25 of 31 design pressures have ≥1 counterplay pattern concept with `HAS_COUNTERPLAY` relation (pressures without meaningful counterplay are documented)
 - [ ] Each of 15 design primitives has ≥1 failure mode concept with `CAN_FAIL_AS` relation
 - [ ] 3 new relation types registered in `relation-types.yaml` (HAS_MUTATION_VECTOR, IMPLEMENTED_AS, CAN_FAIL_AS — HAS_COUNTERPLAY already exists)
 - [ ] `query_design_space` MCP tool returns new relation types
@@ -388,7 +345,7 @@ const designRelationTypes = new Set([
 - [ ] Obsidian vault renders new concept types — verify that `render-record.ts` produces notes with `concept_type`, `definition`, `inclusion_criteria`, and `exclusion_criteria` fields for at least one `mutation_vector` and one `failure_mode` concept
 - [ ] All existing tests pass (no regressions)
 
-**Note on code vs content**: criteria 1–4 require both code changes (generation logic in `run-stage-design.ts`) and curated content (mutation vector definitions, knob values, counterplay patterns, failure mode descriptions). An agent can implement the code and generate concept records, but the quality of curated definitions requires domain expertise. The acceptance criteria verify structural completeness (counts and relations), not content quality.
+**Note on code vs content**: criteria 1–4 are fully automated via LLM + algorithm generation. No manual curation is required. The acceptance criteria verify structural completeness (counts and relations). LLM-generated content quality should be reviewed post-generation but does not block acceptance.
 
 ## Alternatives considered
 
@@ -398,18 +355,20 @@ const designRelationTypes = new Set([
 
 **C. Use existing `COUNTERS` relation instead of `HAS_COUNTERPLAY`** — `COUNTERS` exists with semantics "Source provides meaningful counterplay against target behavior/effect." Rejected in favor of `HAS_COUNTERPLAY` because `HAS_COUNTERPLAY` better expresses the directionality from pressure to counterplay (pressure HAS counterplay), while `COUNTERS` implies the counterplay is the source, which inverts the natural query direction.
 
-**D. Auto-generate all concepts from game data** — instead of curating mutation vectors and knobs, automatically derive them from extracted game records. Rejected because the design layer is an analytical abstraction — mutation vectors and failure modes are interpretive concepts that require domain analysis, not mechanical extraction. Auto-generation would produce noise without insight.
+**D. Purely manual curation without LLM** — define all mutation vectors, knobs, counterplay patterns, and failure modes as hand-written constants in the script. Rejected because it requires significant operator effort (~250 concepts) and is not scalable. The LLM + algorithm approach automates content generation while grounding it in actual game data.
 
-**E. Start with all 15 primitives at once** — implement all mutation vectors, knobs, counterplay patterns, and failure modes in a single pass. Rejected due to curated data volume (~250 concepts). The implementation can start with 5 most important primitives (permadeath, procedural_generation, hunger_clock, identification_system, stealth_and_awareness) and expand incrementally. However, acceptance criteria require full coverage to ensure graph completeness.
+**E. Start with all 15 primitives at once** — implement all mutation vectors, knobs, counterplay patterns, and failure modes in a single pass. Accepted: the LLM + algorithm approach makes full coverage feasible in one run. LLM responses are cached for idempotent re-runs.
 
 ## Risks
 
-- **Curated data volume**: 15 primitives × ~4 dimensions × ~3 knobs = ~180 knob concepts, plus ~31 counterplay patterns and ~15-30 failure modes. This is a significant amount of hand-curated data. Mitigation: start with 5 most important primitives and expand incrementally.
-- **Implementation refs for knobs**: Knob concepts need `implementation_refs` pointing to actual game records. This requires knowing which records exemplify each knob. Mitigation: use `find_by_attribute` MCP tool to find candidate records, then curate manually.
+- **Curated data volume**: 15 primitives × ~4 dimensions × ~3 knobs = ~180 knob concepts, plus ~25-31 counterplay patterns and ~15-30 failure modes. All generated automatically via LLM + algorithm. Mitigation: LLM calls are batched and cached; script can be re-run idempotently.
+- **LLM API cost**: generating ~250 concepts via OpenAI API incurs cost. Mitigation: use batched prompts (multiple concepts per call), cache responses in `systems-cache/llm-design-cache.json`, and use a cost-effective model (gpt-4o-mini).
+- **LLM output quality**: LLM-generated definitions may be generic or inaccurate. Mitigation: include game record context in prompts; validate output against schema; manual review of a sample before full acceptance.
+- **Implementation refs for knobs**: Knob `implementation_refs` are auto-computed by clustering game records by attribute values along the mutation vector axis. Mitigation: use `find_by_attribute` logic to find candidate records, cluster by attribute similarity.
 - **Relation type proliferation**: Adding 3 new relation types increases ontology complexity. Mitigation: all 3 are within the `cross_game` scope and follow the existing pattern of typed directional relations. `HAS_COUNTERPLAY` is reused rather than creating a duplicate.
-- **Agent misinterpretation**: agents may treat the curated data constants in `run-stage-design.ts` as exhaustive and fail to add new primitives or dimensions when games are added. The constants are curated, not auto-discovered. Mitigation: implementation notes specify that new primitives require manual addition to the `DESIGN_PRIMITIVES` and `MUTATION_VECTORS` constants.
-- **Performance**: the `run-stage-design.ts` script runs sequentially. Adding ~250 new concepts and ~250 new relations increases runtime. The existing script processes ~105 records in under 1 second; ~500 total records should complete in under 5 seconds. Acceptable for batch generation.
-- **Edge cases**: a design primitive without `mutation_dimensions` would produce zero mutation vectors. All 15 current primitives have dimensions, but new primitives added in the future must include them. A pressure without meaningful counterplay (e.g., `analysis_paralysis`) may have no counterplay pattern — the acceptance criterion of ≥1 per pressure may need relaxation for such cases.
+- **Agent misinterpretation**: agents may treat the LLM-generated content as authoritative. The content is auto-generated and may need refinement. Mitigation: implementation notes specify that content is LLM-generated and should be reviewed before final acceptance.
+- **Performance**: the `run-stage-design.ts` script runs sequentially with LLM API calls. ~250 concepts × ~1s per LLM call = ~4 minutes. Acceptable for batch generation. LLM responses are cached for re-runs.
+- **Edge cases**: a design primitive without `mutation_dimensions` would produce zero mutation vectors. All 15 current primitives have dimensions. A pressure without meaningful counterplay (e.g., `analysis_paralysis`) may have 0 counterplay patterns — documented as exception.
 
 ## Implementation notes for agents
 
@@ -419,5 +378,9 @@ const designRelationTypes = new Set([
 - Agents MUST NOT create concept records outside `scripts/run-stage-design.ts` — all design-layer concepts are managed by this script.
 - Agents MUST use `HAS_COUNTERPLAY` (existing) for pressure → counterplay_pattern relations, NOT a new `COUNTERED_BY` type.
 - Agents MUST add new relation types to `relation-types.yaml` before using them in the script.
+- Agents MUST use `@ai-sdk/openai` with `OPENAI_API_KEY` from environment for LLM calls. Cache responses in `systems-cache/llm-design-cache.json` for idempotent re-runs.
+- Agents MUST include game record context in LLM prompts to ground generated content in actual game data.
+- Agents MUST validate LLM output against `concept.schema.yaml` before writing to canonical state.
 - Agents MUST run `pnpm exec forge rfc.validate --id RFC-0003 --json` after changes to verify no mechanical violations.
 - Agents MUST NOT weaken or remove enforcement rules established by this RFC without a new RFC that supersedes it.
+- Agents SHOULD review a sample of LLM-generated concepts for quality before full acceptance.
