@@ -42,9 +42,17 @@ function makeDimension(
 async function main() {
   // === BrogueCE ===
   const brogueceDims = [
-    makeDimension("creatures", "extractor_population", 67, 67, 67, "extractor_population", "All monsters in monsterCatalog"),
+    makeDimension("creatures", "extractor_population", 67, 67, 67, "extractor_population", "All monsters in monsterCatalog (excluding MK_YOU and NUMBER_MONSTER_KINDS)"),
     makeDimension("terrain", "extractor_population", 214, 214, 214, "extractor_population", "All tile types in tileCatalog"),
-    makeDimension("items", "extractor_population", 46, 46, 46, "extractor_population", "Items from weapon/armor/food/key/staff/ring tables"),
+    makeDimension("items", "extractor_population", 97, 97, 97, "extractor_population", "All items across weapon/armor/food/key/staff/ring/potion/scroll/wand/charm tables"),
+    makeDimension("dungeon_features", "extractor_population", 145, 145, 145, "extractor_population", "All unique tile types in dungeonFeatureCatalog"),
+    makeDimension("lights", "extractor_population", 60, 60, 60, "extractor_population", "All entries in lightCatalog"),
+    makeDimension("mutations", "extractor_population", 8, 8, 8, "extractor_population", "All entries in mutationCatalog"),
+    makeDimension("monster_classes", "extractor_population", 15, 15, 15, "extractor_population", "All entries in monsterClassCatalog"),
+    makeDimension("status_effects", "extractor_population", 26, 26, 26, "extractor_population", "All entries in statusEffectCatalog"),
+    makeDimension("monster_behaviors", "extractor_population", 29, 29, 29, "extractor_population", "All entries in monsterBehaviorCatalog"),
+    makeDimension("monster_abilities", "extractor_population", 18, 18, 18, "extractor_population", "All entries in monsterAbilityCatalog"),
+    makeDimension("image_assets", "extractor_population", 4, 4, 4, "extractor_population", "Image assets (icon.png, tiles.png) from bin/assets and source/bin/assets"),
     makeDimension("semantic_records", "qualitative", null, 12, 12, "qualitative", "12 semantic records covering core BrogueCE systems and mechanics"),
     makeDimension("concepts", "qualitative", null, 2, 2, "qualitative", "2 cross-game concepts: layered terrain promotion, runic weapon"),
   ];
@@ -53,8 +61,8 @@ async function main() {
   // === Cataclysm-BN ===
   const catbnDims = [
     makeDimension("monsters", "extractor_population", 597, 597, 597, "extractor_population", "All monster entries in data/json/monsters/*.json"),
-    makeDimension("items", "extractor_population", 5886, 5838, 5838, "extractor_population", "Items from data/json/items/**/*.json; 5838 of 5886 extracted (48 missing)"),
-    makeDimension("mutations", "extractor_population", 625, 621, 621, "extractor_population", "Mutations from data/json/mutations/*.json; 621 of 625 extracted"),
+    makeDimension("items", "extractor_population", 5886, 5886, 5886, "extractor_population", "All item entries with id in data/json/items/**/*.json"),
+    makeDimension("mutations", "extractor_population", 625, 625, 625, "extractor_population", "All mutation entries with id in data/json/mutations/*.json"),
     makeDimension("professions", "extractor_population", 339, 339, 339, "extractor_population", "All profession entries in professions.json"),
     makeDimension("bionics", "extractor_population", 137, 137, 137, "extractor_population", "All bionic entries with type=bionic in data/json/bionics.json"),
     makeDimension("cb_traps", "extractor_population", 50, 50, 50, "extractor_population", "All trap entries with type=trap in data/json/traps.json"),
