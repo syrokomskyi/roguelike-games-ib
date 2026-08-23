@@ -8,6 +8,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: search, design-search, index, and health endpoints with CORS and token auth.</item>
+  <item>RFC-0010: Added concept_type filter to /api/search endpoint.</item>
 </CHANGE_SUMMARY>
 */
 import type {
@@ -74,6 +75,7 @@ async function handleSearch(
   const sourceId = normalizeFilter(url.searchParams.get("source"));
   const recordType = normalizeFilter(url.searchParams.get("type"));
   const kind = normalizeFilter(url.searchParams.get("kind"));
+  const conceptType = normalizeFilter(url.searchParams.get("concept_type"));
   const limit = parseLimit(url.searchParams.get("limit"));
   const queryEmbedding = await embedTexts(env, [q]);
 
@@ -85,6 +87,7 @@ async function handleSearch(
   if (sourceId) filter.source_id = sourceId;
   if (recordType) filter.record_type = recordType;
   if (kind) filter.kind = kind;
+  if (conceptType) filter.concept_type = conceptType;
   const vectorMatches = await env.VECTOR_INDEX.query(queryEmbedding[0], {
     topK: limit,
     returnMetadata: "all",
