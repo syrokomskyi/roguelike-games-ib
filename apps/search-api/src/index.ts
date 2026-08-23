@@ -73,6 +73,7 @@ async function handleSearch(
 
   const sourceId = normalizeFilter(url.searchParams.get("source"));
   const recordType = normalizeFilter(url.searchParams.get("type"));
+  const kind = normalizeFilter(url.searchParams.get("kind"));
   const limit = parseLimit(url.searchParams.get("limit"));
   const queryEmbedding = await embedTexts(env, [q]);
 
@@ -83,6 +84,7 @@ async function handleSearch(
   const filter: Record<string, string> = {};
   if (sourceId) filter.source_id = sourceId;
   if (recordType) filter.record_type = recordType;
+  if (kind) filter.kind = kind;
   const vectorMatches = await env.VECTOR_INDEX.query(queryEmbedding[0], {
     topK: limit,
     returnMetadata: "all",
@@ -215,9 +217,11 @@ function toSearchHit(match: { score: number; metadata?: unknown }): SearchApiHit
     title: metadata.title,
     summary: metadata.summary,
     score: match.score,
-    concept_type: metadata.concept_type,
+    concept_type: metadata.concept_type || undefined,
     source_games: deserializeList(metadata.source_games),
     mutation_dimensions: deserializeList(metadata.mutation_dimensions),
+    kind: metadata.kind || undefined,
+    semantic_type: metadata.semantic_type || undefined,
   };
 }
 
@@ -234,10 +238,12 @@ function toMetadata(value: unknown): VectorMetadata {
     concept_type: raw.concept_type ?? "",
     source_games: raw.source_games ?? "",
     mutation_dimensions: raw.mutation_dimensions ?? "",
+    kind: raw.kind ?? "",
+    semantic_type: raw.semantic_type ?? "",
   };
 }
 
-function normalizeIndexRecord(value: IndexRecord): IndexRecord | undefined {
+export function normalizeIndexRecord(value: IndexRecord): IndexRecord | undefined {
   if (!isVectorId(value.vector_id) || !value.canonical_id || !value.key || !value.record_type) return undefined;
   return {
     vector_id: value.vector_id,
@@ -251,10 +257,12 @@ function normalizeIndexRecord(value: IndexRecord): IndexRecord | undefined {
     concept_type: value.concept_type ? truncate(value.concept_type, 160) : undefined,
     source_games: normalizeStringList(value.source_games),
     mutation_dimensions: normalizeStringList(value.mutation_dimensions),
+    kind: value.kind ? truncate(value.kind, 80) : undefined,
+    semantic_type: value.semantic_type ? truncate(value.semantic_type, 80) : undefined,
   };
 }
 
-function toVectorMetadata(record: IndexRecord): VectorMetadata {
+export function toVectorMetadata(record: IndexRecord): VectorMetadata {
   return {
     canonical_id: record.canonical_id,
     key: record.key,
@@ -266,16 +274,20 @@ function toVectorMetadata(record: IndexRecord): VectorMetadata {
     concept_type: record.concept_type ?? "",
     source_games: record.source_games?.length ? serializeList(record.source_games) : "",
     mutation_dimensions: record.mutation_dimensions?.length ? serializeList(record.mutation_dimensions) : "",
+    kind: record.kind ?? "",
+    semantic_type: record.semantic_type ?? "",
   };
 }
 
-function buildEmbeddingText(record: IndexRecord): string {
+export function buildEmbeddingText(record: IndexRecord): string {
   return [
     `type: ${record.record_type}`,
+    record.kind && `kind: ${record.kind}`,
     `key: ${record.key}`,
     record.title && `title: ${record.title}`,
     record.summary && `description: ${record.summary}`,
     record.concept_type && `concept: ${record.concept_type}`,
+    record.semantic_type && `semantic_type: ${record.semantic_type}`,
     record.source_games?.length && `games: ${record.source_games.join(", ")}`,
     record.mutation_dimensions?.length && `dimensions: ${record.mutation_dimensions.join(", ")}`,
   ].filter(Boolean).join("\n");

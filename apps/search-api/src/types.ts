@@ -20,6 +20,8 @@ export interface VectorMetadata {
   concept_type: string;
   source_games: string;
   mutation_dimensions: string;
+  kind: string;
+  semantic_type: string;
   [key: string]: string | number | boolean;
 }
 
@@ -40,6 +42,8 @@ export interface SearchApiHit {
   concept_type?: string;
   source_games?: string[];
   mutation_dimensions?: string[];
+  kind?: string;
+  semantic_type?: string;
 }
 
 export interface DesignSearchApiResponse {
@@ -82,6 +86,8 @@ export interface IndexRecord {
   concept_type?: string;
   source_games?: string[];
   mutation_dimensions?: string[];
+  kind?: string;
+  semantic_type?: string;
 }
 
 export interface IndexResponse {
