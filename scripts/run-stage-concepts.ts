@@ -19,53 +19,60 @@ const ACTOR_ID = "cross-game-concepts";
 // Format: { conceptName, attrMapping: [{ games: [sourceIds], attr: attributeName }] }
 const SEMANTIC_EQUIVALENCES: {
   conceptName: string;
-  kind: string;
+  kinds: string[];
   description: string;
   attrMapping: { sourceId: string; attr: string }[];
 }[] = [
   {
     conceptName: "Fire Resistance",
-    kind: "creature",
+    kinds: ["creature", "mutation"],
     description: "Creatures that resist or are immune to fire damage across roguelike games.",
     attrMapping: [
       { sourceId: "broguece", attr: "flags" },
       { sourceId: "nethack", attr: "resistances" },
       { sourceId: "nethack", attr: "conveys" },
       { sourceId: "cataclysm-bn", attr: "flags" },
+      { sourceId: "crawl", attr: "resists" },
     ],
   },
   {
     conceptName: "Cold Resistance",
-    kind: "creature",
+    kinds: ["creature", "mutation"],
     description: "Creatures that resist or are immune to cold damage across roguelike games.",
     attrMapping: [
+      { sourceId: "broguece", attr: "flags" },
       { sourceId: "nethack", attr: "resistances" },
       { sourceId: "nethack", attr: "conveys" },
       { sourceId: "cataclysm-bn", attr: "flags" },
+      { sourceId: "crawl", attr: "resists" },
     ],
   },
   {
     conceptName: "Poison Resistance",
-    kind: "creature",
+    kinds: ["creature", "mutation"],
     description: "Creatures that resist or are immune to poison across roguelike games.",
     attrMapping: [
+      { sourceId: "broguece", attr: "flags" },
       { sourceId: "nethack", attr: "resistances" },
       { sourceId: "nethack", attr: "conveys" },
       { sourceId: "cataclysm-bn", attr: "flags" },
+      { sourceId: "crawl", attr: "resists" },
     ],
   },
   {
     conceptName: "Electricity Resistance",
-    kind: "creature",
+    kinds: ["creature", "mutation"],
     description: "Creatures that resist or are immune to electrical damage across roguelike games.",
     attrMapping: [
+      { sourceId: "broguece", attr: "flags" },
       { sourceId: "nethack", attr: "resistances" },
       { sourceId: "nethack", attr: "conveys" },
+      { sourceId: "crawl", attr: "resists" },
     ],
   },
   {
     conceptName: "Acid Resistance",
-    kind: "creature",
+    kinds: ["creature"],
     description: "Creatures that resist or are immune to acid damage across roguelike games.",
     attrMapping: [
       { sourceId: "nethack", attr: "resistances" },
@@ -75,7 +82,7 @@ const SEMANTIC_EQUIVALENCES: {
   },
   {
     conceptName: "Sleep Resistance",
-    kind: "creature",
+    kinds: ["creature"],
     description: "Creatures that resist or are immune to sleep attacks across roguelike games.",
     attrMapping: [
       { sourceId: "nethack", attr: "resistances" },
@@ -84,7 +91,7 @@ const SEMANTIC_EQUIVALENCES: {
   },
   {
     conceptName: "Faction Membership",
-    kind: "creature",
+    kinds: ["creature"],
     description: "Creatures that belong to a faction or group, determining hostile/neutral behavior toward other creatures.",
     attrMapping: [
       { sourceId: "cataclysm-bn", attr: "default_faction" },
@@ -93,7 +100,7 @@ const SEMANTIC_EQUIVALENCES: {
   },
   {
     conceptName: "Creature Alignment",
-    kind: "creature",
+    kinds: ["creature"],
     description: "Creatures with an alignment or moral axis that affects gameplay interactions.",
     attrMapping: [
       { sourceId: "nethack", attr: "alignment" },
@@ -101,7 +108,7 @@ const SEMANTIC_EQUIVALENCES: {
   },
   {
     conceptName: "Flight Capability",
-    kind: "creature",
+    kinds: ["creature"],
     description: "Creatures capable of flight, enabling aerial movement and bypassing ground-based obstacles.",
     attrMapping: [
       { sourceId: "broguece", attr: "flags" },
@@ -111,7 +118,7 @@ const SEMANTIC_EQUIVALENCES: {
   },
   {
     conceptName: "Item Material",
-    kind: "item",
+    kinds: ["item"],
     description: "Items categorized by material composition, affecting properties like durability and interactions.",
     attrMapping: [
       { sourceId: "nethack", attr: "material" },
@@ -159,6 +166,7 @@ const VALUE_NORMALIZATIONS: Record<string, Record<string, string>> = {
   "Electricity Resistance": {
     "mr_elec": "electricity",
     "electricity": "electricity",
+    "elec": "electricity",
     "relec": "electricity",
     "resist_electric": "electricity",
     "elec_resist": "electricity",
@@ -264,6 +272,13 @@ function extractAttributeValues(attrValue: unknown): string[] {
     }
     return [attrValue];
   }
+  // Handle object-valued attributes: extract keys where value is positive/truthy
+  // (Crawl mutation resists: { fire: 2, poison: -1 } -> ["fire"])
+  if (typeof attrValue === "object" && !Array.isArray(attrValue)) {
+    return Object.entries(attrValue as Record<string, unknown>)
+      .filter(([, v]) => v === true || (typeof v === "number" && v > 0) || v === "true")
+      .map(([k]) => k);
+  }
   return [];
 }
 
@@ -273,8 +288,14 @@ function generateExactMatchConcepts(records: any[]): any[] {
   // Group by (kind, attribute, valueSlug) across games
   const groups = new Map<string, { kind: string; attr: string; value: string; valueSlug: string; members: any[]; sourceIds: Set<string> }>();
 
-  // Skip attributes that produce noisy or trivial concepts
-  const NOISY_ATTRS = new Set(["id", "key", "schema", "record_type", "language", "activation", "evidence_refs", "decision_refs", "sprite_path", "tile_coords", "tile", "glyph", "color", "symbol", "sound", "geno_flags", "flags3"]);
+  // Only generate concepts for attributes that represent meaningful game mechanics
+  const INFORMATIVE_ATTRS = new Set([
+    "material", "alignment", "holiness", "default_faction",
+    "flags", "resistances", "conveys", "size", "shape",
+    "blood_type", "abilities", "species", "categories",
+    "artifact_type", "trap_value", "skill_value",
+    "schools", "parent_branch",
+  ]);
 
   for (const record of records) {
     if (record.record_type !== "definition") continue;
@@ -288,7 +309,7 @@ function generateExactMatchConcepts(records: any[]): any[] {
 
     for (const [attrName, attrValue] of Object.entries(attrs)) {
       if (attrValue === null || attrValue === undefined || attrValue === "") continue;
-      if (NOISY_ATTRS.has(attrName)) continue;
+      if (!INFORMATIVE_ATTRS.has(attrName)) continue;
 
       const values = Array.isArray(attrValue) ? attrValue : [attrValue];
       for (const v of values) {
@@ -358,6 +379,7 @@ function generateExactMatchConcepts(records: any[]): any[] {
         derived_from: implementationRefs.slice(0, 10),
         mutation_dimensions: ["implementation_method", "effect_magnitude", "stacking_rules", "acquisition_method"],
       },
+      _dedupKey: `${group.attr}:${group.value.toLowerCase()}`,
     });
   }
 
@@ -374,7 +396,7 @@ function generateSemanticEquivalenceConcepts(records: any[]): any[] {
       const gameRecords = records.filter(
         (r) =>
           r.record_type === "definition" &&
-          r.kind === equiv.kind &&
+          equiv.kinds.includes(r.kind) &&
           (r.scope?.source_id ?? r.source_identity?.source_id) === mapping.sourceId,
       );
 
@@ -428,7 +450,7 @@ function generateSemanticEquivalenceConcepts(records: any[]): any[] {
       title: equiv.conceptName,
       definition: `${equiv.description} Found in ${memberCount} records across ${membersByGame.size} games (${gameList}). Each game implements this concept through different attribute names and value systems, but the underlying mechanic is semantically equivalent.`,
       inclusion_criteria: [
-        `Record kind is ${equiv.kind}`,
+        `Record kind is one of: ${equiv.kinds.join(", ")}`,
         `Record has a resistance/immunity attribute matching the concept's element`,
         `Record appears in 2 or more games with semantically equivalent attributes`,
       ],
@@ -449,6 +471,47 @@ function generateSemanticEquivalenceConcepts(records: any[]): any[] {
   }
 
   return concepts;
+}
+
+function buildSemanticDedupSet(): Set<string> {
+  const dedupPairs = new Set<string>();
+  for (const equiv of SEMANTIC_EQUIVALENCES) {
+    const normMap = VALUE_NORMALIZATIONS[equiv.conceptName];
+    if (!normMap) continue;
+    const attrs = new Set(equiv.attrMapping.map((m) => m.attr));
+    for (const attr of attrs) {
+      for (const aliasKey of Object.keys(normMap)) {
+        dedupPairs.add(`${attr}:${aliasKey}`);
+      }
+    }
+  }
+  return dedupPairs;
+}
+
+function validateConceptRefs(
+  concepts: any[],
+  allRecords: any[],
+): { valid: any[]; deleted: string[]; dangling: { conceptKey: string; danglingRefs: string[] }[] } {
+  const recordIds = new Set(allRecords.map((r) => r.id));
+  const dangling: { conceptKey: string; danglingRefs: string[] }[] = [];
+  const deleted: string[] = [];
+
+  const valid = concepts.flatMap((c) => {
+    const refs = c.implementation_refs ?? [];
+    const validRefs = refs.filter((id: string) => recordIds.has(id));
+    const bad = refs.filter((id: string) => !recordIds.has(id));
+    if (bad.length > 0) {
+      dangling.push({ conceptKey: c.key, danglingRefs: bad });
+    }
+    if (validRefs.length === 0) {
+      deleted.push(c.key);
+      return [];
+    }
+    const validDerivedFrom = (c.ancestry?.derived_from ?? []).filter((id: string) => recordIds.has(id));
+    return [{ ...c, implementation_refs: validRefs, ancestry: { ...c.ancestry, derived_from: validDerivedFrom } }];
+  });
+
+  return { valid, deleted, dangling };
 }
 
 async function main() {
@@ -472,8 +535,21 @@ async function main() {
   const semanticConcepts = generateSemanticEquivalenceConcepts(definitions);
   console.log(`  ${semanticConcepts.length} semantic-equivalence concepts`);
 
+  // Deduplicate: remove exact-match concepts covered by semantic equivalence concepts
+  const semanticDedupSet = buildSemanticDedupSet();
+  const filteredExact = exactConcepts.filter((c) => {
+    const dedupKey = c._dedupKey as string | undefined;
+    if (!dedupKey) return true;
+    delete c._dedupKey;
+    return !semanticDedupSet.has(dedupKey);
+  });
+  const dedupedCount = exactConcepts.length - filteredExact.length;
+  if (dedupedCount > 0) {
+    console.log(`  Removed ${dedupedCount} exact-match concepts duplicating semantic concepts`);
+  }
+
   // Combine and dedup by key
-  const allConcepts = [...exactConcepts, ...semanticConcepts];
+  const allConcepts = [...filteredExact, ...semanticConcepts];
   const seenKeys = new Set<string>();
   const uniqueConcepts = allConcepts.filter((c) => {
     if (seenKeys.has(c.key)) return false;
@@ -482,14 +558,27 @@ async function main() {
   });
   console.log(`  ${uniqueConcepts.length} unique concepts (after dedup)`);
 
-  if (uniqueConcepts.length === 0) {
+  // Validate implementation refs
+  console.log("Validating concept implementation refs...");
+  const { valid, deleted, dangling } = validateConceptRefs(uniqueConcepts, state.records);
+  if (dangling.length > 0) {
+    for (const d of dangling) {
+      console.log(`  WARNING: ${d.conceptKey} has ${d.danglingRefs.length} dangling refs`);
+    }
+  }
+  if (deleted.length > 0) {
+    console.log(`  Deleted ${deleted.length} concepts with all-dangling refs`);
+  }
+  console.log(`  ${valid.length} valid concepts after ref validation`);
+
+  if (valid.length === 0) {
     console.log("No concepts to create. Done.");
     return;
   }
 
   // Build transaction
   const ops: TransactionOperation[] = [];
-  for (const concept of uniqueConcepts) {
+  for (const concept of valid) {
     ops.push({ type: "create", record_id: concept.id, record_type: "concept", key: concept.key, data: concept });
   }
 
@@ -505,7 +594,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Promoted ${uniqueConcepts.length} cross-game concepts to canonical.`);
+  console.log(`Promoted ${valid.length} cross-game concepts to canonical.`);
   console.log("Done.");
 }
 

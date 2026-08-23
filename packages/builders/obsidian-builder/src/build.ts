@@ -78,6 +78,12 @@ export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuild
     for (const claim of store.claims) {
       if (claim.subject_id === record.id && claim.object_ref) allLinks.push(claim.object_ref);
     }
+    if (record.record_type === "concept") {
+      const refs = (record as Record<string, unknown>).implementation_refs;
+      if (Array.isArray(refs)) {
+        for (const ref of refs) if (typeof ref === "string") allLinks.push(ref);
+      }
+    }
   }
 
   const linkValidation = validateAllLinks(resolver, store.aliasMap, allLinks);
