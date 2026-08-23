@@ -1,7 +1,7 @@
 ---
 id: RFC-0003
 title: "Design layer expansion — mutation vectors, design knobs, counterplay patterns, and failure modes"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
