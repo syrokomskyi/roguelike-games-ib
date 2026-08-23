@@ -401,15 +401,15 @@ design-permadeath:
 
 ## Acceptance criteria
 
-- [ ] `compare_games` with `include_concepts: true` returns concept coverage per game
-- [ ] `get_coverage_matrix` returns a game × concept_type count matrix
-- [ ] `get_concept_coverage` returns detailed per-game coverage for a concept, including gaps
-- [ ] `compare_concept_implementations` returns curated implementation summaries per game (code: tool reads YAML data file; content: human-authored summaries in `concept-implementations.yaml` — start with 5 primitives, expand incrementally)
-- [ ] `find_concept_gaps` identifies concepts missing from specific games
-- [ ] All 4 new tools are read-only and registered in `REQUIRED_TOOLS`
-- [ ] All existing tests pass (no regressions)
-- [ ] New tests cover all 4 tools
-- [ ] Edge case: concepts with no `ancestry` and no `implementation_refs` return `member_count: 0` and appear in gaps (no error)
+- [x] `compare_games` with `include_concepts: true` returns concept coverage per game (evidence: apps/mcp/src/tools/compare.ts:111-125, tests/mcp/mcp-012.test.ts:155-163)
+- [x] `get_coverage_matrix` returns a game × concept_type count matrix (evidence: apps/mcp/src/tools/derived.ts:152-170, tests/mcp/mcp-012.test.ts:170-179)
+- [x] `get_concept_coverage` returns detailed per-game coverage for a concept, including gaps (evidence: apps/mcp/src/tools/derived.ts:179-259, tests/mcp/mcp-012.test.ts:190-215)
+- [x] `compare_concept_implementations` returns curated implementation summaries per game (code: tool reads JSON data file; content: human-authored summaries in `concept-implementations.json` — 5 primitives, expand incrementally) (evidence: apps/mcp/src/tools/derived.ts:278-334, apps/mcp/src/tools/concept-implementations.json, tests/mcp/mcp-012.test.ts:222-237)
+- [x] `find_concept_gaps` identifies concepts missing from specific games (evidence: apps/mcp/src/tools/derived.ts:336-402, tests/mcp/mcp-012.test.ts:242-268)
+- [x] All 4 new tools are read-only and registered in `REQUIRED_TOOLS` (evidence: apps/mcp/src/server.ts:470-527, apps/mcp/src/server.ts:576-579, tests/mcp/mcp-012.test.ts:112-135)
+- [x] All existing tests pass (no regressions) (evidence: pnpm exec vitest --run — 665 tests pass across 91 files)
+- [x] New tests cover all 4 tools (evidence: tests/mcp/mcp-012.test.ts — 24 tests covering D1-D5 + registration + edge cases)
+- [x] Edge case: concepts with no `ancestry` and no `implementation_refs` return `member_count: 0` and appear in gaps (no error) (evidence: tests/mcp/mcp-012.test.ts:210-215, tests/mcp/mcp-012.test.ts:264-268)
 
 ## Risks
 
