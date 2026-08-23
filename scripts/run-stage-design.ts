@@ -1046,11 +1046,6 @@ Respond with JSON:
       .map((slug) => primitiveConceptIds.get(slug))
       .filter((id): id is string => !!id);
 
-    // Resolve member pressure IDs
-    const memberPressureIds = pattern.member_pressures
-      .map((p) => pressureConceptIds.get(`cross-game/concept/pressure-${slugify(p)}`))
-      .filter((id): id is string => !!id);
-
     concepts.push({
       ...makePatternConceptEnvelope(patternKey, patternId),
       concept_type: "design_pattern",
