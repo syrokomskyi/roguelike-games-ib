@@ -50,3 +50,18 @@ Deploy is opt-in via commit message containing `deploy:`. Required GitHub secret
 
 Source binding metadata (fingerprint, binding_digest) MUST be read from `knowledge/sources/bindings.yaml` at runtime, not hardcoded in stage scripts or coverage scripts. Duplicating these values across files creates drift risk when the source tree changes — a single update to `bindings.yaml` must be sufficient. Scripts that need binding metadata should parse `bindings.yaml` directly (see `scripts/run-stage13-crawl.ts` for the established pattern).
 
+## Supplemental Source Paths
+
+RFC-0008 introduces `supplemental_paths` on source bindings to declare evidence sources outside the payload root. This allows extractors to read files (e.g. C header files) that live outside `dat/` without copying them into the payload root.
+
+Key semantics:
+
+- `supplemental_paths` is an optional field on `SourceBinding` in `bindings.yaml`
+- Each entry has: `name` (prefix used in artifact paths), `path` (relative to payload root), `glob` (file filter, e.g. `*.h`), and `fingerprint` (sha256-tree-v1 of matching files)
+- `ReadonlySourceReader` accepts optional `SupplementalRoot[]` in its constructor — paths prefixed with a supplemental name (e.g. `headers/spl-data.h`) are resolved against the supplemental root
+- `validateEvidenceAnchor` accepts optional `supplementalRoots` to validate artifact paths with supplemental prefixes
+- `computeSupplementalFingerprint` computes a tree hash for files matching a glob in a directory
+- `computeBindingDigest` combines payload and supplemental fingerprints when supplemental paths are present
+- Extractors MUST NOT copy files from outside the payload root into `dat/` — use supplemental paths instead
+- The `binding_digest` changes when supplemental paths are added or their fingerprints change
+
