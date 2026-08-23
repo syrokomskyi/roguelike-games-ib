@@ -1,7 +1,7 @@
 ---
 id: RFC-0009
 title: "Concept quality scoring — coverage, evidence, and richness scores"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
