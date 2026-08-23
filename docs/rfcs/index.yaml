@@ -116,10 +116,10 @@ entries:
     file: docs/rfcs/archive/implemented/rfc-0007-infrastructure-ci-cd-versioning-quality-gates.md
   - id: RFC-0008
     title: Supplemental source paths for evidence extraction outside payload root
-    status: draft
+    status: implemented
     kind: policy
     createdAt: 2026-08-23
-    implementedAt: ""
+    implementedAt: 2026-08-23
     closedAt: ""
     supersedes: []
     supersededBy: ""
@@ -128,4 +128,4 @@ entries:
     related:
       - RFC-0001
       - RFC-0006
-    file: docs/rfcs/rfc-0008-supplemental-source-paths-for-evidence-extraction-outside-payload-root.md
+    file: docs/rfcs/archive/implemented/rfc-0008-supplemental-source-paths-for-evidence-extraction-outside-payload-root.md
