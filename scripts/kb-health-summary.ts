@@ -52,8 +52,7 @@ function main(): void {
   }
 
   console.log();
-  if (baseline && hashFromFile) {
-    const baselineHash = (readJson(BASELINE_FILE) as Record<string, unknown>)?.canonicalHash;
+  if (hashFromFile) {
     const hashMatch = hashFromFile === canonicalHash;
     console.log(`Canonical hash: ${canonicalHash.slice(0, 16)}... (hash file: ${hashMatch ? "match" : "MISMATCH"})`);
   } else {

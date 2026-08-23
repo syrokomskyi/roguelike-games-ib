@@ -29,7 +29,7 @@ describe("C17: Record count regression detection", () => {
 
         if (currVal < threshold) {
           const delta = currVal - baseVal;
-          const pctChange = ((delta / baseVal) * 100).toFixed(1);
+          const pctChange = baseVal === 0 ? "N/A" : ((delta / baseVal) * 100).toFixed(1);
           regressions.push(
             `  ${key}: ${currVal} (baseline: ${baseVal}, delta: ${delta}, change: ${pctChange}%)`,
           );
@@ -43,21 +43,4 @@ describe("C17: Record count regression detection", () => {
     },
   );
 
-  it.skipIf(!existsSync(MANIFEST_FILE) || !existsSync(BASELINE_FILE))(
-    "prints current counts vs baseline summary",
-    () => {
-      const manifest = JSON.parse(readFileSync(MANIFEST_FILE, "utf-8"));
-      const baseline = JSON.parse(readFileSync(BASELINE_FILE, "utf-8"));
-      const current = manifest.recordCounts;
-
-      console.log("=== Record Count Comparison ===");
-      for (const key of Object.keys(baseline)) {
-        const baseVal = baseline[key];
-        const currVal = current[key] ?? 0;
-        const delta = currVal - baseVal;
-        console.log(`  ${key}: ${currVal} (baseline: ${baseVal}, delta: ${delta})`);
-      }
-      expect(true).toBe(true);
-    },
-  );
 });
