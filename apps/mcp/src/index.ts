@@ -42,3 +42,4 @@ export { getEvidence } from "./tools/evidence.ts";
 export { compareRecords, compareGames } from "./tools/compare.ts";
 export { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
 export { getCoverage } from "./tools/coverage.ts";
+export { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";

@@ -24,6 +24,7 @@ import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
 import { findSemanticRecords, getDerivedSummary } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
+import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 
 export type ToolHandler<I = unknown, O = unknown> = (ctx: McpContext, input: I) => O | Promise<O>;
 
@@ -390,6 +391,81 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "get_claims_by_predicate",
+    description: "Search claims across ALL records by predicate. Optionally filter by source_id or assertion_state. Useful for cross-game analysis (e.g., all has_resistance claims).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        predicate: { type: "string" },
+        source_id: { type: "string" },
+        assertion_state: { type: "string", enum: ["supported", "contested"] },
+        cursor: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      required: ["predicate"],
+      additionalProperties: false,
+    },
+    handler: getClaimsByPredicate,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "get_concept_members",
+    description: "Resolve member records of a cross-game concept via ancestry.derived_from. Returns the actual records grouped by source game.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        record_id: { type: "string" },
+        key: { type: "string" },
+        cursor: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      additionalProperties: false,
+    },
+    handler: getConceptMembers,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "get_design_tensions",
+    description: "Get tension pairs involving a specific design primitive or pressure. Optionally filter by record_key or record_id.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        record_key: { type: "string" },
+        record_id: { type: "string" },
+        cursor: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      additionalProperties: false,
+    },
+    handler: getDesignTensions,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "find_by_attribute",
+    description: "Cross-game structured attribute search. Find records where a specific attribute key matches a value (exact or contains). Supports filtering by source_id, record_type, and kind.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        attribute: { type: "string" },
+        value: { type: "string" },
+        match_mode: { type: "string", enum: ["exact", "contains"] },
+        source_id: { type: "string" },
+        record_type: { type: "string" },
+        kind: { type: "string" },
+        cursor: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      required: ["attribute", "value"],
+      additionalProperties: false,
+    },
+    handler: findByAttribute,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -433,4 +509,8 @@ export const REQUIRED_TOOLS = [
   "find_semantic_records",
   "get_derived_summary",
   "get_coverage",
+  "get_claims_by_predicate",
+  "get_concept_members",
+  "get_design_tensions",
+  "find_by_attribute",
 ];
