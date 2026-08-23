@@ -1,12 +1,25 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Reusable search input form with optional source, record type, and concept type filters.</purpose>
+<non-goals>
+  <item>Does not implement search logic — delegates to the /search page.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: search input form with source and recordType hidden inputs.</item>
+  <item>RFC-0010: Added conceptType prop for concept type filtering.</item>
+</CHANGE_SUMMARY>
+*/
 interface Props {
   placeholder?: string;
   value?: string;
   source?: string;
   recordType?: string;
+  conceptType?: string;
 }
 
-const { placeholder = "Search records...", value = "", source, recordType } = Astro.props;
+const { placeholder = "Search records...", value = "", source, recordType, conceptType } = Astro.props;
 ---
 
 <form class="group flex border border-ib-text bg-ib-surface shadow-[5px_5px_0_var(--color-ib-border)] transition-shadow focus-within:shadow-[8px_8px_0_var(--color-ib-accent)]" action="/search" method="get">
@@ -14,5 +27,6 @@ const { placeholder = "Search records...", value = "", source, recordType } = As
   <input type="text" name="q" value={value} placeholder={placeholder} class="min-w-0 flex-1 bg-transparent px-4 py-4 text-ib-text placeholder-ib-muted focus:outline-none" />
   {source && <input type="hidden" name="source" value={source} />}
   {recordType && <input type="hidden" name="type" value={recordType} />}
+  {conceptType && <input type="hidden" name="concept_type" value={conceptType} />}
   <button type="submit" aria-label="Explore" class="border-l border-ib-border px-5 font-mono text-lg text-ib-accent transition-colors hover:bg-ib-accent hover:text-white">↵</button>
 </form>

@@ -1,4 +1,16 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Search page with semantic search, source/type filters, and concept type filtering.</purpose>
+<non-goals>
+  <item>Does not implement the search API — calls the search API Worker or local proxy.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: search page with source and type filters.</item>
+  <item>RFC-0010: Added concept_type filter and Concepts only toggle.</item>
+</CHANGE_SUMMARY>
+*/
 export const prerender = true;
 
 import Base from "../layouts/Base.astro";
@@ -49,6 +61,7 @@ import SearchBox from "../components/SearchBox.astro";
       const query = pageParams.get("q") ?? "";
       const source = pageParams.get("source") ?? "all";
       const type = pageParams.get("type") ?? "all";
+      const conceptType = pageParams.get("concept_type") ?? "all";
       const status = document.getElementById("search-status");
       const searchInput = document.querySelector<HTMLInputElement>('input[name="q"]');
       if (searchInput) searchInput.value = query;
@@ -63,6 +76,7 @@ import SearchBox from "../components/SearchBox.astro";
       const params = new URLSearchParams({ q: query });
       if (source !== "all") params.set("source", source);
       if (type !== "all") params.set("type", type);
+      if (conceptType !== "all") params.set("concept_type", conceptType);
 
       const apiUrl = SEARCH_API
         ? `${SEARCH_API}/api/search?${params.toString()}`
@@ -74,7 +88,7 @@ import SearchBox from "../components/SearchBox.astro";
           return res.json() as Promise<ApiResponse>;
         })
         .then((data) => {
-          renderResults(container, data, query, source, type);
+          renderResults(container, data, query, source, type, conceptType);
         })
         .catch(() => {
           if (status) {
@@ -89,6 +103,7 @@ import SearchBox from "../components/SearchBox.astro";
       query: string,
       activeSource: string,
       activeType: string,
+      activeConceptType: string,
     ) {
       const { hits, total } = data;
 
@@ -132,6 +147,27 @@ import SearchBox from "../components/SearchBox.astro";
         html += filterLink("type", "all", activeType === "all");
         for (const t of types) {
           html += filterLink("type", t, activeType === t);
+        }
+        html += `</div>`;
+      }
+
+      const CONCEPT_TYPES = [
+        "cross_game_mechanic", "design_primitive", "design_pressure",
+        "design_knob", "mutation_vector", "counterplay_pattern",
+        "failure_mode", "player_sensation", "design_tension",
+        "negative_space", "emergent_pattern", "synergy_pattern",
+      ];
+
+      const hasConcepts = hits.some((h) => h.concept_type);
+      if (hasConcepts || activeConceptType !== "all") {
+        html += `<div class="flex flex-wrap gap-2"><span class="text-sm text-ib-muted py-1.5">Concept type:</span>`;
+        html += filterLink("concept_type", "all", activeConceptType === "all");
+        for (const ct of CONCEPT_TYPES) {
+          const active = activeConceptType === ct;
+          const count = hits.filter((h) => h.concept_type === ct).length;
+          if (count > 0 || active) {
+            html += filterLink("concept_type", ct, active);
+          }
         }
         html += `</div>`;
       }
