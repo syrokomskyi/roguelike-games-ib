@@ -36,6 +36,7 @@ export {
   computeRecordHash,
   computeCanonicalHash,
   computeSourceFingerprint,
+  computeSupplementalFingerprint,
   computeBindingDigest,
   computeFragmentHash,
 } from "./hash.ts";
@@ -48,7 +49,7 @@ export type { SourceMetadata } from "./source/metadata.ts";
 export { createFingerprintResult } from "./source/fingerprint.ts";
 export type { FingerprintResult } from "./source/fingerprint.ts";
 export { createSourceBinding } from "./source/binding.ts";
-export type { SourceBinding } from "./source/binding.ts";
+export type { SourceBinding, SupplementalPath } from "./source/binding.ts";
 export { detectSourceDrift } from "./source/drift.ts";
 export type { DriftResult } from "./source/drift.ts";
 export { ReadonlySource } from "./source/read-guard.ts";

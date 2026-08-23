@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: sha256, sha256File, computeRecordHash, computeCanonicalHash, computeSourceFingerprint, computeBindingDigest, computeFragmentHash.</item>
+  <item>RFC-0008: Added computeSupplementalFingerprint, extended computeBindingDigest with optional supplementalFingerprints parameter.</item>
 </CHANGE_SUMMARY>
 */
 import { createHash } from "node:crypto";
@@ -107,14 +108,75 @@ export function computeSourceFingerprint(
 
 /**
  * Compute the binding digest from source fingerprint and metadata.
- * binding_digest = sha256(fingerprint + declared_version + source_id)
+ * binding_digest = sha256(fingerprint + "\n" + declared_version + "\n" + source_id)
+ * When supplementalFingerprints is provided and non-empty:
+ * binding_digest = sha256(fingerprint + "\n" + supplementalFingerprints.join(",") + "\n" + declared_version + "\n" + source_id)
  */
 export function computeBindingDigest(
   fingerprint: string,
   declaredVersion: string,
   sourceId: string,
+  supplementalFingerprints?: string[],
 ): string {
+  if (supplementalFingerprints && supplementalFingerprints.length > 0) {
+    return sha256(`${fingerprint}\n${supplementalFingerprints.join(",")}\n${declaredVersion}\n${sourceId}`);
+  }
   return sha256(`${fingerprint}\n${declaredVersion}\n${sourceId}`);
+}
+
+/**
+ * Compute the supplemental fingerprint (sha256-tree-v1) for a directory,
+ * filtering files by a glob pattern.
+ *
+ * Uses the same algorithm as computeSourceFingerprint (walk, sort entries,
+ * hash concatenation) but only includes files matching the glob.
+ * For simple glob patterns (e.g. "*.h"), an inline extension matcher is used.
+ *
+ * Ignores: .git directories, node_modules
+ */
+export function computeSupplementalFingerprint(
+  supplementalPath: string,
+  glob: string,
+): string {
+  const ignoreSet = new Set([".git", "node_modules"]);
+  const entries: string[] = [];
+
+  const globExt = glob.startsWith("*.") ? glob.slice(1) : null;
+
+  function matchesGlob(filename: string): boolean {
+    if (globExt !== null) {
+      return filename.endsWith(globExt);
+    }
+    return filename === glob;
+  }
+
+  function walk(dir: string, relPrefix: string) {
+    const items = readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      if (ignoreSet.has(item.name)) continue;
+
+      const fullPath = join(dir, item.name);
+      const relPath = relPrefix ? `${relPrefix}/${item.name}` : item.name;
+
+      if (item.isSymbolicLink()) {
+        const target = realpathSync(fullPath);
+        const targetHash = sha256(target);
+        entries.push(`S:${relPath}:${targetHash}`);
+      } else if (item.isDirectory()) {
+        walk(fullPath, relPath);
+      } else if (item.isFile()) {
+        if (matchesGlob(item.name)) {
+          const fileHash = sha256File(fullPath);
+          entries.push(`F:${relPath}:${fileHash}`);
+        }
+      }
+    }
+  }
+
+  walk(supplementalPath, "");
+  entries.sort();
+
+  return sha256(entries.join("\n"));
 }
 
 /**
