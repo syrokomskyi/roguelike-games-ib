@@ -2,7 +2,10 @@ import { buildObsidianVault } from "../packages/builders/obsidian-builder/src/bu
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 
-const result = buildObsidianVault({ workspaceRoot: WORKSPACE });
+const result = buildObsidianVault({
+  workspaceRoot: WORKSPACE,
+  reports: process.argv.includes("--report"),
+});
 
 console.log("=== Obsidian Vault Build Results ===");
 console.log("Vault root:", result.vaultRoot);

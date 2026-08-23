@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: renderMoc, MOC_TITLE, MOC_FILENAME.</item>
+  <item>RFC-0012: Added optional reportPaths parameter to renderMoc for comparison report links.</item>
 </CHANGE_SUMMARY>
 */
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
@@ -17,6 +18,7 @@ export const MOC_TITLE = "MOC - Roguelike Games KB";
 export function renderMoc(
   records: CanonicalRecord[],
   resolver: PathResolver,
+  reportPaths?: string[],
 ): string {
   const sections: string[] = [
     "---",
@@ -48,6 +50,15 @@ export function renderMoc(
         const stem = path.replace(/\.md$/, "");
         sections.push(`- [[${stem}]]`);
       }
+    }
+    sections.push("");
+  }
+
+  if (reportPaths && reportPaths.length > 0) {
+    sections.push("## Comparison Reports");
+    for (const reportPath of reportPaths) {
+      const stem = reportPath.replace(/\.md$/, "");
+      sections.push(`- [[${stem}]]`);
     }
     sections.push("");
   }

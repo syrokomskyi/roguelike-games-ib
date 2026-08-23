@@ -8,6 +8,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: buildObsidianVault with record/source/MOC rendering and link validation.</item>
+  <item>RFC-0012: Added optional reports flag for comparison report note generation.</item>
 </CHANGE_SUMMARY>
 */
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -21,6 +22,7 @@ import { renderSourceNote } from "./render-source.ts";
 import { renderMoc, MOC_FILENAME, renderConceptsMoc, CONCEPTS_MOC_FILENAME } from "./moc.ts";
 import { createBuildManifest, writeBuildManifest, type ObsidianBuildManifest } from "./build-manifest.ts";
 import { validateAllLinks, resolveLink } from "./links.ts";
+import { generateComparisonNotes } from "./report.ts";
 
 const GENERATED_WARNING = "**GENERATED PROJECTION — DO NOT EDIT AS CANONICAL KNOWLEDGE**";
 
@@ -28,6 +30,7 @@ export interface ObsidianBuildOptions {
   workspaceRoot: string;
   distDir?: string;
   vaultDir?: string;
+  reports?: boolean;
 }
 
 export interface ObsidianBuildResult {
@@ -101,7 +104,13 @@ export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuild
     sourceNotePaths.push(notePath);
   }
 
-  const mocContent = renderMoc(store.records, resolver);
+  let reportNotePaths: string[] = [];
+  if (options.reports) {
+    reportNotePaths = generateComparisonNotes(store, resolver, vaultRoot);
+    notePaths.push(...reportNotePaths);
+  }
+
+  const mocContent = renderMoc(store.records, resolver, reportNotePaths);
   writeFileSync(join(vaultRoot, MOC_FILENAME), mocContent, "utf-8");
   notePaths.push(MOC_FILENAME);
 

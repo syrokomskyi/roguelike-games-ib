@@ -22,3 +22,4 @@ export { makeWikiLink, resolveLink, validateAllLinks, wikiLinkToPath } from "./l
 export type { LinkValidationResult } from "./links.ts";
 export { createBuildManifest, writeBuildManifest } from "./build-manifest.ts";
 export type { ObsidianBuildManifest } from "./build-manifest.ts";
+export { generateComparisonNotes } from "./report.ts";
