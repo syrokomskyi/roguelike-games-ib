@@ -1,6 +1,6 @@
 command: rfc.index.generate
 generatedAt: 2026-08-23
-count: 7
+count: 8
 entries:
   - id: RFC-0001
     title: Extraction methodology for multi-game knowledge base
@@ -85,10 +85,10 @@ entries:
     file: docs/rfcs/archive/implemented/rfc-0005-web-app-enrichment.md
   - id: RFC-0006
     title: Extractor expansion — next-tier data types for all four games
-    status: accepted
+    status: implemented
     kind: policy
     createdAt: 2026-08-23
-    implementedAt: ""
+    implementedAt: 2026-08-23
     closedAt: ""
     supersedes: []
     supersededBy: ""
@@ -98,7 +98,7 @@ entries:
       - RFC-0001
       - PLAN-002
       - PLAN-003
-    file: docs/rfcs/rfc-0006-extractor-expansion-next-tier.md
+    file: docs/rfcs/archive/implemented/rfc-0006-extractor-expansion-next-tier.md
   - id: RFC-0007
     title: Infrastructure — CI/CD pipeline, canonical versioning, and quality gates
     status: implemented
@@ -114,3 +114,18 @@ entries:
       - RFC-0001
       - PLAN-003
     file: docs/rfcs/archive/implemented/rfc-0007-infrastructure-ci-cd-versioning-quality-gates.md
+  - id: RFC-0008
+    title: Supplemental source paths for evidence extraction outside payload root
+    status: draft
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: ""
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - RFC-0006
+    file: docs/rfcs/rfc-0008-supplemental-source-paths-for-evidence-extraction-outside-payload-root.md
