@@ -1,0 +1,444 @@
+---
+/*
+<MODULE_CONTRACT>
+<purpose>Interactive D3 force-directed graph page for exploring design concepts and relations — primitives, pressures, patterns, mutation vectors, knobs, counterplay, failure modes.</purpose>
+<non-goals>
+  <item>Does not fetch or mutate data — pure projection over ProjectionStore via buildGraphData.</item>
+  <item>Does not support graph editing — read-only exploration.</item>
+  <item>Does not render 3D or VR — 2D force-directed layout.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0015: Initial creation — D3 force-directed graph page with filters, detail panel, legend, and noscript fallback.</item>
+</CHANGE_SUMMARY>
+*/
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context";
+import { getPageMetadata } from "../lib/metadata";
+import { buildGraphData } from "../lib/graph-data";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const { nodes, edges } = buildGraphData(ctx.store);
+
+const conceptTypes = [
+  { type: "design_primitive", label: "Primitive", color: "#3b82f6" },
+  { type: "design_pressure", label: "Pressure", color: "#f59e0b" },
+  { type: "design_pattern", label: "Pattern", color: "#22c55e" },
+  { type: "mutation_vector", label: "Mutation Vector", color: "#a855f7" },
+  { type: "design_knob", label: "Knob", color: "#06b6d4" },
+  { type: "counterplay_pattern", label: "Counterplay", color: "#14b8a6" },
+  { type: "failure_mode", label: "Failure Mode", color: "#ef4444" },
+];
+
+const relationTypes = [
+  { type: "CREATES_PRESSURE", label: "Creates Pressure" },
+  { type: "tensions_with", label: "Tensions With" },
+  { type: "HAS_MUTATION_VECTOR", label: "Has Mutation Vector" },
+  { type: "IMPLEMENTED_AS", label: "Implemented As" },
+  { type: "HAS_COUNTERPLAY", label: "Has Counterplay" },
+  { type: "CAN_FAIL_AS", label: "Can Fail As" },
+  { type: "TRIGGERED_BY_COMBINATION", label: "Triggered By Combination" },
+];
+
+const allGames = [...new Set(nodes.flatMap((n) => n.gamesPresent))].sort();
+---
+
+<Base title="Design Graph" metadata={meta} activeNav="graph">
+  <div class="space-y-6">
+    <header class="grid gap-8 border-b border-ib-text pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div>
+        <p class="atlas-label text-ib-blue">Derived layer</p>
+        <h1 class="mt-5 text-5xl font-medium tracking-[-.045em] sm:text-7xl">Graph.</h1>
+        <p class="mt-5 max-w-2xl text-lg text-ib-muted">Interactive force-directed graph of design concepts and relations. Explore how primitives connect to pressures, which tensions exist, and how patterns combine.</p>
+      </div>
+      <div class="border border-ib-blue px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-ib-blue">D3 force-directed</div>
+    </header>
+
+    <div class="flex gap-3">
+      <a href="/design/" class="border border-ib-border bg-ib-surface px-4 py-2 text-sm text-ib-accent transition-colors hover:bg-ib-surface2">← Back to Design Space</a>
+    </div>
+
+    {nodes.length > 0 ? (
+      <div class="grid gap-4 lg:grid-cols-[240px_1fr]">
+        {/* Filter sidebar */}
+        <aside id="filter-sidebar" class="space-y-6 border border-ib-border bg-ib-surface p-4 lg:max-h-[80vh] lg:overflow-y-auto">
+          <div>
+            <h3 class="mb-3 text-xs font-mono uppercase tracking-wider text-ib-muted">Concept Types</h3>
+            <div class="space-y-2">
+              {conceptTypes.map((ct) => (
+                <label class="flex items-center gap-2 text-sm text-ib-text">
+                  <input type="checkbox" checked data-filter-type="concept" data-filter-value={ct.type} class="accent-ib-accent" />
+                  <span class="inline-block h-3 w-3 rounded-full" style={`background: ${ct.color}`}></span>
+                  {ct.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-3 text-xs font-mono uppercase tracking-wider text-ib-muted">Relation Types</h3>
+            <div class="space-y-2">
+              {relationTypes.map((rt) => (
+                <label class="flex items-center gap-2 text-sm text-ib-text">
+                  <input type="checkbox" checked data-filter-type="relation" data-filter-value={rt.type} class="accent-ib-accent" />
+                  {rt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-3 text-xs font-mono uppercase tracking-wider text-ib-muted">Game Presence</h3>
+            <select id="game-filter" class="w-full border border-ib-border bg-ib-bg px-3 py-2 text-sm text-ib-text">
+              <option value="">All games</option>
+              {allGames.map((g) => (
+                <option value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <h3 class="mb-3 text-xs font-mono uppercase tracking-wider text-ib-muted">Quality Threshold</h3>
+            <input type="range" id="quality-filter" min="0" max="1" step="0.1" value="0" class="w-full accent-ib-accent" />
+            <span id="quality-value" class="text-xs text-ib-muted">0.0</span>
+          </div>
+
+          <button id="reset-filters" class="w-full border border-ib-border px-3 py-2 text-sm text-ib-muted transition-colors hover:bg-ib-surface2">Reset Filters</button>
+        </aside>
+
+        {/* Graph canvas */}
+        <div class="relative border border-ib-border bg-ib-surface2" style="min-height: 600px;">
+          <svg id="graph-svg" class="w-full" style="height: 80vh; cursor: grab;"></svg>
+
+          {/* Legend */}
+          <div class="absolute bottom-3 left-3 border border-ib-border bg-ib-surface p-3 text-xs">
+            <div class="mb-2 font-mono uppercase tracking-wider text-ib-muted">Legend</div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+              {conceptTypes.map((ct) => (
+                <div class="flex items-center gap-1.5">
+                  <span class="inline-block h-2.5 w-2.5 rounded-full" style={`background: ${ct.color}`}></span>
+                  <span class="text-ib-text">{ct.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detail panel */}
+          <div id="detail-panel" class="absolute right-0 top-0 hidden h-full w-80 overflow-y-auto border-l border-ib-border bg-ib-surface p-5 shadow-lg">
+            <button id="close-detail" class="mb-4 text-sm text-ib-muted hover:text-ib-text">✕ Close</button>
+            <div id="detail-content"></div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <p class="text-sm text-ib-muted">No design concepts found.</p>
+    )}
+
+    {/* Noscript fallback */}
+    <noscript>
+      <section class="space-y-4">
+        <h2 class="atlas-label text-ib-muted">Nodes ({nodes.length})</h2>
+        <ul class="space-y-1">
+          {nodes.map((n) => (
+            <li class="text-sm">
+              <a href={`/records/${n.key}/`} class="text-ib-accent hover:text-ib-accent2">{n.label}</a>
+              <span class="text-ib-muted"> — {n.type}</span>
+            </li>
+          ))}
+        </ul>
+        <h2 class="atlas-label mt-6 text-ib-muted">Edges ({edges.length})</h2>
+        <ul class="space-y-1">
+          {edges.map((e) => (
+            <li class="text-sm text-ib-muted">{e.source} —{e.type}→ {e.target}</li>
+          ))}
+        </ul>
+      </section>
+    </noscript>
+  </div>
+</Base>
+
+<script define:vars={{ nodes, edges, conceptTypes, relationTypes, allGames }}>
+  // Graph data is serialized here for client-side D3
+  window.__graphData = { nodes, edges, conceptTypes, relationTypes, allGames };
+</script>
+
+<script type="module">
+  import { forceSimulation, forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
+  import { select, event as d3Event } from "d3-selection";
+  import { zoom, zoomIdentity } from "d3-zoom";
+  import { scaleOrdinal } from "d3-scale";
+
+  const data = window.__graphData;
+  if (!data || data.nodes.length === 0) {
+    // Nothing to render
+  } else {
+    const { nodes: rawNodes, edges: rawEdges, conceptTypes, relationTypes } = data;
+
+    // Color scale
+    const colorScale = scaleOrdinal()
+      .domain(conceptTypes.map((ct) => ct.type))
+      .range(conceptTypes.map((ct) => ct.color));
+
+    // Edge opacity by relation type
+    const edgeOpacity = {
+      tensions_with: 0.8,
+      CREATES_PRESSURE: 0.6,
+      HAS_MUTATION_VECTOR: 0.4,
+      IMPLEMENTED_AS: 0.3,
+      HAS_COUNTERPLAY: 0.4,
+      CAN_FAIL_AS: 0.4,
+      TRIGGERED_BY_COMBINATION: 0.5,
+    };
+
+    // Build node map
+    const nodeMap = new Map(rawNodes.map((n) => [n.id, n]));
+
+    // Compute degree for each node
+    const degree = new Map();
+    for (const e of rawEdges) {
+      degree.set(e.source, (degree.get(e.source) ?? 0) + 1);
+      degree.set(e.target, (degree.get(e.target) ?? 0) + 1);
+    }
+
+    // Prepare D3 data (copy to avoid mutating originals)
+    const nodes = rawNodes.map((n) => ({ ...n, degree: degree.get(n.id) ?? 0 }));
+    const links = rawEdges.map((e) => ({ source: e.source, target: e.target, type: e.type }));
+
+    // SVG setup
+    const svg = select("#graph-svg");
+    const width = svg.node().clientWidth;
+    const height = svg.node().clientHeight;
+
+    // Container group for zoom
+    const g = svg.append("g");
+
+    // Zoom behavior
+    const zoomBehavior = zoom()
+      .scaleExtent([0.2, 4])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoomBehavior);
+
+    // Initial transform to center
+    svg.call(zoomBehavior.transform, zoomIdentity.translate(width / 2, height / 2));
+
+    // Filter state
+    const filterState = {
+      conceptTypes: new Set(conceptTypes.map((ct) => ct.type)),
+      relationTypes: new Set(relationTypes.map((rt) => rt.type)),
+      game: "",
+      qualityThreshold: 0,
+    };
+
+    // Mobile defaults: hide design_knob and mutation_vector
+    if (window.innerWidth < 768) {
+      filterState.conceptTypes.delete("design_knob");
+      filterState.conceptTypes.delete("mutation_vector");
+      document.querySelectorAll('input[data-filter-type="concept"][data-filter-value="design_knob"]').forEach((cb) => (cb.checked = false));
+      document.querySelectorAll('input[data-filter-type="concept"][data-filter-value="mutation_vector"]').forEach((cb) => (cb.checked = false));
+    }
+
+    function getFilteredData() {
+      const filteredNodes = nodes.filter((n) => {
+        if (!filterState.conceptTypes.has(n.type)) return false;
+        if (filterState.game && !n.gamesPresent.includes(filterState.game)) return false;
+        if (n.qualityScore !== null && n.qualityScore < filterState.qualityThreshold) return false;
+        return true;
+      });
+      const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
+      const filteredLinks = links.filter(
+        (l) => filteredNodeIds.has(l.source) && filteredNodeIds.has(l.target) && filterState.relationTypes.has(l.type),
+      );
+      return { filteredNodes, filteredLinks };
+    }
+
+    // Simulation
+    let simulation = null;
+    let linkSel = null;
+    let nodeSel = null;
+
+    function render() {
+      const { filteredNodes, filteredLinks } = getFilteredData();
+
+      // Clear previous
+      g.selectAll("*").remove();
+
+      if (filteredNodes.length === 0) {
+        g.append("text")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("text-anchor", "middle")
+          .attr("class", "fill-ib-muted")
+          .style("font-size", "14px")
+          .text("No nodes match current filters.");
+        return;
+      }
+
+      // Links
+      linkSel = g.append("g")
+        .selectAll("line")
+        .data(filteredLinks)
+        .join("line")
+        .attr("stroke", (d) => colorScale(nodeMap.get(d.source)?.type ?? "#999"))
+        .attr("stroke-opacity", (d) => edgeOpacity[d.type] ?? 0.3)
+        .attr("stroke-width", 1);
+
+      // Nodes
+      nodeSel = g.append("g")
+        .selectAll("circle")
+        .data(filteredNodes)
+        .join("circle")
+        .attr("r", (d) => 5 + Math.min(d.degree * 1.5, 15))
+        .attr("fill", (d) => colorScale(d.type))
+        .attr("stroke", "var(--color-ib-bg)")
+        .attr("stroke-width", 1.5)
+        .style("cursor", "pointer")
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          showDetail(d);
+        })
+        .on("mouseenter", function () {
+          select(this).attr("stroke-width", 3);
+        })
+        .on("mouseleave", function () {
+          select(this).attr("stroke-width", 1.5);
+        });
+
+      // Labels (only for nodes with degree > 2)
+      g.append("g")
+        .selectAll("text")
+        .data(filteredNodes.filter((n) => n.degree > 2))
+        .join("text")
+        .text((d) => d.label.length > 25 ? d.label.slice(0, 22) + "…" : d.label)
+        .attr("font-size", "10px")
+        .attr("font-family", "monospace")
+        .attr("fill", "var(--color-ib-text)")
+        .attr("text-anchor", "middle")
+        .attr("dy", -12)
+        .style("pointer-events", "none");
+
+      // Simulation
+      if (simulation) simulation.stop();
+      simulation = forceSimulation(filteredNodes)
+        .force("charge", forceManyBody().strength(-300))
+        .force("link", forceLink(filteredLinks).id((d) => d.id).distance(80))
+        .force("center", forceCenter(0, 0))
+        .force("collision", forceCollide().radius(20))
+        .alphaMin(0.001)
+        .alphaDecay(0.0228);
+
+      let tickCount = 0;
+      simulation.on("tick", () => {
+        tickCount++;
+        if (tickCount > 300) simulation.stop();
+
+        linkSel
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+
+        nodeSel
+          .attr("cx", (d) => d.x)
+          .attr("cy", (d) => d.y);
+
+        g.selectAll("text")
+          .attr("x", (d) => d.x)
+          .attr("y", (d) => d.y);
+      });
+    }
+
+    // Detail panel
+    function showDetail(node) {
+      const panel = document.getElementById("detail-panel");
+      const content = document.getElementById("detail-content");
+      const connectedEdges = rawEdges.filter((e) => e.source === node.id || e.target === node.id);
+      const edgeList = connectedEdges.map((e) => {
+        const otherId = e.source === node.id ? e.target : e.source;
+        const other = nodeMap.get(otherId);
+        const direction = e.source === node.id ? "→" : "←";
+        return `<li class="text-xs"><span class="text-ib-accent2">${e.type}</span> ${direction} <a href="/records/${other?.key ?? ""}/" class="text-ib-accent hover:text-ib-accent2">${other?.label ?? otherId}</a></li>`;
+      }).join("");
+
+      const qualityBadge = node.qualityScore !== null
+        ? `<span class="rounded px-1.5 py-0.5 text-xs font-mono ${node.qualityScore >= 0.7 ? "bg-green-500/20 text-green-400" : node.qualityScore >= 0.4 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}">${node.qualityScore >= 0.7 ? "A" : node.qualityScore >= 0.4 ? "B" : "C"}</span>`
+        : '<span class="text-xs text-ib-muted">N/A</span>';
+
+      content.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">${node.type}</div>
+            <h3 class="mt-1 text-lg font-semibold text-ib-text">${node.label}</h3>
+            <div class="mt-1 font-mono text-xs text-ib-accent">${node.key}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-ib-muted">Quality:</span> ${qualityBadge}
+          </div>
+          <div>
+            <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">Games Present</div>
+            <div class="mt-1 flex flex-wrap gap-1">
+              ${node.gamesPresent.length > 0
+                ? node.gamesPresent.map((g) => `<span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">${g}</span>`).join("")
+                : '<span class="text-xs text-ib-muted">None</span>'}
+            </div>
+          </div>
+          <div>
+            <div class="text-xs font-mono uppercase tracking-wider text-ib-muted">Connected Relations (${connectedEdges.length})</div>
+            <ul class="mt-2 space-y-1">${edgeList || '<li class="text-xs text-ib-muted">None</li>'}</ul>
+          </div>
+          <a href="/records/${node.key}/" class="block border border-ib-border px-3 py-2 text-center text-sm text-ib-accent transition-colors hover:bg-ib-surface2">View Full Record →</a>
+        </div>
+      `;
+      panel.classList.remove("hidden");
+    }
+
+    document.getElementById("close-detail").addEventListener("click", () => {
+      document.getElementById("detail-panel").classList.add("hidden");
+    });
+
+    // Filter handlers
+    document.querySelectorAll('input[data-filter-type]').forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const type = cb.dataset.filterType;
+        const value = cb.dataset.filterValue;
+        const set = type === "concept" ? filterState.conceptTypes : filterState.relationTypes;
+        if (cb.checked) set.add(value);
+        else set.delete(value);
+        render();
+      });
+    });
+
+    document.getElementById("game-filter").addEventListener("change", (e) => {
+      filterState.game = e.target.value;
+      render();
+    });
+
+    const qualitySlider = document.getElementById("quality-filter");
+    const qualityValue = document.getElementById("quality-value");
+    qualitySlider.addEventListener("input", (e) => {
+      filterState.qualityThreshold = parseFloat(e.target.value);
+      qualityValue.textContent = filterState.qualityThreshold.toFixed(1);
+      render();
+    });
+
+    document.getElementById("reset-filters").addEventListener("click", () => {
+      filterState.conceptTypes = new Set(conceptTypes.map((ct) => ct.type));
+      filterState.relationTypes = new Set(relationTypes.map((rt) => rt.type));
+      filterState.game = "";
+      filterState.qualityThreshold = 0;
+      document.querySelectorAll('input[data-filter-type]').forEach((cb) => (cb.checked = true));
+      document.getElementById("game-filter").value = "";
+      qualitySlider.value = 0;
+      qualityValue.textContent = "0.0";
+      render();
+    });
+
+    // Initial render
+    render();
+  }
+</script>
