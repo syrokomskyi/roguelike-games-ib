@@ -61,7 +61,7 @@ function renderComparisonNote(
 
   lines.push(...renderOverview(store, sidA, sidB));
   lines.push(...renderCoverage(store, resolver, sidA, sidB));
-  lines.push(...renderGaps(store, resolver, sidA, sidB));
+  lines.push(...renderGaps(store, sidA, sidB));
 
   return lines.join("\n");
 }
@@ -141,7 +141,6 @@ function renderCoverage(
 
 function renderGaps(
   store: ProjectionStore,
-  resolver: PathResolver,
   sidA: string,
   sidB: string,
 ): string[] {
