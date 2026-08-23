@@ -1,0 +1,81 @@
+---
+/*
+<MODULE_CONTRACT>
+<purpose>Design pattern library index page — lists all design_pattern concepts with game coverage badges and member primitives.</purpose>
+<non-goals>
+  <item>Does not fetch or mutate data — pure projection over ProjectionStore via buildPatternData.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0011: Initial creation — patterns index page with game coverage badges.</item>
+</CHANGE_SUMMARY>
+*/
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context";
+import { getPageMetadata } from "../lib/metadata";
+import { buildPatternData } from "../lib/design-data";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const patterns = buildPatternData(ctx.store);
+---
+
+<Base title="Design Patterns" metadata={meta} activeNav="patterns">
+  <div class="space-y-14">
+    <header class="grid gap-8 border-b border-ib-text pb-12 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div>
+        <p class="atlas-label text-ib-blue">Design layer</p>
+        <h1 class="mt-5 text-5xl font-medium tracking-[-.045em] sm:text-7xl">Patterns.</h1>
+        <p class="mt-5 max-w-2xl text-lg text-ib-muted">Named combinations of design primitives that co-occur across roguelike games. Each pattern describes an archetype of intentional design choices.</p>
+      </div>
+      <div class="border border-ib-blue px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-ib-blue">Derived pattern library</div>
+    </header>
+
+    <section>
+      <h2 class="atlas-label mb-5 text-ib-muted">01 / Design patterns <span>({patterns.length})</span></h2>
+      {patterns.length > 0 ? (
+        <div class="grid gap-3 sm:grid-cols-2">
+          {patterns.map((p) => (
+            <a href={`/records/${p.key}/`} class="block border-l-2 border-ib-blue bg-ib-surface p-5 transition-colors hover:bg-ib-surface2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="font-semibold text-ib-text">{p.title}</div>
+                {p.qualityScore && (
+                  <span class={`rounded px-1.5 py-0.5 text-xs font-mono ${p.qualityScore.overall >= 0.7 ? "bg-green-500/20 text-green-400" : p.qualityScore.overall >= 0.4 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>
+                    {p.qualityScore.overall >= 0.7 ? "A" : p.qualityScore.overall >= 0.4 ? "B" : "C"}
+                  </span>
+                )}
+              </div>
+              {p.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{p.definition}</p>}
+              <div class="mt-2 flex flex-wrap gap-1">
+                <span class="text-xs text-ib-muted">Present in:</span>
+                {p.gamesWherePresent.map((g: string) => (
+                  <span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">{g}</span>
+                ))}
+              </div>
+              {p.gamesWhereAbsent.length > 0 && (
+                <div class="mt-1 flex flex-wrap gap-1">
+                  <span class="text-xs text-ib-muted">Absent from:</span>
+                  {p.gamesWhereAbsent.map((g: string) => (
+                    <span class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-muted">{g}</span>
+                  ))}
+                </div>
+              )}
+              {p.memberPrimitives.length > 0 && (
+                <div class="mt-1.5 flex flex-wrap gap-1">
+                  {p.memberPrimitives.map((mp: string) => (
+                    <a href={`/records/${mp}/`} class="rounded bg-ib-surface px-1.5 py-0.5 text-xs text-ib-accent hover:text-ib-accent2">{mp}</a>
+                  ))}
+                </div>
+              )}
+              <div class="mt-2 font-mono text-xs text-ib-accent">{p.key}</div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-sm text-ib-muted">No design patterns yet.</p>
+      )}
+    </section>
+  </div>
+</Base>

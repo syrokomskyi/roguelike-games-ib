@@ -9,6 +9,7 @@
   <item>Initial creation: buildDesignData with concepts, primitives, design relations, realizations.</item>
   <item>RFC-0005: Fixed relation scope filter to include cross_game scope. Added designRelationTypes filter matching MCP queryDesignSpace. Added buildConceptsByType, buildCoverageMatrix, buildGameConceptCoverage. Exported designRelationTypes for reuse.</item>
   <item>RFC-0009: Added qualityScore to ConceptCard and conceptCards/primitiveCards in buildDesignData.</item>
+  <item>RFC-0011: Added TRIGGERED_BY_COMBINATION to designRelationTypes. Added buildPatternData for design pattern library.</item>
 </CHANGE_SUMMARY>
 */
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
@@ -17,6 +18,7 @@ import { getSourceId } from "./page-data";
 export const designRelationTypes = new Set([
   "CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with",
   "HAS_MUTATION_VECTOR", "IMPLEMENTED_AS", "HAS_COUNTERPLAY", "CAN_FAIL_AS",
+  "TRIGGERED_BY_COMBINATION",
 ]);
 
 export function buildDesignData(store: ProjectionStore) {
@@ -227,4 +229,37 @@ export function buildGameConceptCoverage(store: ProjectionStore, sourceId: strin
     else if (ct === "design_pressure") result.designPressures.push(card);
   }
   return result;
+}
+
+export interface PatternCard {
+  key: string;
+  title: string;
+  definition: string | null;
+  memberPrimitives: string[];
+  memberPressures: string[];
+  gamesWherePresent: string[];
+  gamesWhereAbsent: string[];
+  qualityScore: { coverage: number; evidence: number; richness: number; overall: number } | null;
+}
+
+export function buildPatternData(store: ProjectionStore): PatternCard[] {
+  const patterns = store.records.filter((r) => {
+    if (r.record_type !== "concept") return false;
+    const ct = (r as Record<string, unknown>)["concept_type"] as string | undefined;
+    return ct === "design_pattern";
+  });
+
+  return patterns.map((r) => {
+    const ra = r as Record<string, unknown>;
+    return {
+      key: r.key,
+      title: (ra["title"] as string | null) ?? r.key,
+      definition: ra["definition"] as string | null,
+      memberPrimitives: (ra["member_primitives"] as string[]) ?? [],
+      memberPressures: (ra["member_pressures"] as string[]) ?? [],
+      gamesWherePresent: (ra["games_where_present"] as string[]) ?? [],
+      gamesWhereAbsent: (ra["games_where_absent"] as string[]) ?? [],
+      qualityScore: (ra["quality_score"] as { coverage: number; evidence: number; richness: number; overall: number } | undefined) ?? null,
+    };
+  });
 }
