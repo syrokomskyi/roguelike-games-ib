@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples, generateDesignSeed } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 import { generateComparisonReport } from "./tools/report.ts";
@@ -608,6 +608,24 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "generate_design_seed",
+    description: "Generate a structured design dossier from a sensation word. Maps the sensation to relevant design primitives, pressures, mutation vectors, concrete examples, ancestry trail, and design tensions. Unknown sensations fall back to semantic search.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        sensation: { type: "string", description: "A game design sensation word (e.g. 'dread', 'tension', 'discovery')" },
+        context: { type: "string", description: "Optional context (e.g. 'cave exploration')" },
+        excluded: { type: "array", items: { type: "string" }, description: "Mechanics to exclude from results (e.g. ['hunger', 'darkness'])" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      required: ["sensation"],
+      additionalProperties: false,
+    },
+    handler: generateDesignSeed,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -664,4 +682,5 @@ export const REQUIRED_TOOLS = [
   "find_design_patterns",
   "get_pattern_examples",
   "generate_comparison_report",
+  "generate_design_seed",
 ];

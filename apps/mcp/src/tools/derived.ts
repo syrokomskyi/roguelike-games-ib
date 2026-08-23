@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, concept quality scoring, and semantic design-space search.</purpose>
+<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, concept quality scoring, semantic design-space search, and AI design seed generation.</purpose>
 <non-goals>
   <item>Does not mutate or create records — all tools are read-only.</item>
 </non-goals>
@@ -11,6 +11,7 @@
   <item>RFC-0009: Added get_concept_quality tool for concept quality scoring.</item>
   <item>RFC-0010: Added search_design_space tool for semantic concept search.</item>
   <item>RFC-0011: Added find_design_patterns and get_pattern_examples tools for design pattern library.</item>
+  <item>RFC-0013: Added generate_design_seed tool for sensation-to-structure dossier generation.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -20,6 +21,7 @@ import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
+import { SENSATION_MAP } from "./sensation-map.ts";
 
 export function findSemanticRecords(
   ctx: McpContext,
@@ -661,4 +663,265 @@ export function getPatternExamples(
     },
     examples_by_game: examplesByGame,
   });
+}
+
+interface DossierConcept {
+  key: string;
+  title: string;
+  definition: string;
+  quality_score: { coverage: number; evidence: number; richness: number; overall: number } | null;
+  why_relevant: string;
+}
+
+interface DossierMutationVector {
+  key: string;
+  title: string;
+  definition: string;
+  available_knobs: string[];
+}
+
+interface DossierExample {
+  game: string;
+  primitive: string;
+  example: string;
+}
+
+interface DossierOutput {
+  sensation: string;
+  context: string | null;
+  excluded: string[];
+  dossier: {
+    relevant_primitives: DossierConcept[];
+    relevant_pressures: DossierConcept[];
+    mutation_vectors: DossierMutationVector[];
+    concrete_examples: DossierExample[];
+    excluded_mechanics_filtered: { requested_exclusion: string; filtered_concepts: string[] }[];
+    ancestry_trail: { step: number; type: "source_structure" | "mutation" | "possibility"; ref: string; description: string }[];
+    design_tensions: { tension: string; description: string }[];
+  };
+}
+
+function templateWhyRelevant(title: string, definition: string, sensation: string): string {
+  return `${title} contributes to ${sensation} because it ${definition}`;
+}
+
+function isExcluded(record: Record<string, unknown>, excluded: string[]): { excluded: boolean; matchedTerm: string | null } {
+  if (excluded.length === 0) return { excluded: false, matchedTerm: null };
+  const title = ((record["title"] as string) ?? "").toLowerCase();
+  const definition = ((record["definition"] as string) ?? "").toLowerCase();
+  const key = ((record["key"] as string) ?? "").toLowerCase();
+  for (const term of excluded) {
+    const lower = term.toLowerCase();
+    if (title.includes(lower) || definition.includes(lower) || key.includes(lower)) {
+      return { excluded: true, matchedTerm: term };
+    }
+  }
+  return { excluded: false, matchedTerm: null };
+}
+
+export async function generateDesignSeed(
+  ctx: McpContext,
+  input: { sensation: string; context?: string; excluded?: string[]; limit?: number },
+) {
+  if (!input.sensation) {
+    throw new ValidationError("sensation is required");
+  }
+
+  const excluded = input.excluded ?? [];
+  const contextStr = input.context ?? null;
+  const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
+
+  const sensationEntry = SENSATION_MAP[input.sensation.toLowerCase()];
+
+  let primitiveKeys: string[] = [];
+  let pressureKeys: string[] = [];
+  let patternKeys: string[] = [];
+
+  if (sensationEntry) {
+    primitiveKeys = sensationEntry.primitives;
+    pressureKeys = sensationEntry.pressures;
+    patternKeys = sensationEntry.patterns;
+  } else {
+    const fallbackResult = await searchDesignSpace(ctx, {
+      query: input.sensation,
+      limit: limit * 2,
+    });
+    const fallbackData = fallbackResult.data as { concepts: Array<{ key: string; concept_type: string }> };
+    for (const concept of fallbackData.concepts) {
+      const ct = concept.concept_type;
+      if (ct === "design_primitive") primitiveKeys.push(concept.key);
+      else if (ct === "design_pressure") pressureKeys.push(concept.key);
+      else if (ct === "design_pattern") patternKeys.push(concept.key);
+    }
+  }
+
+  const excludedMechanicsFiltered: { requested_exclusion: string; filtered_concepts: string[] }[] = [];
+  const filterExcluded = (key: string): boolean => {
+    const record = ctx.store.resolveRecordByKey(key);
+    if (!record) return false;
+    const ra = record as unknown as Record<string, unknown>;
+    const result = isExcluded(ra, excluded);
+    if (result.excluded && result.matchedTerm) {
+      const existing = excludedMechanicsFiltered.find((e) => e.requested_exclusion === result.matchedTerm);
+      if (existing) {
+        if (!existing.filtered_concepts.includes(key)) existing.filtered_concepts.push(key);
+      } else {
+        excludedMechanicsFiltered.push({ requested_exclusion: result.matchedTerm, filtered_concepts: [key] });
+      }
+      return false;
+    }
+    return true;
+  };
+
+  const activePrimitiveKeys = primitiveKeys.filter(filterExcluded);
+  const activePressureKeys = pressureKeys.filter(filterExcluded);
+  const activePatternKeys = patternKeys.filter(filterExcluded);
+
+  const buildDossierConcept = (key: string): DossierConcept | null => {
+    const record = ctx.store.resolveRecordByKey(key);
+    if (!record) return null;
+    const ra = record as unknown as Record<string, unknown>;
+    const title = (ra["title"] as string) ?? key;
+    const definition = (ra["definition"] as string) ?? "";
+    const qualityScore = ra["quality_score"] as
+      | { coverage: number; evidence: number; richness: number; overall: number }
+      | undefined;
+    return {
+      key,
+      title,
+      definition,
+      quality_score: qualityScore ?? null,
+      why_relevant: templateWhyRelevant(title, definition, input.sensation),
+    };
+  };
+
+  const relevantPrimitives = activePrimitiveKeys
+    .map(buildDossierConcept)
+    .filter((c): c is DossierConcept => c !== null);
+
+  const relevantPressures = activePressureKeys
+    .map(buildDossierConcept)
+    .filter((c): c is DossierConcept => c !== null);
+
+  const mutationVectors: DossierMutationVector[] = [];
+  const ancestryTrail: { step: number; type: "source_structure" | "mutation" | "possibility"; ref: string; description: string }[] = [];
+  let stepCounter = 1;
+
+  for (const primKey of activePrimitiveKeys) {
+    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    if (!primRecord) continue;
+    const primRa = primRecord as unknown as Record<string, unknown>;
+    const primTitle = (primRa["title"] as string) ?? primKey;
+
+    ancestryTrail.push({
+      step: stepCounter++,
+      type: "source_structure",
+      ref: primKey,
+      description: `Canonical primitive: ${primTitle}`,
+    });
+
+    for (const rel of ctx.store.relations) {
+      if (rel.relation_type !== "HAS_MUTATION_VECTOR" || rel.source_record_id !== primRecord.id) continue;
+      const mutRecord = ctx.store.resolveRecordById(rel.target_record_id);
+      if (!mutRecord) continue;
+      const mutRa = mutRecord as unknown as Record<string, unknown>;
+      const mutTitle = (mutRa["title"] as string) ?? mutRecord.key;
+      const mutDef = (mutRa["definition"] as string) ?? "";
+
+      const knobs: string[] = [];
+      for (const knobRel of ctx.store.relations) {
+        if (knobRel.relation_type !== "IMPLEMENTED_AS" || knobRel.source_record_id !== mutRecord.id) continue;
+        const knobRecord = ctx.store.resolveRecordById(knobRel.target_record_id);
+        if (knobRecord) knobs.push(knobRecord.key);
+      }
+
+      if (!filterExcluded(mutRecord.key)) continue;
+
+      mutationVectors.push({
+        key: mutRecord.key,
+        title: mutTitle,
+        definition: mutDef,
+        available_knobs: knobs,
+      });
+
+      ancestryTrail.push({
+        step: stepCounter++,
+        type: "mutation",
+        ref: mutRecord.key,
+        description: `Mutation axis: ${mutTitle}`,
+      });
+
+      for (const knobKey of knobs) {
+        if (!filterExcluded(knobKey)) continue;
+        const knobRecord = ctx.store.resolveRecordByKey(knobKey);
+        const knobTitle = knobRecord ? ((knobRecord as unknown as Record<string, unknown>)["title"] as string) ?? knobKey : knobKey;
+        ancestryTrail.push({
+          step: stepCounter++,
+          type: "possibility",
+          ref: knobKey,
+          description: `Possibility: ${knobTitle}`,
+        });
+      }
+    }
+  }
+
+  const concreteExamples: DossierExample[] = [];
+  for (const primKey of activePrimitiveKeys) {
+    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    if (!primRecord) continue;
+    const primRa = primRecord as unknown as Record<string, unknown>;
+    const examples = primRa["concrete_examples"] as
+      | Array<{ game: string; description: string }>
+      | undefined;
+    if (!examples) continue;
+    for (const ex of examples) {
+      concreteExamples.push({
+        game: ex.game,
+        primitive: primKey,
+        example: ex.description,
+      });
+    }
+  }
+
+  const designTensions: { tension: string; description: string }[] = [];
+  const tensionPairs = new Set<string>();
+  for (const pressureKey of activePressureKeys) {
+    const pressureRecord = ctx.store.resolveRecordByKey(pressureKey);
+    if (!pressureRecord) continue;
+    for (const rel of ctx.store.relations) {
+      if (rel.relation_type !== "tensions_with") continue;
+      if (rel.source_record_id !== pressureRecord.id && rel.target_record_id !== pressureRecord.id) continue;
+      const source = ctx.store.resolveRecordById(rel.source_record_id);
+      const target = ctx.store.resolveRecordById(rel.target_record_id);
+      if (!source || !target) continue;
+      const pairKey = [source.key, target.key].sort().join(" ↔ ");
+      if (tensionPairs.has(pairKey)) continue;
+      tensionPairs.add(pairKey);
+      const sourceTitle = (source as unknown as Record<string, unknown>)["title"] as string ?? source.key;
+      const targetTitle = (target as unknown as Record<string, unknown>)["title"] as string ?? target.key;
+      const qualifiers = (rel as unknown as Record<string, unknown>)["qualifiers"] as Record<string, unknown> | undefined;
+      const rationale = (qualifiers?.["rationale"] as string) ?? "";
+      designTensions.push({
+        tension: `${sourceTitle} ↔ ${targetTitle}`,
+        description: rationale || `${sourceTitle} and ${targetTitle} create a design tension`,
+      });
+    }
+  }
+
+  const dossier: DossierOutput = {
+    sensation: input.sensation,
+    context: contextStr,
+    excluded,
+    dossier: {
+      relevant_primitives: relevantPrimitives,
+      relevant_pressures: relevantPressures,
+      mutation_vectors: mutationVectors,
+      concrete_examples: concreteExamples,
+      excluded_mechanics_filtered: excludedMechanicsFiltered,
+      ancestry_trail: ancestryTrail,
+      design_tensions: designTensions,
+    },
+  };
+
+  return envelope(ctx, dossier);
 }

@@ -32,7 +32,7 @@ export { encodeListCursor, decodeListCursor, paginate } from "./pagination.ts";
 // Tool handlers (for direct testing)
 export { getDatasetInfo } from "./tools/dataset.ts";
 export { listSources, getSourceStatus } from "./tools/sources.ts";
-export { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps } from "./tools/derived.ts";
+export { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, generateDesignSeed } from "./tools/derived.ts";
 export { getRecord, resolveKey } from "./tools/records.ts";
 export { searchRecords } from "./tools/search.ts";
 export { listDefinitions } from "./tools/definitions.ts";
