@@ -18,7 +18,7 @@ import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projec
 import { buildPathResolver, type PathResolver } from "./paths.ts";
 import { renderRecordNote } from "./render-record.ts";
 import { renderSourceNote } from "./render-source.ts";
-import { renderMoc, MOC_FILENAME } from "./moc.ts";
+import { renderMoc, MOC_FILENAME, renderConceptsMoc, CONCEPTS_MOC_FILENAME } from "./moc.ts";
 import { createBuildManifest, writeBuildManifest, type ObsidianBuildManifest } from "./build-manifest.ts";
 import { validateAllLinks, resolveLink } from "./links.ts";
 
@@ -98,6 +98,12 @@ export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuild
   const mocContent = renderMoc(store.records, resolver);
   writeFileSync(join(vaultRoot, MOC_FILENAME), mocContent, "utf-8");
   notePaths.push(MOC_FILENAME);
+
+  const conceptsMocContent = renderConceptsMoc(store.records, resolver);
+  if (conceptsMocContent) {
+    writeFileSync(join(vaultRoot, CONCEPTS_MOC_FILENAME), conceptsMocContent, "utf-8");
+    notePaths.push(CONCEPTS_MOC_FILENAME);
+  }
 
   writeFileSync(join(vaultRoot, "README.md"), `# Roguelike Games IB — Obsidian Vault\n\n${GENERATED_WARNING}\n\nThis vault is generated from the materialized canonical knowledge base.\n\n- **Canonical hash**: \`${store.canonicalHash}\`\n- **Notes**: ${notePaths.length}\n\nSee [[${MOC_FILENAME.replace(/\.md$/, "")}]] for the Map of Content.\n`, "utf-8");
 

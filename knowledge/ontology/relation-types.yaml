@@ -298,6 +298,39 @@ relations:
   range:
   - definition
   - semantic_record
+- id: EQUIVALENT_TO
+  semantics: Source definition is functionally equivalent to target definition (e.g., form creature equivalent to base creature).
+  direction: directed
+  evidence_required: true
+  domain:
+  - definition
+  - semantic_record
+  range:
+  - definition
+- id: USES_ITEM
+  semantics: Source definition uses target item as a component or requirement.
+  direction: directed
+  evidence_required: true
+  domain:
+  - definition
+  range:
+  - definition
+- id: BELONGS_TO
+  semantics: Source definition belongs to target faction/group/organization.
+  direction: directed
+  evidence_required: true
+  domain:
+  - definition
+  range:
+  - definition
+- id: RELATED_TO
+  semantics: Source definition is related to target definition in a general sense not covered by a more specific relation type.
+  direction: symmetric
+  evidence_required: true
+  domain:
+  - definition
+  range:
+  - definition
 - id: pressures
   semantics: Source design primitive creates a design pressure that the target design primitive must address or resolve.
   direction: directed

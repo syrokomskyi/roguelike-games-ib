@@ -24,6 +24,16 @@ const SKIP_ATTRIBUTES = new Set([
 // Attributes that reference other records by native_id → relation
 const CROSS_REF_ATTRIBUTES: Record<string, { relationType: string; refType: string }> = {
   leads_to: { relationType: "TRANSFORMS_INTO", refType: "mutation" },
+  equivalent_mons: { relationType: "EQUIVALENT_TO", refType: "mons" },
+  quest_artifact: { relationType: "REQUIRES", refType: "artifact" },
+  talisman: { relationType: "USES_ITEM", refType: "item" },
+  monster_index: { relationType: "RELATED_TO", refType: "creature" },
+  leader_index: { relationType: "RELATED_TO", refType: "creature" },
+  nemesis_index: { relationType: "RELATED_TO", refType: "creature" },
+  default_faction: { relationType: "BELONGS_TO", refType: "faction" },
+  result: { relationType: "PRODUCES", refType: "item" },
+  tools: { relationType: "REQUIRES", refType: "item" },
+  components: { relationType: "REQUIRES", refType: "item" },
 };
 
 // Grouping attributes → semantic records + PART_OF relations
@@ -33,6 +43,7 @@ const GROUPING_ATTRIBUTES = [
   "alignment", "holiness", "size", "shape", "blood_type",
   "ability_flags", "flags1", "flags2", "flags3",
   "is_buff", "is_always_active",
+  "schools", "parent_branch", "artifact_type", "trap_value", "skill_value",
 ];
 
 interface DerivedData {
@@ -55,7 +66,7 @@ function recordSlug(recordKey: string): string {
   return parts[parts.length - 1] ?? recordKey;
 }
 
-function makeEnvelope(recordType: string, key: string, id: string, sourceId: string) {
+function makeEnvelope(recordType: string, key: string, id: string, sourceId: string, scopeKind: "source" | "cross_game" = "source") {
   const schemaMap: Record<string, string> = {
     claim: "rgkb/claim@2",
     relation: "rgkb/relation@2",
@@ -67,7 +78,7 @@ function makeEnvelope(recordType: string, key: string, id: string, sourceId: str
     key,
     record_type: recordType,
     language: "en",
-    scope: { source_id: sourceId, scope_kind: "source" as const },
+    scope: { source_id: sourceId, scope_kind: scopeKind },
     origin: { kind: "derived" as const, actor_id: `${sourceId}-deriver`, run_id: RUN_ID },
     epistemic: { status: "observed" as const, confidence: "verified" as const },
     aliases: [] as string[],
@@ -96,6 +107,30 @@ function buildNativeIdIndex(records: any[]): Map<string, any> {
     }
   }
   return map;
+}
+
+function flattenObject(
+  obj: Record<string, unknown>,
+  prefix: string,
+  depth: number,
+): { predicateSuffix: string; value: string | number | boolean }[] {
+  const results: { predicateSuffix: string; value: string | number | boolean }[] = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === null || v === undefined || v === "") continue;
+    const suffix = `${prefix}_${slugify(k)}`;
+    if (typeof v === "object" && !Array.isArray(v) && depth < 2) {
+      results.push(...flattenObject(v as Record<string, unknown>, suffix, depth + 1));
+    } else if (Array.isArray(v)) {
+      for (const elem of v) {
+        if (elem === null || elem === undefined || elem === "") continue;
+        if (typeof elem === "object") continue;
+        results.push({ predicateSuffix: suffix, value: elem as string | number | boolean });
+      }
+    } else if (typeof v !== "object") {
+      results.push({ predicateSuffix: suffix, value: v as string | number | boolean });
+    }
+  }
+  return results;
 }
 
 function deriveClaims(
@@ -141,7 +176,22 @@ function deriveClaims(
           });
         }
       } else if (typeof attrValue === "object") {
-        continue;
+        const flattened = flattenObject(attrValue as Record<string, unknown>, attrName, 1);
+        for (const { predicateSuffix, value: fValue } of flattened) {
+          const vSlug = slugify(fValue);
+          if (!vSlug) continue;
+          const predicate = `has_${predicateSuffix}`;
+          const claimId = createRecordId();
+          const key = `${sourceId}/claim/${rSlug}/${predicate}/${vSlug}`;
+          claims.push({
+            ...makeEnvelope("claim", key, claimId, sourceId),
+            subject_id: record.id,
+            predicate,
+            assertion_state: "supported",
+            value: fValue,
+            evidence_refs: evidenceIds,
+          });
+        }
       } else {
         const vSlug = slugify(attrValue);
         if (!vSlug) continue;
@@ -189,12 +239,30 @@ function deriveRelations(
       const values = Array.isArray(attrValue) ? attrValue : [attrValue];
       for (const refValue of values) {
         if (typeof refValue !== "string") continue;
-        // Try to find target record by native_id
+        // Try to find target record by native_id — try configured refType first,
+        // then a broader set of common native_id prefixes as fallbacks
         const possibleNativeIds = [
           `${config.refType}:${refValue}`,
           `mutation:${refValue}`,
           `creature:${refValue}`,
+          `mons:${refValue}`,
           `item:${refValue}`,
+          `artifact:${refValue}`,
+          `faction:${refValue}`,
+          `monster:${refValue}`,
+          `species:${refValue}`,
+          `class:${refValue}`,
+          `profession:${refValue}`,
+          `spell:${refValue}`,
+          `branch:${refValue}`,
+          `trap:${refValue}`,
+          `skill:${refValue}`,
+          `effect:${refValue}`,
+          `recipe:${refValue}`,
+          `bionic:${refValue}`,
+          `form:${refValue}`,
+          `ability:${refValue}`,
+          `job:${refValue}`,
         ];
         let targetRecord: any = null;
         for (const nid of possibleNativeIds) {
@@ -323,6 +391,104 @@ function deriveSemanticRecords(
         relation_scope: "game",
         evidence_refs: evidenceIds,
         qualifiers: { via_attribute: group.attr, group_value: group.value },
+      });
+    }
+  }
+
+  // === Cross-game semantic records (D-4) ===
+  // Group records by (kind, attribute, valueSlug) across ALL games
+  const crossGameGroups = new Map<string, { kind: string; attr: string; value: string; valueSlug: string; members: any[]; sourceIds: Set<string> }>();
+
+  for (const record of records) {
+    if (record.record_type !== "definition") continue;
+    const attrs = record.attributes as Record<string, unknown> | undefined;
+    if (!attrs) continue;
+
+    const sourceId = record.scope?.source_id ?? record.source_identity?.source_id ?? "";
+    if (!sourceId) continue;
+
+    const kind = record.kind ?? "unknown";
+
+    for (const groupAttr of GROUPING_ATTRIBUTES) {
+      const attrValue = attrs[groupAttr];
+      if (attrValue === null || attrValue === undefined || attrValue === "") continue;
+
+      const values = Array.isArray(attrValue) ? attrValue : [attrValue];
+      for (const v of values) {
+        if (typeof v !== "string" && typeof v !== "number" && typeof v !== "boolean") continue;
+        const vStr = String(v);
+        if (!vStr) continue;
+        const vSlug = slugify(v);
+        if (!vSlug) continue;
+        const crossKey = `${kind}|${groupAttr}|${vSlug}`;
+        const group = crossGameGroups.get(crossKey);
+        if (group) {
+          group.members.push(record);
+          group.sourceIds.add(sourceId);
+        } else {
+          crossGameGroups.set(crossKey, { kind, attr: groupAttr, value: vStr, valueSlug: vSlug, members: [record], sourceIds: new Set([sourceId]) });
+        }
+      }
+    }
+  }
+
+  // Create cross-game semantic records for groups spanning 2+ games
+  const CROSS_GAME_SOURCE_ID = "cross-game";
+  for (const group of crossGameGroups.values()) {
+    if (group.sourceIds.size < 2) continue;
+    if (group.members.length < 2) continue;
+
+    const attrSlug = slugify(group.attr);
+    const valueSlug = group.valueSlug;
+    const key = `${CROSS_GAME_SOURCE_ID}/semantic/${group.kind}-${attrSlug}-${valueSlug}`;
+
+    let srId = srKeyToId.get(key);
+    if (!srId) {
+      srId = createRecordId();
+      srKeyToId.set(key, srId);
+
+      const participantRefs = group.members.map((m) => m.id);
+      const evidenceRefs = group.members.flatMap((m) => evidenceByRecordId.get(m.id) ?? []).slice(0, 50);
+      const gameList = [...group.sourceIds].sort().join(", ");
+
+      const title = `${group.value} ${group.attr.replace(/_/g, " ")} (${group.kind}, cross-game)`;
+      const summary = `${group.members.length} ${group.kind} records across ${group.sourceIds.size} games (${gameList}) with ${group.attr} = ${group.value}`;
+
+      semanticRecords.push({
+        ...makeEnvelope("semantic_record", key, srId, CROSS_GAME_SOURCE_ID, "cross_game"),
+        semantic_type: "cross_game",
+        title,
+        summary,
+        claim_refs: [],
+        evidence_refs: evidenceRefs,
+        participant_refs: participantRefs,
+        body: {
+          grouping_attribute: group.attr,
+          grouping_value: group.value,
+          kind: group.kind,
+          member_count: group.members.length,
+          source_games: [...group.sourceIds].sort(),
+        },
+      });
+    }
+
+    // Create PART_OF relations from each member to the cross-game semantic record
+    for (const member of group.members) {
+      const mSlug = recordSlug(member.key);
+      const evidenceIds = evidenceByRecordId.get(member.id) ?? [];
+      if (evidenceIds.length === 0) continue;
+
+      const memberSourceId = member.scope?.source_id ?? member.source_identity?.source_id ?? "";
+      const relId = createRecordId();
+      const relKey = `${CROSS_GAME_SOURCE_ID}/relation/${mSlug}-PART_OF-${valueSlug}-${attrSlug}`;
+      relations.push({
+        ...makeEnvelope("relation", relKey, relId, CROSS_GAME_SOURCE_ID, "cross_game"),
+        relation_type: "PART_OF",
+        source_record_id: member.id,
+        target_record_id: srId,
+        relation_scope: "cross_game",
+        evidence_refs: evidenceIds,
+        qualifiers: { via_attribute: group.attr, group_value: group.value, source_game: memberSourceId },
       });
     }
   }

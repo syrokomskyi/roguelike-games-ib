@@ -22,6 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
+import { findSemanticRecords, getDerivedSummary } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 
 export type ToolHandler<I = unknown, O = unknown> = (ctx: McpContext, input: I) => O | Promise<O>;
@@ -304,10 +305,11 @@ export function createMcpToolRegistry(): ToolRegistry {
 
   registry.register({
     name: "find_cross_game_concepts",
-    description: "Search/list canonical cross-game concepts.",
+    description: "Search/list canonical cross-game concepts, optionally filtered by concept_type.",
     inputSchema: {
       type: "object",
       properties: {
+        concept_type: { type: "string", enum: ["cross_game_mechanic", "design_primitive", "design_pressure", "player_sensation", "design_tension", "design_knob", "mutation_vector", "counterplay_pattern", "failure_mode", "negative_space", "emergent_pattern", "synergy_pattern"] },
         cursor: { type: "string" },
         limit: { type: "integer", minimum: 1, maximum: 100 },
       },
@@ -346,6 +348,32 @@ export function createMcpToolRegistry(): ToolRegistry {
       additionalProperties: false,
     },
     handler: queryDesignSpace,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "find_semantic_records",
+    description: "List semantic records (mechanics, systems, cross-game groupings) with optional filters by source, semantic_type, or kind.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source_id: { type: "string" },
+        semantic_type: { type: "string", enum: ["mechanic", "system", "algorithm", "emergence", "invariant", "cross_game"] },
+        kind: { type: "string" },
+        cursor: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      additionalProperties: false,
+    },
+    handler: findSemanticRecords,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "get_derived_summary",
+    description: "Returns aggregate counts of derived data: records by type, concepts by concept_type, semantic records by semantic_type, relations by type, and top claim predicates.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    handler: getDerivedSummary,
     readOnly: true,
   });
 
@@ -402,5 +430,7 @@ export const REQUIRED_TOOLS = [
   "find_cross_game_concepts",
   "find_design_primitives",
   "query_design_space",
+  "find_semantic_records",
+  "get_derived_summary",
   "get_coverage",
 ];

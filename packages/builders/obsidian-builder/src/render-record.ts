@@ -45,6 +45,68 @@ function renderProperties(record: CanonicalRecord): string {
   return lines.join("\n");
 }
 
+function renderConceptDetails(
+  store: ProjectionStore,
+  resolver: PathResolver,
+  aliasMap: AliasMap,
+  record: CanonicalRecord,
+): string {
+  if (record.record_type !== "concept") return "";
+
+  const sections: string[] = [];
+
+  const conceptType = (record as Record<string, unknown>).concept_type as string | undefined;
+  const definition = (record as Record<string, unknown>).definition as string | undefined;
+  const inclusionCriteria = (record as Record<string, unknown>).inclusion_criteria as string[] | undefined;
+  const exclusionCriteria = (record as Record<string, unknown>).exclusion_criteria as string[] | undefined;
+  const implementationRefs = (record as Record<string, unknown>).implementation_refs as string[] | undefined;
+  const ancestry = (record as Record<string, unknown>).ancestry as Record<string, unknown> | undefined;
+
+  if (conceptType) {
+    sections.push(`> **Concept type**: \`${conceptType}\``);
+  }
+  if (definition) {
+    sections.push("", "## Definition", definition, "");
+  }
+  if (inclusionCriteria && inclusionCriteria.length > 0) {
+    sections.push("## Inclusion Criteria");
+    for (const c of inclusionCriteria) sections.push(`- ${c}`);
+    sections.push("");
+  }
+  if (exclusionCriteria && exclusionCriteria.length > 0) {
+    sections.push("## Exclusion Criteria");
+    for (const c of exclusionCriteria) sections.push(`- ${c}`);
+    sections.push("");
+  }
+  if (implementationRefs && implementationRefs.length > 0) {
+    sections.push("## Implementation References");
+    for (const ref of implementationRefs) {
+      const link = makeWikiLink(resolver, aliasMap, ref);
+      sections.push(`- ${link ?? ref}`);
+    }
+    sections.push("");
+  }
+  if (ancestry) {
+    const sourceGames = ancestry.source_games as string[] | undefined;
+    const mutationDims = ancestry.mutation_dimensions as string[] | undefined;
+    const observedIn = ancestry.observed_in as string[] | undefined;
+
+    sections.push("## Ancestry");
+    if (sourceGames && sourceGames.length > 0) {
+      sections.push(`- **Source games**: ${sourceGames.join(", ")}`);
+    }
+    if (observedIn && observedIn.length > 0) {
+      sections.push(`- **Observed in**: ${observedIn.join(", ")}`);
+    }
+    if (mutationDims && mutationDims.length > 0) {
+      sections.push(`- **Mutation dimensions**: ${mutationDims.join(", ")}`);
+    }
+    sections.push("");
+  }
+
+  return sections.join("\n");
+}
+
 function renderRelations(
   store: ProjectionStore,
   resolver: PathResolver,
@@ -172,6 +234,11 @@ export function renderRecordNote(
   const props = renderProperties(record);
   if (props) {
     sections.push("## Properties", props, "");
+  }
+
+  const conceptDetails = renderConceptDetails(store, resolver, aliasMap, record);
+  if (conceptDetails) {
+    sections.push(conceptDetails);
   }
 
   const rels = renderRelations(store, resolver, aliasMap, record.id);

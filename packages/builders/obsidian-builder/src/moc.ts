@@ -56,3 +56,55 @@ export function renderMoc(
 }
 
 export const MOC_FILENAME = "MOC - Roguelike Games KB.md";
+
+export const CONCEPTS_MOC_FILENAME = "MOC - Concepts.md";
+
+export function renderConceptsMoc(
+  records: CanonicalRecord[],
+  resolver: PathResolver,
+): string {
+  const concepts = records.filter((r) => r.record_type === "concept");
+  if (concepts.length === 0) return "";
+
+  const sections: string[] = [
+    "---",
+    `generated: true`,
+    `title: "MOC - Concepts"`,
+    "---",
+    "",
+    "# MOC - Concepts",
+    "",
+    "> Generated Map of Content for all concept records (cross-game mechanics, design primitives, design pressures).",
+    "",
+  ];
+
+  const byConceptType = new Map<string, CanonicalRecord[]>();
+  for (const concept of concepts) {
+    const ct = (concept as Record<string, unknown>).concept_type as string | undefined ?? "unknown";
+    const list = byConceptType.get(ct) ?? [];
+    list.push(concept);
+    byConceptType.set(ct, list);
+  }
+
+  const sortedTypes = [...byConceptType.keys()].sort();
+  for (const type of sortedTypes) {
+    sections.push(`## ${type}`);
+    const recs = byConceptType.get(type)!;
+    const sorted = [...recs].sort((a, b) => {
+      const titleA = (a as Record<string, unknown>).title as string | undefined ?? a.key;
+      const titleB = (b as Record<string, unknown>).title as string | undefined ?? b.key;
+      return titleA.localeCompare(titleB);
+    });
+    for (const rec of sorted) {
+      const path = resolver.idToPath.get(rec.id);
+      const title = (rec as Record<string, unknown>).title as string | undefined ?? rec.key;
+      if (path) {
+        const stem = path.replace(/\.md$/, "");
+        sections.push(`- [[${stem}|${title}]]`);
+      }
+    }
+    sections.push("");
+  }
+
+  return sections.join("\n");
+}

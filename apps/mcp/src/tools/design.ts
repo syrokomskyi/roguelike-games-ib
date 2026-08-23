@@ -15,12 +15,18 @@ import { paginate } from "../pagination.ts";
 
 export function findCrossGameConcepts(
   ctx: McpContext,
-  input: { cursor?: string; limit?: number },
+  input: { concept_type?: string; cursor?: string; limit?: number },
 ) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
   const filters: Record<string, unknown> = {};
+  if (input.concept_type) filters.concept_type = input.concept_type;
 
-  const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  let concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  if (input.concept_type) {
+    concepts = concepts.filter(
+      (r) => (r as unknown as Record<string, unknown>)["concept_type"] === input.concept_type,
+    );
+  }
 
   const { items, nextCursor } = paginate(
     concepts.map((r) => ({ ...r, key: r.key, id: r.id })),
@@ -34,8 +40,9 @@ export function findCrossGameConcepts(
     concepts: items.map((r) => ({
       record_id: r.id,
       record_key: r.key,
+      concept_type: (r as unknown as Record<string, unknown>)["concept_type"] ?? null,
       title: (r as unknown as Record<string, unknown>)["title"] ?? null,
-      summary: (r as unknown as Record<string, unknown>)["summary"] ?? null,
+      definition: (r as unknown as Record<string, unknown>)["definition"] ?? null,
     })),
     cursor: nextCursor,
   });
@@ -48,7 +55,11 @@ export function findDesignPrimitives(
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
   const filters: Record<string, unknown> = {};
 
-  const primitives = ctx.store.records.filter((r) => r.record_type === "design_primitive");
+  const primitives = ctx.store.records.filter(
+    (r) =>
+      r.record_type === "concept" &&
+      (r as unknown as Record<string, unknown>)["concept_type"] === "design_primitive",
+  );
 
   const { items, nextCursor } = paginate(
     primitives.map((r) => ({ ...r, key: r.key, id: r.id })),
@@ -63,7 +74,7 @@ export function findDesignPrimitives(
       record_id: r.id,
       record_key: r.key,
       title: (r as unknown as Record<string, unknown>)["title"] ?? null,
-      summary: (r as unknown as Record<string, unknown>)["summary"] ?? null,
+      definition: (r as unknown as Record<string, unknown>)["definition"] ?? null,
     })),
     cursor: nextCursor,
   });
@@ -81,8 +92,12 @@ export function queryDesignSpace(
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
 
   let designRelations = ctx.store.relations.filter(
-    (r) => r.relation_scope === "design",
+    (r) => r.relation_scope === "design" || r.relation_scope === "cross_game",
   );
+
+  // Further filter to design-space relation types only
+  const designRelationTypes = new Set(["CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with"]);
+  designRelations = designRelations.filter((r) => designRelationTypes.has(r.relation_type));
 
   if (input.primitive_key) {
     const primitive = ctx.store.records.find((r) => r.key === input.primitive_key);

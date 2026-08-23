@@ -23,10 +23,14 @@ export function findMechanics(
   if (input.kind) filters.kind = input.kind;
 
   let records = ctx.store.records.filter((r) => {
-    if (r.record_type !== "mechanic") return false;
+    if (r.record_type !== "semantic_record") return false;
+    const st = (r as unknown as Record<string, unknown>)["semantic_type"];
+    if (st !== "mechanic") return false;
     if (input.source_id) {
       const si = (r as unknown as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      if (si?.["source_id"] !== input.source_id) return false;
+      const scope = (r as unknown as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+      const sid = si?.["source_id"] ?? scope?.["source_id"];
+      if (sid !== input.source_id) return false;
     }
     if (input.kind && (r as unknown as Record<string, unknown>)["kind"] !== input.kind) return false;
     return true;
@@ -56,10 +60,14 @@ export function findSystems(
   if (input.kind) filters.kind = input.kind;
 
   let records = ctx.store.records.filter((r) => {
-    if (r.record_type !== "system") return false;
+    if (r.record_type !== "semantic_record") return false;
+    const st = (r as unknown as Record<string, unknown>)["semantic_type"];
+    if (st !== "system") return false;
     if (input.source_id) {
       const si = (r as unknown as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      if (si?.["source_id"] !== input.source_id) return false;
+      const scope = (r as unknown as Record<string, unknown>)["scope"] as Record<string, unknown> | undefined;
+      const sid = si?.["source_id"] ?? scope?.["source_id"];
+      if (sid !== input.source_id) return false;
     }
     if (input.kind && (r as unknown as Record<string, unknown>)["kind"] !== input.kind) return false;
     return true;
