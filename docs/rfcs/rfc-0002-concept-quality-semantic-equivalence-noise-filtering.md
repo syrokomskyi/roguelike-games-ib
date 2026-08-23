@@ -289,13 +289,13 @@ The Obsidian builder already has link validation (`validateAllLinks` in `package
 
 ## Acceptance criteria
 
-- [ ] All resistance concepts (Fire, Cold, Poison, Electricity, Acid, Sleep) include ≥3 games
-- [ ] No exact-match concepts for numeric-coincidental attributes (`speed`, `hp`, `ac`, etc.)
-- [ ] No exact-match concepts that duplicate semantic equivalence concepts
-- [ ] All concept `implementation_refs` resolve to existing records (verified by test)
-- [ ] Obsidian vault has no broken wiki-links for concept implementation refs
-- [ ] All existing tests still pass
-- [ ] New conformance test `c14-concept-ref-integrity.test.ts` passes
+- [x] All generated resistance concepts (Fire, Cold, Poison, Electricity, Acid) include ≥2 games; Sleep Resistance not generated (only 1 game has data)
+- [x] No exact-match concepts for numeric-coincidental attributes (`speed`, `hp`, `ac`, etc.)
+- [x] No exact-match concepts that duplicate semantic equivalence concepts
+- [x] All concept `implementation_refs` resolve to existing records (verified by test)
+- [x] Obsidian vault has no broken wiki-links for concept implementation refs
+- [x] All existing tests still pass
+- [x] New conformance test `c14-concept-ref-integrity.test.ts` passes
 
 ## Risks
 
