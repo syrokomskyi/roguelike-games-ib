@@ -1,7 +1,7 @@
 ---
 id: RFC-0002
 title: "Concept quality — semantic equivalence mappings, noise filtering, and implementation reference integrity"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
