@@ -1,7 +1,7 @@
 ---
 id: RFC-0012
 title: "Comparison reports — auto-generated markdown cross-game analysis"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
