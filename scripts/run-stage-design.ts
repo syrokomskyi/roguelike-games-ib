@@ -17,6 +17,7 @@ const STAGING_ROOT = join(WORKSPACE, "staging");
 
 const RUN_ID = "design-run-001";
 const ACTOR_ID = "design-primitives";
+const PATTERN_ACTOR_ID = "design-patterns";
 
 function slugify(s: string): string {
   return s
@@ -58,6 +59,20 @@ function makeRelationEnvelope(key: string, id: string, relationType: string, sou
     relation_scope: scope,
     evidence_refs: evidenceRefs,
     qualifiers,
+  };
+}
+
+function makePatternConceptEnvelope(key: string, id: string) {
+  return {
+    ...makeConceptEnvelope(key, id),
+    origin: { kind: "derived" as const, actor_id: PATTERN_ACTOR_ID, run_id: RUN_ID },
+  };
+}
+
+function makePatternRelationEnvelope(key: string, id: string, relationType: string, sourceId: string, targetId: string, scope: string, qualifiers: Record<string, unknown>, evidenceRefs: string[] = []) {
+  return {
+    ...makeRelationEnvelope(key, id, relationType, sourceId, targetId, scope, qualifiers, evidenceRefs),
+    origin: { kind: "derived" as const, actor_id: PATTERN_ACTOR_ID, run_id: RUN_ID },
   };
 }
 
@@ -152,6 +167,7 @@ function cleanDesignData() {
   const conceptDir = join(CANONICAL_ROOT, "concept");
   if (!existsSync(conceptDir)) return;
   let removed = 0;
+  const actorsToClean = new Set([ACTOR_ID, PATTERN_ACTOR_ID]);
   function walkAndClean(dirPath: string) {
     const entries = readdirSync(dirPath, { withFileTypes: true });
     for (const entry of entries) {
@@ -166,7 +182,7 @@ function cleanDesignData() {
           const raw = readFileSync(childPath, "utf-8");
           const d = JSON.parse(raw);
           const actorId = d?.origin?.actor_id ?? "";
-          if (actorId === ACTOR_ID) {
+          if (actorsToClean.has(actorId)) {
             rmSync(childPath);
             removed++;
           }
@@ -175,7 +191,7 @@ function cleanDesignData() {
     }
   }
   walkAndClean(conceptDir);
-  // Also clean relations from this actor
+  // Also clean relations from these actors
   const relDir = join(CANONICAL_ROOT, "relation");
   if (existsSync(relDir)) {
     function walkAndCleanRels(dirPath: string) {
@@ -192,7 +208,7 @@ function cleanDesignData() {
             const raw = readFileSync(childPath, "utf-8");
             const d = JSON.parse(raw);
             const actorId = d?.origin?.actor_id ?? "";
-            if (actorId === ACTOR_ID) {
+            if (actorsToClean.has(actorId)) {
               rmSync(childPath);
               removed++;
             }
@@ -202,7 +218,7 @@ function cleanDesignData() {
     }
     walkAndCleanRels(relDir);
   }
-  if (removed > 0) console.log(`Cleaned ${removed} previous design files from ${ACTOR_ID}`);
+  if (removed > 0) console.log(`Cleaned ${removed} previous design files from ${ACTOR_ID} and ${PATTERN_ACTOR_ID}`);
 }
 
 interface DesignPrimitive {
@@ -485,6 +501,126 @@ const DESIGN_PRIMITIVES: DesignPrimitive[] = [
   },
 ];
 
+interface DesignPattern {
+  slug: string;
+  title: string;
+  definition: string;
+  member_primitives: string[];
+  member_pressures: string[];
+  games_where_present: string[];
+  games_where_absent: string[];
+  failure_mode_links: { primitive_slug: string; failure_mode_slug: string; trigger_conditions: string }[];
+}
+
+const DESIGN_PATTERNS: DesignPattern[] = [
+  {
+    slug: "knowledge_through_risk",
+    title: "Knowledge Through Risk",
+    definition: "A design pattern where procedural generation creates unknown items, and the player must risk using them to learn their properties. The tension between curiosity and survival drives engagement.",
+    member_primitives: ["procedural_generation", "identification_system", "permadeath"],
+    member_pressures: ["information_scarcity", "consequence_persistence"],
+    games_where_present: ["nethack", "broguece", "crawl"],
+    games_where_absent: ["cataclysm-bn"],
+    failure_mode_links: [
+      { primitive_slug: "identification_system", failure_mode_slug: "degenerate", trigger_conditions: "When identification is too expensive and permadeath is harsh, players avoid all unidentified items, reducing build diversity." },
+    ],
+  },
+  {
+    slug: "build_diversity",
+    title: "Build Diversity",
+    definition: "A design pattern where species, profession, and skill progression combine to create distinct character builds. Each build offers unique playstyles and strategic approaches.",
+    member_primitives: ["character_progression", "skill_progression"],
+    member_pressures: ["specialization_tradeoff", "adaptation_requirement"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "escalating_threat",
+    title: "Escalating Threat",
+    definition: "A design pattern where depth scaling, resource scarcity, and permadeath combine to create increasing pressure as the player descends. Each level deeper raises the stakes.",
+    member_primitives: ["permadeath", "procedural_generation"],
+    member_pressures: ["risk_aversion", "resource_scarcity"],
+    games_where_present: ["nethack", "broguece", "crawl", "cataclysm-bn"],
+    games_where_absent: [],
+    failure_mode_links: [
+      { primitive_slug: "permadeath", failure_mode_slug: "degenerate", trigger_conditions: "When depth scaling is too steep and permadeath is harsh, players adopt overly conservative playstyles, reducing engagement." },
+    ],
+  },
+  {
+    slug: "shop_economy",
+    title: "Shop Economy",
+    definition: "A design pattern where currency, item durability, and procedural generation create a trading economy. Players must decide when to buy, sell, and invest in equipment.",
+    member_primitives: ["inventory_management", "procedural_generation"],
+    member_pressures: ["resource_scarcity", "opportunity_cost"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "god_relationship",
+    title: "God Relationship",
+    definition: "A design pattern where religion, piety, and alignment systems create a relationship with divine entities. Players must balance worship costs against divine rewards.",
+    member_primitives: ["character_progression"],
+    member_pressures: ["consequence_persistence"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "corpse_economy",
+    title: "Corpse Economy",
+    definition: "A design pattern where corpse mechanics, nutrition, and mutation systems create a resource loop from defeated enemies. Corpses become food, mutation sources, or sacrifice material.",
+    member_primitives: ["inventory_management", "procedural_generation"],
+    member_pressures: ["resource_scarcity"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "stealth_alternative",
+    title: "Stealth Alternative",
+    definition: "A design pattern where stealth, evasion, and information gathering combine to offer a non-combat playstyle. Players can avoid direct confrontation through careful positioning and awareness.",
+    member_primitives: ["turn_based_combat", "procedural_generation"],
+    member_pressures: ["tactical_depth"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "save_scum_prevention",
+    title: "Save Scum Prevention",
+    definition: "A design pattern where permadeath and save system restrictions prevent save-scumming. This creates genuine stakes and forces players to accept consequences of their decisions.",
+    member_primitives: ["permadeath"],
+    member_pressures: ["consequence_persistence", "risk_aversion"],
+    games_where_present: ["nethack", "broguece", "crawl", "cataclysm-bn"],
+    games_where_absent: [],
+    failure_mode_links: [],
+  },
+  {
+    slug: "branch_choice",
+    title: "Branch Choice",
+    definition: "A design pattern where dungeon branches, risk-reward trade-offs, and progression gating create strategic routing decisions. Players choose which areas to explore based on their build and risk tolerance.",
+    member_primitives: ["procedural_generation", "permadeath"],
+    member_pressures: ["risk_aversion", "opportunity_cost"],
+    games_where_present: ["nethack", "crawl", "cataclysm-bn"],
+    games_where_absent: ["broguece"],
+    failure_mode_links: [],
+  },
+  {
+    slug: "asymmetric_combat",
+    title: "Asymmetric Combat",
+    definition: "A design pattern where turn-based combat, action points, and tactical positioning create a puzzle-like combat experience. Each encounter is a spatial-temporal problem to solve.",
+    member_primitives: ["turn_based_combat"],
+    member_pressures: ["tactical_depth", "analysis_paralysis"],
+    games_where_present: ["nethack", "broguece", "crawl", "cataclysm-bn"],
+    games_where_absent: [],
+    failure_mode_links: [
+      { primitive_slug: "turn_based_combat", failure_mode_slug: "degenerate", trigger_conditions: "When combat is too complex and analysis paralysis sets in, players spend excessive time on trivial encounters, reducing pacing." },
+    ],
+  },
+];
+
 async function main() {
   if (!process.env.OPENAI_API_KEY) {
     console.warn("WARNING: OPENAI_API_KEY not found in environment. LLM calls will fail and fall back to defaults.");
@@ -496,7 +632,7 @@ async function main() {
 
   // Estimate total LLM calls for progress reporting
   const totalDims = DESIGN_PRIMITIVES.reduce((sum, dp) => sum + dp.mutation_dimensions.length, 0);
-  llmTotalCalls = totalDims * 2 + 34 + DESIGN_PRIMITIVES.length; // vectors + knobs + counterplay + failure modes
+  llmTotalCalls = totalDims * 2 + 34 + DESIGN_PRIMITIVES.length + DESIGN_PRIMITIVES.length * 4; // vectors + knobs + counterplay + failure modes + concrete examples
 
   console.log("Reading canonical state...");
   const state = readCanonicalState(CANONICAL_ROOT);
@@ -812,6 +948,7 @@ Respond with JSON array:
   // === Step 6: Generate failure modes ===
   console.log("\n=== Generating failure modes ===");
   let failureModeCount = 0;
+  const failureModeIds = new Map<string, string>(); // key: `${primitiveSlug}/${failureModeSlug}`
   for (const dp of DESIGN_PRIMITIVES) {
     const primId = primitiveConceptIds.get(dp.slug)!;
 
@@ -859,11 +996,112 @@ Respond with JSON array:
         }, [designEvId]),
       });
       failureModeCount++;
+      failureModeIds.set(`${dp.slug}/${slugify(mode.slug)}`, fmId);
     }
   }
   console.log(`Generated ${failureModeCount} failure modes`);
 
-  console.log(`\nCreated ${concepts.length} design concepts (${DESIGN_PRIMITIVES.length} primitives + pressure + mutation + knob + counterplay + failure concepts)`);
+  // === Step 7: Generate concrete examples for design primitives ===
+  console.log("\n=== Generating concrete examples for design primitives ===");
+  let exampleCount = 0;
+  const GAMES = ["nethack", "broguece", "crawl", "cataclysm-bn"];
+  for (const dp of DESIGN_PRIMITIVES) {
+    const primId = primitiveConceptIds.get(dp.slug)!;
+    const primConcept = concepts.find((c) => c.id === primId);
+    if (!primConcept) continue;
+
+    const examples: { game: string; description: string; record_refs: string[]; source_file: string }[] = [];
+    for (const game of GAMES) {
+      let example: { description: string; record_refs: string[]; source_file: string };
+      try {
+        example = await llmJson(`You are a game design expert analyzing roguelike games.
+
+Given the design primitive "${dp.title}" (definition: ${dp.definition}), provide a concrete example of how this primitive is implemented in the game "${game}".
+
+Respond with JSON:
+{"description": "How this primitive works in ${game} (1-2 sentences)", "record_refs": [], "source_file": "relevant source file if known, or empty string"}`);
+      } catch (e) {
+        console.warn(`  [WARN] LLM failed for example ${dp.slug}/${game}:`, e instanceof Error ? e.message : e);
+        example = { description: `${dp.title} in ${game}.`, record_refs: [], source_file: "" };
+      }
+      examples.push({ game, ...example });
+      exampleCount++;
+    }
+
+    // Add concrete_examples field to the existing primitive concept
+    primConcept.concrete_examples = examples;
+  }
+  console.log(`Generated ${exampleCount} concrete examples`);
+
+  // === Step 8: Generate design pattern records ===
+  console.log("\n=== Generating design pattern records ===");
+  const patternConceptIds = new Map<string, string>();
+  for (const pattern of DESIGN_PATTERNS) {
+    const patternId = createRecordId();
+    const patternKey = `cross-game/concept/pattern-${pattern.slug}`;
+    patternConceptIds.set(pattern.slug, patternId);
+
+    // Resolve member primitive IDs
+    const memberPrimitiveIds = pattern.member_primitives
+      .map((slug) => primitiveConceptIds.get(slug))
+      .filter((id): id is string => !!id);
+
+    // Resolve member pressure IDs
+    const memberPressureIds = pattern.member_pressures
+      .map((p) => pressureConceptIds.get(`cross-game/concept/pressure-${slugify(p)}`))
+      .filter((id): id is string => !!id);
+
+    concepts.push({
+      ...makePatternConceptEnvelope(patternKey, patternId),
+      concept_type: "design_pattern",
+      title: pattern.title,
+      definition: pattern.definition,
+      member_primitives: pattern.member_primitives.map((slug) => `cross-game/concept/design-${slug}`),
+      member_pressures: pattern.member_pressures.map((p) => `cross-game/concept/pressure-${slugify(p)}`),
+      games_where_present: pattern.games_where_present,
+      games_where_absent: pattern.games_where_absent,
+      inclusion_criteria: [],
+      exclusion_criteria: [],
+      implementation_refs: [],
+      decision_refs: [],
+      evidence_refs: [],
+      ancestry: {
+        source_games: pattern.games_where_present,
+        observed_in: ["cross-game design pattern analysis"],
+        derived_from: memberPrimitiveIds,
+        mutation_dimensions: [],
+      },
+    });
+  }
+  console.log(`Generated ${DESIGN_PATTERNS.length} design pattern records`);
+
+  // === Step 9: Generate anti-pattern relations ===
+  console.log("\n=== Generating anti-pattern relations ===");
+  let antiPatternCount = 0;
+  for (const pattern of DESIGN_PATTERNS) {
+    const patternId = patternConceptIds.get(pattern.slug)!;
+
+    for (const link of pattern.failure_mode_links) {
+      const fmKey = `${link.primitive_slug}/${slugify(link.failure_mode_slug)}`;
+      const fmId = failureModeIds.get(fmKey);
+      if (!fmId) {
+        console.warn(`  [WARN] Failure mode not found for key: ${fmKey}`);
+        continue;
+      }
+
+      const relId = createRecordId();
+      const relKey = `cross-game/relation/${pattern.slug}-triggered_by_combination-${link.primitive_slug}-${slugify(link.failure_mode_slug)}`;
+      relations.push({
+        ...makePatternRelationEnvelope(relKey, relId, "TRIGGERED_BY_COMBINATION", fmId, patternId, "cross_game", {
+          trigger_conditions: link.trigger_conditions,
+        }, [designEvId]),
+      });
+      antiPatternCount++;
+    }
+  }
+  console.log(`Generated ${antiPatternCount} anti-pattern relations`);
+
+  console.log(`\nCreated ${concepts.length} design concepts (${DESIGN_PRIMITIVES.length} primitives + pressure + mutation + knob + counterplay + failure + pattern concepts)`);
   console.log(`Created ${relations.length} design-space relations`);
 
   // Build transaction
