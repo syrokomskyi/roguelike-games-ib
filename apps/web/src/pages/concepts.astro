@@ -1,0 +1,93 @@
+---
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context";
+import { getPageMetadata } from "../lib/metadata";
+import { buildConceptsByType } from "../lib/design-data";
+import { resolve } from "node:path";
+
+const distDir = process.env.PROJECTION_DIST_DIR ?? resolve(process.cwd(), "../../.generated/knowledge/dist");
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+const grouped = buildConceptsByType(ctx.store);
+const totalCount = grouped.reduce((sum, g) => sum + g.concepts.length, 0);
+
+const typeLabels: Record<string, string> = {
+  design_primitive: "Design Primitives",
+  design_pressure: "Design Pressures",
+  cross_game_mechanic: "Cross-Game Mechanics",
+  mutation_vector: "Mutation Vectors",
+  design_knob: "Design Knobs",
+  counterplay_pattern: "Counterplay Patterns",
+  failure_mode: "Failure Modes",
+  design_tension: "Design Tensions",
+  negative_space: "Negative Space",
+  emergent_pattern: "Emergent Patterns",
+  synergy_pattern: "Synergy Patterns",
+};
+---
+
+<Base title="Concepts" metadata={meta} activeNav="concepts" breadcrumbs={[{ label: "Atlas", href: "/" }, { label: "Concepts" }]}>
+  <div class="space-y-8">
+    <header class="border-b border-ib-text pb-8">
+      <p class="atlas-label text-ib-blue">Derived layer</p>
+      <h1 class="mt-5 text-5xl font-medium tracking-[-.045em] sm:text-7xl">Concepts.</h1>
+      <p class="mt-5 max-w-2xl text-lg text-ib-muted">Cross-game design concepts grouped by type. Each concept links to its individual page with definition, criteria, and implementation references.</p>
+      <div class="mt-3 font-mono text-xs text-ib-muted">{totalCount} concepts across {grouped.length} types</div>
+    </header>
+
+    <div class="flex flex-wrap gap-2" id="concept-filters">
+      <button data-type="all" class="rounded-lg border border-ib-accent bg-ib-accent/15 px-3 py-1.5 text-sm text-ib-accent transition-colors">All ({totalCount})</button>
+      {grouped.map((g) => (
+        <button data-type={g.type} class="rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text">
+          {typeLabels[g.type] ?? g.type} ({g.concepts.length})
+        </button>
+      ))}
+    </div>
+
+    {grouped.map((group) => (
+      <section data-concept-type={group.type} class="space-y-3">
+        <h2 class="atlas-label text-ib-muted">{typeLabels[group.type] ?? group.type} <span class="text-ib-text">({group.concepts.length})</span></h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {group.concepts.map((c) => (
+            <a href={`/records/${c.key}/`} class="block border-l-2 border-ib-blue bg-ib-surface p-5 transition-colors hover:bg-ib-surface2">
+              <div class="font-semibold text-ib-text">{c.title}</div>
+              {c.definition && <p class="mt-1 text-sm text-ib-muted line-clamp-2">{c.definition}</p>}
+              {c.sourceGames.length > 0 && (
+                <div class="mt-2 flex flex-wrap gap-1">
+                  {c.sourceGames.map((g) => (
+                    <span class="rounded bg-ib-accent/20 px-1.5 py-0.5 text-xs text-ib-accent">{g}</span>
+                  ))}
+                </div>
+              )}
+              <div class="mt-2 font-mono text-xs text-ib-accent">{c.key}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {grouped.length === 0 && (
+      <p class="text-sm text-ib-muted">No concepts found.</p>
+    )}
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll<HTMLButtonElement>("#concept-filters button");
+    const sections = document.querySelectorAll<HTMLElement>("[data-concept-type]");
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const type = btn.dataset.type;
+        buttons.forEach((b) => {
+          const isActive = b === btn;
+          b.className = isActive
+            ? "rounded-lg border border-ib-accent bg-ib-accent/15 px-3 py-1.5 text-sm text-ib-accent transition-colors"
+            : "rounded-lg border border-ib-border bg-ib-surface px-3 py-1.5 text-sm text-ib-muted transition-colors hover:text-ib-text";
+        });
+        sections.forEach((s) => {
+          s.style.display = type === "all" || s.dataset.conceptType === type ? "" : "none";
+        });
+      });
+    });
+  </script>
+</Base>
