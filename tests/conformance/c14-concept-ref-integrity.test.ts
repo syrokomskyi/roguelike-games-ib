@@ -25,7 +25,7 @@ function readJsonlDir(dir: string): any[] {
 }
 
 describe("C14: Concept implementation reference integrity", () => {
-  const conceptDir = join(CANONICAL_ROOT, "concept");
+  const conceptDir = join(CANONICAL_ROOT, "concept", "cross-game");
   const definitionDir = join(CANONICAL_ROOT, "definition");
 
   const concepts = readJsonlDir(conceptDir);
