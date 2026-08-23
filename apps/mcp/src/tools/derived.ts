@@ -13,6 +13,7 @@
 */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { DEFAULT_QUALITY_SCORING_CONFIG } from "@roguelike-games-ib/materializer";
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
@@ -484,12 +485,12 @@ function buildEvidenceDetail(
 ): { ref_count: number; target: number } {
   const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as
     string[] | undefined;
-  if (!implRefs) return { ref_count: 0, target: 10 };
+  if (!implRefs) return { ref_count: 0, target: DEFAULT_QUALITY_SCORING_CONFIG.evidence_target };
   let validCount = 0;
   for (const ref of implRefs) {
     if (ctx.store.resolveRecordById(ref)) validCount++;
   }
-  return { ref_count: validCount, target: 10 };
+  return { ref_count: validCount, target: DEFAULT_QUALITY_SCORING_CONFIG.evidence_target };
 }
 
 function buildRichnessDetail(

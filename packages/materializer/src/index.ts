@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: materializer barrel exporting all public types and functions.</item>
+  <item>RFC-0009: Added computeQualityScores, DEFAULT_QUALITY_SCORING_CONFIG, QualityScore, QualityScoringConfig exports.</item>
 </CHANGE_SUMMARY>
 */
 export { materialize, readState, verifyState } from "./build.ts";
