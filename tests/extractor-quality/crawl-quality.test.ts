@@ -19,18 +19,31 @@ import {
   createNullSchemaFacade,
   createExtractorContext,
   RefreshIdentityResolver,
+  type SupplementalRoot,
 } from "@roguelike-games-ib/extractor-sdk";
 import {
   createSourceBinding,
   computeSourceFingerprint,
+  computeSupplementalFingerprint,
+  type SupplementalPath,
 } from "@roguelike-games-ib/knowledge-core";
 import { runQualityChecks } from "./harness.ts";
 
 const WORKSPACE = resolve(__dirname, "../..");
 const SOURCE_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/crawl/crawl-ref/source/dat");
+const HEADERS_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/crawl/crawl-ref/source");
 const STAGING_DIR = join(WORKSPACE, "staging", "quality-crawl");
 
 mkdirSync(STAGING_DIR, { recursive: true });
+
+const supplementalRoots: SupplementalRoot[] = [
+  { name: "headers", root: HEADERS_ROOT, glob: "*.h" },
+];
+
+const supplementalFp = computeSupplementalFingerprint(HEADERS_ROOT, "*.h");
+const supplementalPaths: SupplementalPath[] = [
+  { name: "headers", path: "../", glob: "*.h", fingerprint: { algorithm: "sha256-tree-v1", value: supplementalFp } },
+];
 
 const binding = createSourceBinding(
   "crawl",
@@ -41,12 +54,13 @@ const binding = createSourceBinding(
   computeSourceFingerprint(SOURCE_ROOT),
   { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
   "crawl-ref/source/dat",
+  supplementalPaths,
 );
 
 const extractor = createCrawlExtractor();
 
 function createContext() {
-  const source = new ReadonlySourceReader(SOURCE_ROOT);
+  const source = new ReadonlySourceReader(SOURCE_ROOT, supplementalRoots);
   const evidence = new EvidenceFactory("crawl", binding.binding_digest, source);
   const ids = new RefreshIdentityResolver([], [], "crawl");
   const schemas = createNullSchemaFacade();
@@ -68,5 +82,6 @@ describe("crawl extractor quality", () => {
     timeBudgetMs: 30000,
     spriteChecks: true,
     spriteCoverageThreshold: 0.8,
+    supplementalRoots: () => supplementalRoots.map((sr) => ({ name: sr.name, root: sr.root })),
   });
 });

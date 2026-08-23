@@ -27,15 +27,27 @@ import {
   createExtractorContext,
   RefreshIdentityResolver,
   runExtractorDeterministic,
+  type SupplementalRoot,
 } from "@roguelike-games-ib/extractor-sdk";
 import {
   createSourceBinding,
   computeSourceFingerprint,
+  computeSupplementalFingerprint,
+  type SupplementalPath,
 } from "@roguelike-games-ib/knowledge-core";
 
 const WORKSPACE = resolve(__dirname, "../..");
 const SOURCE_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/crawl/crawl-ref/source/dat");
+const HEADERS_ROOT = resolve(WORKSPACE, "../roguelike-games-ib-source/crawl/crawl-ref/source");
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
+
+const supplementalRoots: SupplementalRoot[] = [
+  { name: "headers", root: HEADERS_ROOT, glob: "*.h" },
+];
+
+const supplementalPaths: SupplementalPath[] = [
+  { name: "headers", path: "../", glob: "*.h", fingerprint: { algorithm: "sha256-tree-v1", value: computeSupplementalFingerprint(HEADERS_ROOT, "*.h") } },
+];
 
 interface RegistrySource {
   id: string;
@@ -52,6 +64,7 @@ interface BindingEntry {
   declared_version: string;
   fingerprint: { algorithm: string; value: string };
   binding_digest: string;
+  supplemental_paths?: Array<{ name: string; path: string; glob: string; fingerprint: { algorithm: string; value: string } }>;
 }
 
 interface BindingsYaml {
@@ -90,6 +103,17 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
     expect(fingerprint).toBe(binding!.fingerprint.value);
   });
 
+  it("supplemental fingerprint matches actual headers", () => {
+    const supplementalFp = computeSupplementalFingerprint(HEADERS_ROOT, "*.h");
+    const bindings = parseYaml(
+      readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8"),
+    ) as BindingsYaml;
+    const binding = bindings.bindings.find((b) => b.source_id === "crawl");
+    expect(binding!.supplemental_paths).toBeDefined();
+    expect(binding!.supplemental_paths).toHaveLength(1);
+    expect(supplementalFp).toBe(binding!.supplemental_paths![0].fingerprint.value);
+  });
+
   it("extractor produces deterministic output", async () => {
     const binding = createSourceBinding(
       "crawl",
@@ -100,12 +124,13 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
       computeSourceFingerprint(SOURCE_ROOT),
       { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
       "crawl-ref/source/dat",
+      supplementalPaths,
     );
     const extractor = createCrawlExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c13-test");
 
     function createContext() {
-      const source = new ReadonlySourceReader(SOURCE_ROOT);
+      const source = new ReadonlySourceReader(SOURCE_ROOT, supplementalRoots);
       const evidence = new EvidenceFactory("crawl", binding.binding_digest, source);
       const ids = new RefreshIdentityResolver([], [], "crawl");
       const schemas = createNullSchemaFacade();
@@ -195,11 +220,12 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
       computeSourceFingerprint(SOURCE_ROOT),
       { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
       "crawl-ref/source/dat",
+      supplementalPaths,
     );
     const extractor = createCrawlExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c13-pop");
 
-    const source = new ReadonlySourceReader(SOURCE_ROOT);
+    const source = new ReadonlySourceReader(SOURCE_ROOT, supplementalRoots);
     const evidence = new EvidenceFactory("crawl", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "crawl");
     const schemas = createNullSchemaFacade();
@@ -234,11 +260,12 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
       computeSourceFingerprint(SOURCE_ROOT),
       { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
       "crawl-ref/source/dat",
+      supplementalPaths,
     );
     const extractor = createCrawlExtractor();
     const stagingDir = join(WORKSPACE, "staging", "c13-bench");
 
-    const source = new ReadonlySourceReader(SOURCE_ROOT);
+    const source = new ReadonlySourceReader(SOURCE_ROOT, supplementalRoots);
     const evidence = new EvidenceFactory("crawl", binding.binding_digest, source);
     const ids = new RefreshIdentityResolver([], [], "crawl");
     const schemas = createNullSchemaFacade();

@@ -6,6 +6,7 @@ import {
   createNullSchemaFacade,
   createExtractorContext,
   RefreshIdentityResolver,
+  type SupplementalRoot,
 } from "../packages/extractor-sdk/src/index.ts";
 import {
   createSourceBinding,
@@ -13,6 +14,7 @@ import {
   preparePromotion,
   applyPromotionTransaction,
   type TransactionOperation,
+  type SupplementalPath,
 } from "../packages/knowledge-core/src/index.ts";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -20,13 +22,19 @@ import { parse as parseYaml } from "yaml";
 
 const WORKSPACE = "/home/syrokomskyi/projects/roguelike-games-ib";
 const SOURCE_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/crawl/crawl-ref/source/dat";
+const HEADERS_ROOT = "/home/syrokomskyi/projects/roguelike-games-ib-source/crawl/crawl-ref/source";
 const CANONICAL_ROOT = join(WORKSPACE, "knowledge");
 const STAGING_ROOT = join(WORKSPACE, "staging");
 
-const bindings = parseYaml(readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8")) as { bindings: Array<{ source_id: string; fingerprint: { value: string }; binding_digest: string }> };
+const supplementalRoots: SupplementalRoot[] = [
+  { name: "headers", root: HEADERS_ROOT, glob: "*.h" },
+];
+
+const bindings = parseYaml(readFileSync(join(CANONICAL_ROOT, "sources", "bindings.yaml"), "utf-8")) as { bindings: Array<{ source_id: string; fingerprint: { value: string }; binding_digest: string; supplemental_paths?: Array<{ name: string; path: string; glob: string; fingerprint: { algorithm: string; value: string } }> }> };
 const crawlBinding = bindings.bindings.find((b) => b.source_id === "crawl")!;
 const FINGERPRINT = crawlBinding.fingerprint.value;
 const BINDING_DIGEST = crawlBinding.binding_digest;
+const SUPPLEMENTAL_PATHS: SupplementalPath[] = crawlBinding.supplemental_paths ?? [];
 
 async function main() {
   const t0 = Date.now();
@@ -41,6 +49,7 @@ async function main() {
     FINGERPRINT,
     { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
     "crawl-ref/source/dat",
+    SUPPLEMENTAL_PATHS,
   );
 
   const extractor = createCrawlExtractor();
@@ -48,7 +57,7 @@ async function main() {
   const stagingRunDir = join(STAGING_ROOT, runId);
   mkdirSync(stagingRunDir, { recursive: true });
 
-  const source = new ReadonlySourceReader(SOURCE_ROOT);
+  const source = new ReadonlySourceReader(SOURCE_ROOT, supplementalRoots);
   const evidence = new EvidenceFactory("crawl", BINDING_DIGEST, source);
   const ids = new RefreshIdentityResolver([], [], "crawl");
   const schemas = createNullSchemaFacade();

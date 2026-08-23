@@ -48,7 +48,6 @@ import {
   type ItemTypeEntry,
   type CloudEntry,
 } from "./c-struct-parser.ts";
-import { readFileSync, writeFileSync } from "node:fs";
 
 const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
 
@@ -587,81 +586,59 @@ export function createCrawlExtractor(): Extractor {
         }
       }
 
-      // --- Parse C header files (outside dat/ payload path) ---
-      // Copy headers into dat/ temporarily so EvidenceFactory can read them
-      const spellSourcePath = resolve(sourceRoot, "../spl-data.h");
-      const spellCopyPath = resolve(sourceRoot, "spl-data.h");
+      // --- Parse C header files via supplemental root (headers/) ---
       let spellEntries: SpellEntry[] = [];
       try {
-        const spellSource = readFileSync(spellSourcePath, "utf-8");
-        writeFileSync(spellCopyPath, spellSource);
-        spellEntries = parseSpellData(spellSource, "spl-data.h");
+        const spellSource = ctx.source.readText("headers/spl-data.h");
+        spellEntries = parseSpellData(spellSource, "headers/spl-data.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse spl-data.h: ${err}`);
       }
 
-      const branchSourcePath = resolve(sourceRoot, "../branch-data.h");
-      const branchCopyPath = resolve(sourceRoot, "branch-data.h");
       let branchEntries: BranchEntry[] = [];
       try {
-        const branchSource = readFileSync(branchSourcePath, "utf-8");
-        writeFileSync(branchCopyPath, branchSource);
-        branchEntries = parseBranchData(branchSource, "branch-data.h");
+        const branchSource = ctx.source.readText("headers/branch-data.h");
+        branchEntries = parseBranchData(branchSource, "headers/branch-data.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse branch-data.h: ${err}`);
       }
 
-      const abilitySourcePath = resolve(sourceRoot, "../ability-type.h");
-      const abilityCopyPath = resolve(sourceRoot, "ability-type.h");
       let abilityEntries: AbilityEntry[] = [];
       try {
-        const abilitySource = readFileSync(abilitySourcePath, "utf-8");
-        writeFileSync(abilityCopyPath, abilitySource);
-        abilityEntries = parseAbilityTypes(abilitySource, "ability-type.h");
+        const abilitySource = ctx.source.readText("headers/ability-type.h");
+        abilityEntries = parseAbilityTypes(abilitySource, "headers/ability-type.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse ability-type.h: ${err}`);
       }
 
-      const godSourcePath = resolve(sourceRoot, "../god-type.h");
-      const godCopyPath = resolve(sourceRoot, "god-type.h");
       let godEntries: GodEntry[] = [];
       try {
-        const godSource = readFileSync(godSourcePath, "utf-8");
-        writeFileSync(godCopyPath, godSource);
-        godEntries = parseGodTypes(godSource, "god-type.h");
+        const godSource = ctx.source.readText("headers/god-type.h");
+        godEntries = parseGodTypes(godSource, "headers/god-type.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse god-type.h: ${err}`);
       }
 
-      const brandSourcePath = resolve(sourceRoot, "../item-prop-enum.h");
-      const brandCopyPath = resolve(sourceRoot, "item-prop-enum.h");
       let brandEntries: BrandEntry[] = [];
       try {
-        const brandSource = readFileSync(brandSourcePath, "utf-8");
-        writeFileSync(brandCopyPath, brandSource);
-        brandEntries = parseBrandTypes(brandSource, "item-prop-enum.h");
+        const brandSource = ctx.source.readText("headers/item-prop-enum.h");
+        brandEntries = parseBrandTypes(brandSource, "headers/item-prop-enum.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse item-prop-enum.h: ${err}`);
       }
 
-      const itemTypeSourcePath = resolve(sourceRoot, "../object-class-type.h");
-      const itemTypeCopyPath = resolve(sourceRoot, "object-class-type.h");
       let itemTypeEntries: ItemTypeEntry[] = [];
       try {
-        const itemTypeSource = readFileSync(itemTypeSourcePath, "utf-8");
-        writeFileSync(itemTypeCopyPath, itemTypeSource);
-        itemTypeEntries = parseObjectClassTypes(itemTypeSource, "object-class-type.h");
+        const itemTypeSource = ctx.source.readText("headers/object-class-type.h");
+        itemTypeEntries = parseObjectClassTypes(itemTypeSource, "headers/object-class-type.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse object-class-type.h: ${err}`);
       }
 
-      const cloudSourcePath = resolve(sourceRoot, "../cloud-type.h");
-      const cloudCopyPath = resolve(sourceRoot, "cloud-type.h");
       let cloudEntries: CloudEntry[] = [];
       try {
-        const cloudSource = readFileSync(cloudSourcePath, "utf-8");
-        writeFileSync(cloudCopyPath, cloudSource);
-        cloudEntries = parseCloudTypes(cloudSource, "cloud-type.h");
+        const cloudSource = ctx.source.readText("headers/cloud-type.h");
+        cloudEntries = parseCloudTypes(cloudSource, "headers/cloud-type.h");
       } catch (err) {
         console.warn(`[crawl-extractor] Failed to parse cloud-type.h: ${err}`);
       }
@@ -681,9 +658,6 @@ export function createCrawlExtractor(): Extractor {
       if (cloudEntries.length > 0) specs.push(cloudSpec(cloudEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
-
-      // Note: copied headers are left in dat/ so evidence artifacts remain valid
-      // for quality tests that verify artifact hashes after extraction
 
       const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
       const { populationCounts, recordCount } = popCollector.collect(dimensionCounts);

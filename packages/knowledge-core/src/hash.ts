@@ -142,6 +142,7 @@ export function computeSupplementalFingerprint(
   const entries: string[] = [];
 
   const globExt = glob.startsWith("*.") ? glob.slice(1) : null;
+  const isTopLevelOnly = globExt !== null && !glob.includes("/");
 
   function matchesGlob(filename: string): boolean {
     if (globExt !== null) {
@@ -159,10 +160,14 @@ export function computeSupplementalFingerprint(
       const relPath = relPrefix ? `${relPrefix}/${item.name}` : item.name;
 
       if (item.isSymbolicLink()) {
-        const target = realpathSync(fullPath);
-        const targetHash = sha256(target);
-        entries.push(`S:${relPath}:${targetHash}`);
-      } else if (item.isDirectory()) {
+        try {
+          const target = realpathSync(fullPath);
+          const targetHash = sha256(target);
+          entries.push(`S:${relPath}:${targetHash}`);
+        } catch {
+          continue;
+        }
+      } else if (item.isDirectory() && !isTopLevelOnly) {
         walk(fullPath, relPath);
       } else if (item.isFile()) {
         if (matchesGlob(item.name)) {

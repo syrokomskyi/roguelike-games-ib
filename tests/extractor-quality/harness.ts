@@ -22,6 +22,7 @@ export interface QualityCheckOptions {
   spriteChecks?: boolean;
   workspaceRoot?: () => string;
   spriteCoverageThreshold?: number;
+  supplementalRoots?: () => Array<{ name: string; root: string }>;
 }
 
 export type ContextFactory = () => ExtractorContext;
@@ -45,6 +46,7 @@ function collectReportData(
   populations: Array<{ dimension: string; expected: number; extracted: number }>,
   sourceRoot: string,
   sourceId: string,
+  supplementalRoots?: Array<{ name: string; root: string }>,
 ): QualityReportData {
   const recordsByFile = new Map<string, number>();
   const keyCounts = new Map<string, number>();
@@ -88,7 +90,7 @@ function collectReportData(
   const invalidEvidence: Array<{ recordId: string; errors: string[] }> = [];
   for (const ev of evidence) {
     const anchor = ev.anchor as EvidenceAnchor;
-    const validation = validateEvidenceAnchor(anchor, sourceRoot);
+    const validation = validateEvidenceAnchor(anchor, sourceRoot, supplementalRoots);
     if (!validation.valid) {
       invalidEvidence.push({ recordId: ev.record_id, errors: validation.errors });
     }
@@ -223,6 +225,7 @@ export function runQualityChecks(
         result.populationCounts,
         options.sourceRoot(),
         options.sourceId,
+        options.supplementalRoots?.(),
       );
 
       const mismatches = data.populations.filter((p) => p.extracted !== p.expected);
@@ -278,7 +281,7 @@ export function runQualityChecks(
       const invalid: Array<{ recordId: string; errors: string[] }> = [];
       for (const ev of evidence) {
         const anchor = ev.anchor as EvidenceAnchor;
-        const validation = validateEvidenceAnchor(anchor, options.sourceRoot());
+        const validation = validateEvidenceAnchor(anchor, options.sourceRoot(), options.supplementalRoots?.());
         if (!validation.valid) {
           invalid.push({ recordId: ev.record_id, errors: validation.errors });
         }
@@ -587,6 +590,7 @@ export function runQualityChecks(
         result.populationCounts,
         options.sourceRoot(),
         options.sourceId,
+        options.supplementalRoots?.(),
       );
 
       const report = formatReport(data);

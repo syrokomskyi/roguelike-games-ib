@@ -65,7 +65,7 @@ export type { RefreshMatchResult } from "./identity/refresh-match.ts";
 
 // Evidence
 export { createEvidenceAnchor, validateEvidenceAnchor } from "./evidence/resolve.ts";
-export type { EvidenceAnchor, MediaQuery } from "./evidence/resolve.ts";
+export type { EvidenceAnchor, MediaQuery, SupplementalRootEntry } from "./evidence/resolve.ts";
 export { reanchorEvidence } from "./evidence/reanchor.ts";
 export type { ReanchorResult } from "./evidence/reanchor.ts";
 export { defaultPublicPolicy, defaultPrivatePolicy, validatePublicationPolicy } from "./evidence/publication.ts";

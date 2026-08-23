@@ -113,7 +113,7 @@ async function main() {
     makeDimension("item_types", "extractor_population", 20, 20, 20, "extractor_population", "All object class type enum entries in object.h (TAG_MAJOR_VERSION == 34)"),
     makeDimension("clouds", "extractor_population", 40, 40, 40, "extractor_population", "All cloud type enum entries in cloud.h (TAG_MAJOR_VERSION == 34)"),
   ];
-  const crawlCoverage = computeCoverage("crawl", "bc1ecb51a2ae22f4fdd65e84806d57c3235841f1eadb2ac88e2b1cffe3abfdb9", crawlDims);
+  const crawlCoverage = computeCoverage("crawl", "6c24cee475930276f51300c052b34522b6a97f7cb2b75b0bedf8ae7f5605f61b", crawlDims);
 
   // Write coverage files directly to canonical
   const coverageDir = join(CANONICAL_ROOT, "coverage");

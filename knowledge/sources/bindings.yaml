@@ -53,10 +53,17 @@ bindings:
     payload_path: crawl-ref/source/dat
     fingerprint:
       algorithm: sha256-tree-v1
-      value: 1f260ab621c0c5c5b572773e540224d3b56dc55f86ebdd73783e742779d28c38
+      value: c3f1ce6053667450dbde94a77162411888438cdbc084edc64835536a58035317
+    supplemental_paths:
+      - name: headers
+        path: "../"
+        glob: "*.h"
+        fingerprint:
+          algorithm: sha256-tree-v1
+          value: 68a5e1c8bd21728616033e0cfd63a3a85f97e6886f477e555633663b03ee5c11
     vcs:
       repository: "https://github.com/crawl/crawl"
       commit: null
       clean: null
       default_branch: "master"
-    binding_digest: bc1ecb51a2ae22f4fdd65e84806d57c3235841f1eadb2ac88e2b1cffe3abfdb9
+    binding_digest: 6c24cee475930276f51300c052b34522b6a97f7cb2b75b0bedf8ae7f5605f61b
