@@ -25,6 +25,7 @@ import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from ".
 import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
+import { generateComparisonReport } from "./tools/report.ts";
 
 export type ToolHandler<I = unknown, O = unknown> = (ctx: McpContext, input: I) => O | Promise<O>;
 
@@ -589,6 +590,24 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "generate_comparison_report",
+    description: "Generate a structured markdown cross-game comparison report synthesizing coverage, implementations, gaps, tensions, and attributes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source_ids: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 8 },
+        concept_key: { type: "string" },
+        format: { type: "string", enum: ["markdown", "json"] },
+        sections: { type: "array", items: { type: "string", enum: ["overview", "coverage", "primitives", "gaps", "tensions", "attributes"] } },
+      },
+      required: ["source_ids"],
+      additionalProperties: false,
+    },
+    handler: generateComparisonReport,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -644,4 +663,5 @@ export const REQUIRED_TOOLS = [
   "search_design_space",
   "find_design_patterns",
   "get_pattern_examples",
+  "generate_comparison_report",
 ];
