@@ -15,6 +15,7 @@ owners:
 reviewers: []
 createdAt: 2026-08-23
 updatedAt: 2026-08-23
+enhancedAt: 2026-08-23
 implementedAt:
 closedAt:
 supersedes: []
@@ -51,6 +52,7 @@ appsImpacted: []
 packagesImpacted:
   - extractor-sdk
   - knowledge-core
+  - extractors/crawl-extractor
 successSignals: []
 nonGoals:
   - Does not change fingerprint algorithm (sha256-tree-v1)
@@ -147,7 +149,7 @@ Bindings without `supplemental_paths` (or empty array) behave exactly as before 
 
 export interface SupplementalPath {
   name: string;              // unique within binding, used as evidence path prefix
-  path: string;              // relative to payload_path parent
+  path: string;              // relative to payload_path (e.g. "../" goes up one level from payload_path)
   glob: string;              // glob pattern for fingerprint filtering
   fingerprint: {
     algorithm: string;
@@ -184,12 +186,20 @@ export class ReadonlySourceReader {
     private readonly supplementalRoots: SupplementalRoot[] = [],
   ) {}
 
-  // resolveSafe now checks payload root first, then supplemental roots
-  // Returns { root: 'payload' | supplemental name, absPath: string }
-  resolveSafe(relativePath: string): { rootName: string; absPath: string };
+  // resolveSafe — unchanged public API, returns string (resolved absolute path)
+  // Tries payload root first, then supplemental roots. Throws SourceRootError
+  // if path not found in any root.
+  resolveSafe(relativePath: string): string;
+
+  // resolveMulti — NEW internal method for multi-root resolution
+  // Returns { rootName: 'payload' | supplemental name, absPath: string }
+  // Used internally by readBytes, readText, stat, exists
+  private resolveMulti(relativePath: string): { rootName: string; absPath: string };
 
   // readBytes, readText, stat, exists — try payload root first, then supplemental
   // walk — walks payload root (unchanged); supplemental roots walked separately
+  // getRoot — returns payload root (unchanged)
+  // getSupplementalRoots — NEW, returns supplemental roots array
 }
 ```
 
@@ -207,11 +217,11 @@ export function computeSupplementalFingerprint(
 ): string;  // NEW — hashes only files matching glob
 
 export function computeBindingDigest(
-  payloadFingerprint: string,
-  supplementalFingerprints: string[],  // NEW parameter
+  fingerprint: string,
   declaredVersion: string,
   sourceId: string,
-): string;  // extended — combines all fingerprints
+  supplementalFingerprints?: string[],  // NEW optional parameter, default []
+): string;  // extended — backward compatible (same digest when supplementalFingerprints omitted or empty)
 ```
 
 ### Evidence path convention
@@ -227,8 +237,8 @@ Evidence anchors for supplemental files use `<name>/<filename>` as `artifactPath
 Separate fingerprints for payload and each supplemental path:
 
 1. `computeSourceFingerprint(payloadPath)` — unchanged, hashes all files in payload
-2. `computeSupplementalFingerprint(path, glob)` — NEW, hashes only files matching glob in the supplemental directory
-3. `computeBindingDigest` combines: `sha256(payloadFingerprint + supplementalFingerprints.join(',') + declaredVersion + sourceId)`
+2. `computeSupplementalFingerprint(path, glob)` — NEW, uses the same `sha256-tree-v1` algorithm as `computeSourceFingerprint` (walk, sort entries, hash concatenation) but filters files by glob before hashing. For simple glob patterns (`*.h`), an inline matcher using `readdirSync` + extension check is sufficient — no new dependency required. If recursive globs (`**/*.h`) are needed in the future, a glob library (e.g. `picomatch`) can be added at that time.
+3. `computeBindingDigest` combines: `sha256(fingerprint + supplementalFingerprints.join(',') + declaredVersion + sourceId)`. When `supplementalFingerprints` is omitted or empty, the digest is identical to the current implementation — backward compatible.
 
 This allows identifying which component changed by comparing individual fingerprints.
 
@@ -249,6 +259,8 @@ This allows identifying which component changed by comparing individual fingerpr
 - **Missing supplemental file**: If a file declared in supplemental_paths does not exist, `resolveSafe` throws `SourceRootError` (same as current behavior for missing payload files).
 - **Glob matches no files**: `computeSupplementalFingerprint` returns a hash of empty string list. Warning logged, but not an error — the binding is still valid (supplemental path may be empty for some game versions).
 - **Duplicate supplemental name**: `createSourceBinding` throws if two supplemental paths have the same `name` — names must be unique within a binding.
+- **Supplemental name collision with payload subdirectory**: `createSourceBinding` throws if a supplemental path `name` matches an existing subdirectory name in `payload_path` — this prevents evidence path ambiguity (e.g., `headers/god-type.h` could refer to either a supplemental path or a payload subdirectory).
+- **Supplemental path escapes source unit root**: `createSourceBinding` validates that the resolved supplemental path does not traverse beyond the source unit root (e.g., `../../` is rejected). Supplemental paths must stay within the source tree declared by `source_unit_path`.
 
 ## Rollout
 
@@ -259,7 +271,8 @@ This allows identifying which component changed by comparing individual fingerpr
 5. **Update Crawl binding in bindings.yaml** — add `supplemental_paths` entry, compute and store separate fingerprints.
 6. **Update stage scripts** — `run-stage13-crawl.ts` reads supplemental fingerprints from bindings.yaml (already refactored to read from bindings.yaml).
 7. **Re-run Crawl extraction** — regenerate evidence with supplemental paths, verify fingerprint stability (no change when re-running).
-8. **Run full test suite** — verify no regressions.
+8. **Update AGENTS.md** — add a rule clarifying supplemental_paths semantics: supplemental paths are a controlled sandbox extension, not arbitrary file access. Only declared paths with declared glob patterns are accessible.
+9. **Run full test suite** — verify no regressions.
 
 Existing bindings (BrogueCE, NetHack, Cataclysm-BN) are unaffected — they have no `supplemental_paths` and behave exactly as before.
 
@@ -292,7 +305,7 @@ Existing bindings (BrogueCE, NetHack, Cataclysm-BN) are unaffected — they have
 - [ ] Crawl extractor no longer copies `.h` files into `dat/` (evidence: no writeFileSync calls for .h files in extractor.ts)
 - [ ] Crawl binding in `bindings.yaml` declares `supplemental_paths` with separate fingerprints (evidence: bindings.yaml crawl entry)
 - [ ] Re-running Crawl extraction produces stable fingerprint (evidence: fingerprint before and after extraction is identical)
-- [ ] All conformance tests pass (671+ tests, 0 failures) (evidence: vitest --run output)
+- [ ] All conformance tests pass (0 failures) (evidence: vitest --run output)
 - [ ] `rfc.validate` passes on this file before merging (evidence: validation output)
 
 ## Implementation notes for agents
