@@ -371,3 +371,11 @@ relations:
   - concept
   range:
   - concept
+- id: TRIGGERED_BY_COMBINATION
+  semantics: Source failure mode is triggered by target design pattern combination of primitives.
+  direction: directed
+  evidence_required: true
+  domain:
+  - concept
+  range:
+  - concept
