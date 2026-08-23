@@ -7,6 +7,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: readKnowledgeConfig, readKnowledgeManifest, resolveKnowledgePaths, resolveSourceRoot.</item>
+  <item>RFC-0009: Added quality_scoring optional field to KnowledgeConfig for concept quality scoring config.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -31,6 +32,12 @@ export interface KnowledgeConfig {
   };
   projections?: Record<string, unknown>;
   search?: Record<string, unknown>;
+  quality_scoring?: {
+    evidence_target: number;
+    richness_target: number;
+    richness_other_target: number;
+    weights: { coverage: number; evidence: number; richness: number };
+  };
 }
 
 export interface KnowledgeManifest {

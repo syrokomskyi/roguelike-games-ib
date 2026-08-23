@@ -18,3 +18,11 @@ search:
   full_text: true
   graph: true
   vector: true
+quality_scoring:
+  evidence_target: 10
+  richness_target: 20
+  richness_other_target: 5
+  weights:
+    coverage: 0.4
+    evidence: 0.3
+    richness: 0.3

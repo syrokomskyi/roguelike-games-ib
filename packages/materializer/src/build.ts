@@ -8,6 +8,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: materialize, readState, verifyState functions.</item>
+  <item>RFC-0009: Added quality score computation step after canonical hash, before writing outputs.</item>
 </CHANGE_SUMMARY>
 */
 import { existsSync, mkdirSync, rmSync } from "node:fs";
@@ -32,6 +33,7 @@ import {
 } from "./records-jsonl.ts";
 import { buildSqlite, verifySqliteIntegrity } from "./sqlite.ts";
 import { createManifest, writeManifest } from "./manifest.ts";
+import { computeQualityScores, DEFAULT_QUALITY_SCORING_CONFIG } from "./quality-scores.ts";
 import { KnowledgeCoreError } from "@roguelike-games-ib/knowledge-core";
 
 /**
@@ -42,10 +44,11 @@ import { KnowledgeCoreError } from "@roguelike-games-ib/knowledge-core";
  * 2. Read canonical state
  * 3. Verify canonical integrity (refuse if invalid)
  * 4. Compute canonical hash
- * 5. Write JSONL outputs (deterministic, sorted)
- * 6. Build SQLite read model
- * 7. Verify SQLite integrity
- * 8. Write manifest with canonical hash, license, counts
+ * 5. Compute quality scores for concepts (projection, non-canonical)
+ * 6. Write JSONL outputs (deterministic, sorted)
+ * 7. Build SQLite read model
+ * 8. Verify SQLite integrity
+ * 9. Write manifest with canonical hash, license, counts
  *
  * @throws KnowledgeCoreError if canonical state is invalid
  */
@@ -75,6 +78,23 @@ export function materialize(options: MaterializationOptions): MaterializationRes
     ...state.relations,
     ...state.contradictions,
   ]);
+
+  const qualityConfig = paths.config.quality_scoring
+    ? {
+        evidence_target: paths.config.quality_scoring.evidence_target,
+        richness_target: paths.config.quality_scoring.richness_target,
+        richness_other_target: paths.config.quality_scoring.richness_other_target,
+        weights: paths.config.quality_scoring.weights,
+      }
+    : DEFAULT_QUALITY_SCORING_CONFIG;
+
+  const qualityScores = computeQualityScores(state, qualityConfig);
+  for (const record of state.records) {
+    const score = qualityScores.get(record.id);
+    if (score) {
+      record["quality_score"] = score;
+    }
+  }
 
   const outputFiles: string[] = [];
 
