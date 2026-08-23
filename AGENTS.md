@@ -35,6 +35,7 @@ CI checks are mandatory for all merges to `main`. The CI workflow (`.github/work
 - `pnpm exec vitest --run` — full test suite including conformance tests
 - `pnpm exec turbo run verify` — workspace-specific verification tasks
 - `pnpm exec tsx scripts/kb-health-summary.ts` — knowledge base health summary
+- Dataset release check — verifies `dataset_version` is valid SemVer and `version_history` is append-only
 
 Agents MUST NOT bypass CI checks. This includes:
 
