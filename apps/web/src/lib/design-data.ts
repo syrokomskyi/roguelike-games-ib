@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: buildDesignData with concepts, primitives, design relations, realizations.</item>
   <item>RFC-0005: Fixed relation scope filter to include cross_game scope. Added designRelationTypes filter matching MCP queryDesignSpace. Added buildConceptsByType, buildCoverageMatrix, buildGameConceptCoverage. Exported designRelationTypes for reuse.</item>
+  <item>RFC-0009: Added qualityScore to ConceptCard and conceptCards/primitiveCards in buildDesignData.</item>
 </CHANGE_SUMMARY>
 */
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
@@ -53,6 +54,7 @@ export function buildDesignData(store: ProjectionStore) {
       definition: ra["definition"] as string | null,
       sourceGames: a.sourceGames,
       mutationDimensions: a.mutationDimensions,
+      qualityScore: (ra["quality_score"] as { coverage: number; evidence: number; richness: number; overall: number } | undefined) ?? null,
     };
   });
 
@@ -65,6 +67,7 @@ export function buildDesignData(store: ProjectionStore) {
       definition: ra["definition"] as string | null,
       sourceGames: a.sourceGames,
       mutationDimensions: a.mutationDimensions,
+      qualityScore: (ra["quality_score"] as { coverage: number; evidence: number; richness: number; overall: number } | undefined) ?? null,
     };
   });
 
@@ -109,6 +112,7 @@ export interface ConceptCard {
   exclusionCriteria: string[] | null;
   implementationRefs: string[];
   observedIn: string[];
+  qualityScore: { coverage: number; evidence: number; richness: number; overall: number } | null;
 }
 
 function extractConceptCard(r: Record<string, unknown>): ConceptCard {
@@ -124,6 +128,7 @@ function extractConceptCard(r: Record<string, unknown>): ConceptCard {
     exclusionCriteria: (r["exclusion_criteria"] as string[] | null) ?? null,
     implementationRefs: (r["implementation_refs"] as string[]) ?? [],
     observedIn: (anc?.["observed_in"] as string[]) ?? [],
+    qualityScore: (r["quality_score"] as { coverage: number; evidence: number; richness: number; overall: number } | undefined) ?? null,
   };
 }
 
