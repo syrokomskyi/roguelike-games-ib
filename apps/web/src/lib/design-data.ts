@@ -7,12 +7,13 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: buildDesignData with concepts, primitives, design relations, realizations.</item>
-  <item>RFC-0005: Fixed relation scope filter to include cross_game scope. Added designRelationTypes filter matching MCP queryDesignSpace. Added buildConceptsByType, buildCoverageMatrix, buildGameConceptCoverage.</item>
+  <item>RFC-0005: Fixed relation scope filter to include cross_game scope. Added designRelationTypes filter matching MCP queryDesignSpace. Added buildConceptsByType, buildCoverageMatrix, buildGameConceptCoverage. Exported designRelationTypes for reuse.</item>
 </CHANGE_SUMMARY>
 */
 import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
+import { getSourceId } from "./page-data";
 
-const designRelationTypes = new Set([
+export const designRelationTypes = new Set([
   "CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with",
   "HAS_MUTATION_VECTOR", "IMPLEMENTED_AS", "HAS_COUNTERPLAY", "CAN_FAIL_AS",
 ]);
@@ -170,10 +171,7 @@ export function buildCoverageMatrix(store: ProjectionStore): CoverageMatrixOutpu
     for (const refId of implRefs) {
       const refRecord = idToRecord.get(refId);
       if (refRecord) {
-        const refRa = refRecord as Record<string, unknown>;
-        const refSi = refRa["source_identity"] as Record<string, unknown> | undefined;
-        const refScope = refRa["scope"] as Record<string, unknown> | undefined;
-        const refSid = (refSi?.["source_id"] as string | undefined) ?? (refScope?.["source_id"] as string | undefined);
+        const refSid = getSourceId(refRecord as Record<string, unknown>);
         if (refSid) games.add(refSid);
       }
     }
@@ -206,10 +204,7 @@ export function buildGameConceptCoverage(store: ProjectionStore, sourceId: strin
     for (const refId of implRefs) {
       const refRecord = idToRecord.get(refId);
       if (refRecord) {
-        const refRa = refRecord as Record<string, unknown>;
-        const refSi = refRa["source_identity"] as Record<string, unknown> | undefined;
-        const refScope = refRa["scope"] as Record<string, unknown> | undefined;
-        const refSid = (refSi?.["source_id"] as string | undefined) ?? (refScope?.["source_id"] as string | undefined);
+        const refSid = getSourceId(refRecord as Record<string, unknown>);
         if (refSid === sourceId) return true;
       }
     }

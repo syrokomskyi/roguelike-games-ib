@@ -1,4 +1,16 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>SVG-based design-space graph visualization — primitives (top), pressures (bottom), tensions as curved edges, with hover highlighting.</purpose>
+<non-goals>
+  <item>Does not fetch data — receives designRelations, concepts, primitives as props.</item>
+  <item>No physics simulation — uses simple hierarchical grid layout.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0005: Initial creation. SVG graph with hierarchical layout, hover highlighting via vanilla JS.</item>
+</CHANGE_SUMMARY>
+*/
 interface DesignRelationCard {
   sourceKey: string;
   targetKey: string;
@@ -79,7 +91,7 @@ function shortenKey(key: string): string {
 ---
 
 {designRelations.length > 0 ? (
-  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} class="w-full overflow-visible" style="max-height: 600px;">
+  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} class="w-full" style="max-height: 600px; overflow: auto;">
     <defs>
       <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" class="text-ib-accent" />

@@ -1,4 +1,15 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Concepts index page — lists all concepts grouped by concept_type with filter buttons and progressive enhancement.</purpose>
+<non-goals>
+  <item>Does not fetch data directly — uses buildConceptsByType from design-data.ts.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0005: Initial creation. Concepts index with grouping, filtering, and progressive enhancement.</item>
+</CHANGE_SUMMARY>
+*/
 import Base from "../layouts/Base.astro";
 import { createWebContext } from "../lib/context";
 import { getPageMetadata } from "../lib/metadata";

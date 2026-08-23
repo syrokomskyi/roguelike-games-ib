@@ -1,7 +1,19 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Concept-specific sections for record pages — definition, criteria, implementation refs, ancestry, related concepts.</purpose>
+<non-goals>
+  <item>Does not fetch data — receives record, relations, and records as props.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0005: Initial creation. Renders concept-specific sections when record_type === "concept".</item>
+</CHANGE_SUMMARY>
+*/
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import CollapsibleSection from "./CollapsibleSection.astro";
+import { designRelationTypes } from "../lib/design-data";
 
 interface Props {
   record: CanonicalRecord;
@@ -22,11 +34,6 @@ const observedIn = (anc?.["observed_in"] as string[]) ?? [];
 const mutationDimensions = (anc?.["mutation_dimensions"] as string[]) ?? [];
 
 const idToRecord = new Map(records.map((r) => [r.id, r]));
-
-const designRelationTypes = new Set([
-  "CREATES_PRESSURE", "tensions_with", "pressures", "synergizes_with",
-  "HAS_MUTATION_VECTOR", "IMPLEMENTED_AS", "HAS_COUNTERPLAY", "CAN_FAIL_AS",
-]);
 
 const conceptRelations = relations.filter((r) => designRelationTypes.has(r.relation_type));
 const idToKey = new Map(records.map((r) => [r.id, r.key]));
