@@ -1,7 +1,7 @@
 ---
 id: RFC-0010
 title: "Embedding search for concepts — semantic search over design space"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
