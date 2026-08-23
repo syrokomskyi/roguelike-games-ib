@@ -1,7 +1,7 @@
 ---
 id: RFC-0005
 title: "Web app enrichment — concept pages, design-space graph, and cross-game comparison view"
-status: draft
+status: accepted
 kind: architecture
 scope: workspace
 owners:
