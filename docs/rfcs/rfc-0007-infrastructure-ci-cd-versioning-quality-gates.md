@@ -1,7 +1,7 @@
 ---
 id: RFC-0007
 title: "Infrastructure — CI/CD pipeline, canonical versioning, and quality gates"
-status: accepted
+status: implemented
 kind: architecture
 scope: workspace
 owners:
@@ -11,7 +11,7 @@ reviewers:
 createdAt: 2026-08-23
 updatedAt: 2026-08-23
 enhancedAt: 2026-08-23
-implementedAt:
+implementedAt: 2026-08-23
 closedAt:
 supersedes: []
 supersededBy:
