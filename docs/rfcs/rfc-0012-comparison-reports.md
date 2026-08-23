@@ -263,14 +263,14 @@ The web `generateReport()` function iterates over `store.records` directly with 
 
 ## Acceptance criteria
 
-- [ ] `generate_comparison_report` MCP tool produces structured markdown for 2+ games (code: agent can implement and test)
-- [ ] Report includes: overview, coverage, primitive comparison, gaps, tensions, attribute comparison (code: agent can verify via test)
-- [ ] `sections` parameter correctly filters report sections (code: agent can test)
-- [ ] `format: "json"` returns structured JSON object (code: agent can test)
-- [ ] Obsidian vault includes comparison notes with wiki-links that resolve via `PathResolver` (code: agent can test)
-- [ ] Web app compare page has "Download report" button that downloads `.md` file (code: agent can implement and test)
-- [ ] Curated summary gaps show "No curated summary available" with attribute-based fallback (code: agent can test; content: curated summaries in `concept-implementations.json` are human-authored and may be incomplete — this is expected and handled gracefully)
-- [ ] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`)
+- [x] `generate_comparison_report` MCP tool produces structured markdown for 2+ games (evidence: `apps/mcp/src/tools/report.ts:73-80`, `tests/mcp/mcp-013.test.ts` "generates markdown report for 2-game comparison")
+- [x] Report includes: overview, coverage, primitive comparison, gaps, tensions, attribute comparison (evidence: `tests/mcp/mcp-013.test.ts` "includes all 6 sections by default")
+- [x] `sections` parameter correctly filters report sections (evidence: `tests/mcp/mcp-013.test.ts` "sections parameter filters to only requested sections")
+- [x] `format: "json"` returns structured JSON object (evidence: `tests/mcp/mcp-013.test.ts` "format: json returns structured JSON object")
+- [x] Obsidian vault includes comparison notes with wiki-links that resolve via `PathResolver` (evidence: `tests/obs/obs-007-report.test.ts` "report note contains wiki-links to concepts")
+- [x] Web app compare page has "Download report" button that downloads `.md` file (evidence: `apps/web/src/pages/compare/[...filter].astro:178-187`, `tests/web/web-008-report.test.ts` "formatReportAsMarkdown returns non-empty markdown")
+- [x] Curated summary gaps show "No curated summary available" with attribute-based fallback (evidence: `tests/mcp/mcp-013.test.ts` "missing curated summary shows fallback text")
+- [x] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`) (evidence: `build:check` 17/17 pass, `vitest` 738/738 pass)
 
 ## Risks
 
