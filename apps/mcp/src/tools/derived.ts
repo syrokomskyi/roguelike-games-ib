@@ -531,34 +531,30 @@ export async function searchDesignSpace(
     limit: overfetchLimit,
   });
 
-  let hits = result.hits;
+  const concepts = result.hits
+    .map((hit) => {
+      const stored = ctx.store.resolveRecordById(hit.record.id);
+      const fullRecord = (stored as unknown as Record<string, unknown>)
+        ?? (JSON.parse(hit.record.json) as Record<string, unknown>);
+      const conceptType = fullRecord["concept_type"] as string | undefined;
 
-  if (input.concept_type) {
-    hits = hits.filter((hit) => {
-      const record = JSON.parse(hit.record.json) as Record<string, unknown>;
-      return record["concept_type"] === input.concept_type;
-    });
-  }
+      if (input.concept_type && conceptType !== input.concept_type) return null;
 
-  const concepts = hits.slice(0, limit).map((hit) => {
-    const record = ctx.store.resolveRecordById(hit.record.id);
-    const fullRecord = record
-      ? (record as unknown as Record<string, unknown>)
-      : (JSON.parse(hit.record.json) as Record<string, unknown>);
-    const qualityScore = fullRecord["quality_score"] as
-      | { coverage: number; evidence: number; richness: number; overall: number }
-      | undefined;
-    const conceptType = fullRecord["concept_type"] as string | undefined;
+      const qualityScore = fullRecord["quality_score"] as
+        | { coverage: number; evidence: number; richness: number; overall: number }
+        | undefined;
 
-    return {
-      record_id: hit.record.id,
-      key: hit.record.key,
-      title: hit.record.title,
-      concept_type: conceptType ?? "concept",
-      quality_score: qualityScore ?? null,
-      score: hit.scores.final_score,
-    };
-  });
+      return {
+        record_id: hit.record.id,
+        key: hit.record.key,
+        title: hit.record.title,
+        concept_type: conceptType ?? "concept",
+        quality_score: qualityScore ?? null,
+        score: hit.scores.final_score,
+      };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .slice(0, limit);
 
   return envelope(ctx, {
     concepts,

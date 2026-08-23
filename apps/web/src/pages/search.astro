@@ -151,6 +151,7 @@ import SearchBox from "../components/SearchBox.astro";
         html += `</div>`;
       }
 
+      // Keep in sync with the enum in server.ts search_design_space tool registration.
       const CONCEPT_TYPES = [
         "cross_game_mechanic", "design_primitive", "design_pressure",
         "design_knob", "mutation_vector", "counterplay_pattern",
