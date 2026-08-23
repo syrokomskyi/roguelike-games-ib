@@ -26,4 +26,23 @@ All extractors MUST follow RFC-0001 (Extraction methodology for multi-game knowl
 
 Agents creating new extractors MUST use the `fo-create-extractor` skill, which references RFC-0001 as the methodology source.
 
+## CI Gates Policy
+
+CI checks are mandatory for all merges to `main`. The CI workflow (`.github/workflows/ci.yml`) runs:
+
+- `pnpm materialize` — generates knowledge base dist and canonical hash
+- `pnpm exec turbo run build:check` — TypeScript compilation across all workspaces
+- `pnpm exec vitest --run` — full test suite including conformance tests
+- `pnpm exec turbo run verify` — workspace-specific verification tasks
+- `pnpm exec tsx scripts/kb-health-summary.ts` — knowledge base health summary
+
+Agents MUST NOT bypass CI checks. This includes:
+
+- Do not force-push to `main` to skip CI
+- Do not disable or modify CI workflows without an accepted RFC
+- If CI fails, fix the root cause rather than working around the failure
+
+The pre-commit hook (`scripts/pre-commit-quality.sh`) coexists with CI for local feedback. It is not a replacement for CI gates.
+
+Deploy is opt-in via commit message containing `deploy:`. Required GitHub secrets: `CLOUDFLARE_API_TOKEN`, `SEARCH_API_URL`, `INDEXING_TOKEN`.
 
