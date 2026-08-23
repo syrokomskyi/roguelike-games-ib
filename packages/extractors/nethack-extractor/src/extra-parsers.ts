@@ -466,3 +466,90 @@ export function parseSkills(source: string): SkillEntry[] {
 
   return entries;
 }
+
+export interface AttackTypeEntry {
+  nativeId: string;
+  name: string;
+  value: number;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseAttackTypes(source: string): AttackTypeEntry[] {
+  const entries: AttackTypeEntry[] = [];
+  const skipNames = new Set(["AT_ANY"]);
+  const lines = source.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const m = line.match(/^#define\s+(AT_\w+)\s+(-?\d+)/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+
+    const value = parseInt(m[2], 10);
+    const name = nativeId
+      .replace(/^AT_/, "")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    entries.push({
+      nativeId,
+      name,
+      value,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return entries;
+}
+
+export interface MonsterAbilityEntry {
+  nativeId: string;
+  name: string;
+  flagGroup: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export function parseMonsterAbilities(source: string): MonsterAbilityEntry[] {
+  const entries: MonsterAbilityEntry[] = [];
+  const skipNames = new Set([
+    "M1_NOLIMBS", "M1_OMNIVORE",
+    "M3_WANTSALL", "M3_COVETOUS", "M3_WAITMASK",
+  ]);
+  const seen = new Set<string>();
+  const lines = source.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const m = line.match(/^#define\s+(M[123]_\w+)\s+/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+    if (seen.has(nativeId)) continue;
+    seen.add(nativeId);
+
+    const flagGroup = nativeId.startsWith("M1_") ? "M1"
+      : nativeId.startsWith("M2_") ? "M2"
+      : "M3";
+
+    const name = nativeId
+      .replace(/^M[123]_/, "")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    entries.push({
+      nativeId,
+      name,
+      flagGroup,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return entries;
+}

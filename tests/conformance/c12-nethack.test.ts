@@ -256,6 +256,8 @@ describe("C12: NetHack scale trial", () => {
     expect(popMap.get("races")).toBe(5);
     expect(popMap.get("branches")).toBe(9);
     expect(popMap.get("skills")).toBe(37);
+    expect(popMap.get("attack_types")).toBe(17);
+    expect(popMap.get("monster_abilities")).toBe(72);
   });
 
   it("materialization produces valid SQLite for nethack records", () => {

@@ -31,12 +31,16 @@ import {
   parseRaces,
   parseDungeonBranches,
   parseSkills,
+  parseAttackTypes,
+  parseMonsterAbilities,
   type ArtifactEntry,
   type TrapEntry,
   type RoleEntry,
   type RaceEntry,
   type DungeonBranchEntry,
   type SkillEntry,
+  type AttackTypeEntry,
+  type MonsterAbilityEntry,
 } from "./extra-parsers.ts";
 
 const MONSTERS_H = "monsters.h";
@@ -46,13 +50,15 @@ const TRAP_H = "trap.h";
 const ROLE_C = "role.c";
 const DUNGEON_LUA = "dungeon.lua";
 const SKILLS_H = "skills.h";
+const MONATTK_H = "monattk.h";
+const MONFLAG_H = "monflag.h";
 
 const manifest: ExtractorManifest = {
   schema: "werkstatt/knowledge-extractor@1",
   extractorId: "nethack-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "item", "artifact", "trap", "class", "species", "branch", "skill"],
+  recordKinds: ["creature", "item", "artifact", "trap", "class", "species", "branch", "skill", "damage_type", "ability"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -104,6 +110,18 @@ const manifest: ExtractorManifest = {
       expected: 37,
       description: "All skills in skills.h (enum p_skills entries P_DAGGER through P_RIDING, excluding P_NONE and P_NUM_SKILLS sentinels)",
     },
+    {
+      dimension: "attack_types",
+      denominatorKind: "extractor_population",
+      expected: 17,
+      description: "All AT_* #define entries in monattk.h (excluding AT_ANY wildcard)",
+    },
+    {
+      dimension: "monster_abilities",
+      denominatorKind: "extractor_population",
+      expected: 72,
+      description: "All M1_*/M2_*/M3_* #define entries in monflag.h (excluding composite aliases M1_NOLIMBS, M1_OMNIVORE, M3_WANTSALL, M3_COVETOUS, M3_WAITMASK)",
+    },
   ],
 };
 
@@ -121,6 +139,8 @@ export function createNetHackExtractor(): Extractor {
       const roleC = ctx.source.readText(ROLE_C);
       const dungeonLua = ctx.source.readText(DUNGEON_LUA);
       const skillsH = ctx.source.readText(SKILLS_H);
+      const monattkH = ctx.source.readText(MONATTK_H);
+      const monflagH = ctx.source.readText(MONFLAG_H);
 
       const artifacts = parseArtifacts(artilistH);
       const traps = parseTraps(trapH);
@@ -128,6 +148,8 @@ export function createNetHackExtractor(): Extractor {
       const races = parseRaces(roleC);
       const branches = parseDungeonBranches(dungeonLua);
       const skills = parseSkills(skillsH);
+      const attackTypes = parseAttackTypes(monattkH);
+      const monsterAbilities = parseMonsterAbilities(monflagH);
 
       const creatureSpec: EntitySpec<MonsterEntry> = {
         kind: "creature",
@@ -352,6 +374,48 @@ export function createNetHackExtractor(): Extractor {
         },
       };
 
+      const attackTypeSpec: EntitySpec<AttackTypeEntry> = {
+        kind: "damage_type",
+        entries: attackTypes,
+        adapter: {
+          nativeKind: "attack_type",
+          originActorId: "nethack-factual",
+          getSourcePath: () => MONATTK_H,
+          getSymbolName: (a) => a.nativeId,
+          getSlug: (a) => a.nativeId.replace(/^AT_/, "").toLowerCase(),
+          getNativeId: (a) => `attack_type:${a.nativeId}`,
+          getCanonicalName: (a) => a.name,
+          getOriginalName: (a) => a.nativeId,
+          getLineRange: (a) => ({ lineStart: a.lineStart, lineEnd: a.lineEnd }),
+          getDataKey: (a) => a.nativeId,
+          getAttributes: (a) => ({
+            value: a.value,
+          }),
+          populationDimension: "attack_types",
+        },
+      };
+
+      const monsterAbilitySpec: EntitySpec<MonsterAbilityEntry> = {
+        kind: "ability",
+        entries: monsterAbilities,
+        adapter: {
+          nativeKind: "monster_ability",
+          originActorId: "nethack-factual",
+          getSourcePath: () => MONFLAG_H,
+          getSymbolName: (a) => a.nativeId,
+          getSlug: (a) => a.nativeId.replace(/^M[123]_/, "").toLowerCase(),
+          getNativeId: (a) => `monster_ability:${a.nativeId}`,
+          getCanonicalName: (a) => a.name,
+          getOriginalName: (a) => a.nativeId,
+          getLineRange: (a) => ({ lineStart: a.lineStart, lineEnd: a.lineEnd }),
+          getDataKey: (a) => a.nativeId,
+          getAttributes: (a) => ({
+            flag_group: a.flagGroup,
+          }),
+          populationDimension: "monster_abilities",
+        },
+      };
+
       const { dimensionCounts } = await runEntityPipeline(ctx, [
         creatureSpec,
         itemSpec,
@@ -361,6 +425,8 @@ export function createNetHackExtractor(): Extractor {
         raceSpec,
         branchSpec,
         skillSpec,
+        attackTypeSpec,
+        monsterAbilitySpec,
       ]);
 
       const popCollector = new PopulationCollector(manifest.exhaustivePopulations ?? [], ctx.output);
