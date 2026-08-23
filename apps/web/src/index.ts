@@ -16,3 +16,4 @@ export { renderEvidence, evidenceForRecord, DEFAULT_EXCERPT_LIMIT, type Rendered
 export { getPageMetadata, metadataToHtmlMeta, type PageMetadata } from "./lib/metadata.ts";
 export { authorityBadge, isNonAuthoritative, type Authority, type AuthorityBadgeData } from "./lib/authority.ts";
 export { prepareWebBuild, type WebBuildOptions } from "./lib/build.ts";
+export { buildReportData, formatReportAsMarkdown, type ReportData } from "./lib/report.ts";
