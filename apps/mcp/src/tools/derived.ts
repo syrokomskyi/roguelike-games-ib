@@ -10,6 +10,7 @@
   <item>RFC-0004: Added get_coverage_matrix, get_concept_coverage, compare_concept_implementations, find_concept_gaps tools.</item>
   <item>RFC-0009: Added get_concept_quality tool for concept quality scoring.</item>
   <item>RFC-0010: Added search_design_space tool for semantic concept search.</item>
+  <item>RFC-0011: Added find_design_patterns and get_pattern_examples tools for design pattern library.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -560,5 +561,104 @@ export async function searchDesignSpace(
     concepts,
     total: concepts.length,
     query: input.query,
+  });
+}
+
+export function findDesignPatterns(
+  ctx: McpContext,
+  input: { game?: string; primitive_key?: string },
+) {
+  let patterns = ctx.store.records.filter((r) => {
+    if (r.record_type !== "concept") return false;
+    const ct = (r as unknown as Record<string, unknown>)["concept_type"] as string | undefined;
+    return ct === "design_pattern";
+  });
+
+  if (input.game) {
+    patterns = patterns.filter((r) => {
+      const gamesPresent = (r as unknown as Record<string, unknown>)["games_where_present"] as string[] | undefined;
+      return gamesPresent?.includes(input.game!);
+    });
+  }
+
+  if (input.primitive_key) {
+    patterns = patterns.filter((r) => {
+      const memberPrimitives = (r as unknown as Record<string, unknown>)["member_primitives"] as string[] | undefined;
+      return memberPrimitives?.includes(input.primitive_key!);
+    });
+  }
+
+  const result = patterns.map((r) => {
+    const ra = r as unknown as Record<string, unknown>;
+    return {
+      record_id: r.id,
+      key: r.key,
+      title: ra["title"] as string | null,
+      definition: ra["definition"] as string | null,
+      member_primitives: (ra["member_primitives"] as string[]) ?? [],
+      member_pressures: (ra["member_pressures"] as string[]) ?? [],
+      games_where_present: (ra["games_where_present"] as string[]) ?? [],
+      games_where_absent: (ra["games_where_absent"] as string[]) ?? [],
+      quality_score: ra["quality_score"] as { coverage: number; evidence: number; richness: number; overall: number } | undefined,
+    };
+  });
+
+  return envelope(ctx, {
+    patterns: result,
+    total: result.length,
+  });
+}
+
+export function getPatternExamples(
+  ctx: McpContext,
+  input: { pattern_key: string },
+) {
+  if (!input.pattern_key) {
+    throw new ValidationError("pattern_key is required");
+  }
+
+  const pattern = ctx.store.resolveRecordByKey(input.pattern_key);
+  if (!pattern) {
+    throw new NotFoundError(`Pattern not found: ${input.pattern_key}`);
+  }
+  if (pattern.record_type !== "concept") {
+    throw new ValidationError(`Record is not a concept: ${pattern.record_type}`);
+  }
+
+  const patternRa = pattern as unknown as Record<string, unknown>;
+  const ct = patternRa["concept_type"] as string | undefined;
+  if (ct !== "design_pattern") {
+    throw new ValidationError(`Record is not a design_pattern: ${ct}`);
+  }
+
+  const memberPrimitiveKeys = (patternRa["member_primitives"] as string[]) ?? [];
+  const examplesByGame: Record<string, Array<{ primitive_key: string; description: string; record_refs: string[]; source_file: string }>> = {};
+
+  for (const primKey of memberPrimitiveKeys) {
+    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    if (!primRecord) continue;
+    const concreteExamples = (primRecord as unknown as Record<string, unknown>)["concrete_examples"] as
+      | Array<{ game: string; description: string; record_refs: string[]; source_file: string }>
+      | undefined;
+    if (!concreteExamples) continue;
+
+    for (const ex of concreteExamples) {
+      if (!examplesByGame[ex.game]) examplesByGame[ex.game] = [];
+      examplesByGame[ex.game].push({
+        primitive_key: primKey,
+        description: ex.description,
+        record_refs: ex.record_refs ?? [],
+        source_file: ex.source_file ?? "",
+      });
+    }
+  }
+
+  return envelope(ctx, {
+    pattern: {
+      record_id: pattern.id,
+      key: pattern.key,
+      title: patternRa["title"] as string | null,
+    },
+    examples_by_game: examplesByGame,
   });
 }

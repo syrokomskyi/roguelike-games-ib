@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 
@@ -559,6 +559,36 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "find_design_patterns",
+    description: "List all design patterns (combinations of design primitives that co-occur in games). Optionally filter by game or member primitive key.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        game: { type: "string", enum: ["nethack", "broguece", "crawl", "cataclysm-bn"] },
+        primitive_key: { type: "string" },
+      },
+      additionalProperties: false,
+    },
+    handler: findDesignPatterns,
+    readOnly: true,
+  });
+
+  registry.register({
+    name: "get_pattern_examples",
+    description: "Return concrete examples for a design pattern, grouped by game. Examples are drawn from the pattern's member primitives.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pattern_key: { type: "string" },
+      },
+      required: ["pattern_key"],
+      additionalProperties: false,
+    },
+    handler: getPatternExamples,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -612,4 +642,6 @@ export const REQUIRED_TOOLS = [
   "find_concept_gaps",
   "get_concept_quality",
   "search_design_space",
+  "find_design_patterns",
+  "get_pattern_examples",
 ];
