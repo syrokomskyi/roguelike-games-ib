@@ -1,6 +1,6 @@
 command: rfc.index.generate
 generatedAt: 2026-08-23
-count: 14
+count: 18
 entries:
   - id: RFC-0001
     title: Extraction methodology for multi-game knowledge base
@@ -226,3 +226,69 @@ entries:
     related:
       - RFC-0007
     file: docs/rfcs/rfc-0014-dataset-versioning-publication.md
+  - id: RFC-0015
+    title: Design space visualization — interactive graph of primitives, pressures,
+      tensions, and patterns
+    status: draft
+    kind: policy
+    createdAt: 2026-08-24
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0003
+      - RFC-0005
+      - RFC-0011
+      - RFC-0013
+    file: docs/rfcs/rfc-0015-design-space-visualization.md
+  - id: RFC-0016
+    title: Game recommender by sensations — match player preferences to game design
+      profiles
+    status: draft
+    kind: policy
+    createdAt: 2026-08-24
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0011
+      - RFC-0013
+      - RFC-0009
+    file: docs/rfcs/rfc-0016-game-recommender-by-sensations.md
+  - id: RFC-0017
+    title: Additional extractors — complete PLAN-002 NetHack and Cataclysm-BN data
+      types
+    status: draft
+    kind: policy
+    createdAt: 2026-08-24
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - RFC-0006
+      - RFC-0008
+      - PLAN-002
+    file: docs/rfcs/rfc-0017-additional-extractors.md
+  - id: RFC-0018
+    title: Public API and deployment — Cloudflare Workers for search-api and MCP
+      server
+    status: draft
+    kind: architecture
+    createdAt: 2026-08-24
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0007
+      - RFC-0010
+      - RFC-0014
+    file: docs/rfcs/rfc-0018-public-api-deployment.md
