@@ -69,10 +69,10 @@ entries:
   - id: RFC-0005
     title: Web app enrichment — concept pages, design-space graph, and cross-game
       comparison view
-    status: draft
+    status: implemented
     kind: architecture
     createdAt: 2026-08-23
-    implementedAt: ""
+    implementedAt: 2026-08-23
     closedAt: ""
     supersedes: []
     supersededBy: ""
@@ -82,7 +82,7 @@ entries:
       - RFC-0003
       - RFC-0004
       - PLAN-003
-    file: docs/rfcs/rfc-0005-web-app-enrichment.md
+    file: docs/rfcs/archive/implemented/rfc-0005-web-app-enrichment.md
   - id: RFC-0006
     title: Extractor expansion — next-tier data types for all four games
     status: draft
