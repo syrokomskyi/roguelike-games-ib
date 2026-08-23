@@ -1,4 +1,17 @@
 ---
+/*
+<MODULE_CONTRACT>
+<purpose>Displays dataset metadata, version, record counts, dataset card sections, download links, and license information.</purpose>
+<non-goals>
+  <item>Does not render individual records — see record pages.</item>
+  <item>Does not render concepts — see concepts page.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: dataset metadata and record counts display.</item>
+  <item>RFC-0014: Added dataset card sections, download links, license link, version badge.</item>
+</CHANGE_SUMMARY>
+*/
 import Base from "../layouts/Base.astro";
 import { createWebContext } from "../lib/context";
 import { getPageMetadata } from "../lib/metadata";
@@ -11,17 +24,22 @@ const manifest = ctx.manifest;
 
 <Base title="Dataset" metadata={meta} activeNav="dataset">
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-ib-text">Dataset</h1>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-ib-text">Dataset</h1>
+      <span class="rounded-full bg-ib-accent px-3 py-1 text-xs font-bold text-white">{manifest.datasetVersion}</span>
+    </div>
+
     <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
       <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
         <dt class="font-semibold text-ib-muted">Dataset ID</dt><dd class="text-ib-text">{manifest.datasetId}</dd>
         <dt class="font-semibold text-ib-muted">Dataset Version</dt><dd class="text-ib-text">{manifest.datasetVersion}</dd>
         <dt class="font-semibold text-ib-muted">Model Version</dt><dd class="text-ib-text">{manifest.modelVersion}</dd>
         <dt class="font-semibold text-ib-muted">Canonical Hash</dt><dd class="font-mono text-xs text-ib-text">{manifest.canonicalHash}</dd>
-        <dt class="font-semibold text-ib-muted">License</dt><dd class="text-ib-text">{manifest.license}</dd>
+        <dt class="font-semibold text-ib-muted">License</dt><dd class="text-ib-text"><a href="/LICENSES/CC-BY-4.0.txt" class="text-ib-accent hover:underline">{manifest.license}</a></dd>
         <dt class="font-semibold text-ib-muted">Logical Dump Hash</dt><dd class="font-mono text-xs text-ib-text">{manifest.logicalDumpHash}</dd>
       </dl>
     </div>
+
     <div>
       <h2 class="mb-3 text-lg font-semibold text-ib-text">Record Counts</h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -32,6 +50,42 @@ const manifest = ctx.manifest;
           </div>
         ))}
       </div>
+    </div>
+
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Composition</h2>
+      <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+        <dt class="font-semibold text-ib-muted">Games</dt><dd class="text-ib-text">4 (BrogueCE, Cataclysm-BN, Dungeon Crawl Stone Soup, NetHack)</dd>
+        <dt class="font-semibold text-ib-muted">Data types</dt><dd class="text-ib-text">creatures, items, spells, abilities, species, professions, vaults, branches, traps, skills, artifacts, gods, brands, effects, martial arts, forms, bionics, recipes, factions, roles, races, dungeon branches</dd>
+      </dl>
+    </div>
+
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Collection Method</h2>
+      <ul class="list-disc pl-5 text-sm text-ib-text space-y-1">
+        <li><strong>Extractors:</strong> TypeScript adapters parsing game source files (YAML, JSON, C headers)</li>
+        <li><strong>Methodology:</strong> RFC-0001 — one source object = one record, factual extraction without loss</li>
+        <li><strong>Evidence:</strong> Every record has source file + line range evidence anchor</li>
+      </ul>
+    </div>
+
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Limitations</h2>
+      <ul class="list-disc pl-5 text-sm text-ib-text space-y-1">
+        <li>4 games only (no ToME4, Caves of Qud, etc.)</li>
+        <li>No balance data (damage numbers are extracted but not normalized)</li>
+        <li>No playtest data (design analysis is structural, not experiential)</li>
+        <li>English-only record text</li>
+      </ul>
+    </div>
+
+    <div class="rounded-xl border border-ib-border bg-ib-surface p-5">
+      <h2 class="mb-3 text-lg font-semibold text-ib-text">Downloads</h2>
+      <ul class="list-disc pl-5 text-sm space-y-1">
+        <li><a href="/records.jsonl" class="text-ib-accent hover:underline">Records JSONL</a> — materialized canonical records</li>
+        <li><a href="/CITATION.bib" class="text-ib-accent hover:underline">Citation (BibTeX)</a> — for academic use</li>
+        <li><a href="/DATASET_CARD.md" class="text-ib-accent hover:underline">Dataset Card</a> — structured metadata</li>
+      </ul>
     </div>
   </div>
 </Base>
