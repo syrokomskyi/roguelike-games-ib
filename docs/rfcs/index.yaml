@@ -1,0 +1,116 @@
+command: rfc.index.generate
+generatedAt: 2026-08-23
+count: 7
+entries:
+  - id: RFC-0001
+    title: Extraction methodology for multi-game knowledge base
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-22
+    implementedAt: 2026-08-22
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - ADR-0003
+      - ADR-0004
+    file: docs/rfcs/archive/implemented/rfc-0001-extraction-methodology-for-multi-game-knowledge-base.md
+  - id: RFC-0002
+    title: Concept quality — semantic equivalence mappings, noise filtering, and
+      implementation reference integrity
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - PLAN-003
+    file: docs/rfcs/archive/implemented/rfc-0002-concept-quality-semantic-equivalence-noise-filtering.md
+  - id: RFC-0003
+    title: Design layer expansion — mutation vectors, design knobs, counterplay
+      patterns, and failure modes
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - PLAN-003
+    file: docs/rfcs/archive/implemented/rfc-0003-design-layer-expansion.md
+  - id: RFC-0004
+    title: Cross-game analysis tools — concept-aware comparison and coverage matrix
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - RFC-0002
+      - RFC-0003
+      - PLAN-003
+    file: docs/rfcs/archive/implemented/rfc-0004-cross-game-analysis-tools.md
+  - id: RFC-0005
+    title: Web app enrichment — concept pages, design-space graph, and cross-game
+      comparison view
+    status: draft
+    kind: architecture
+    createdAt: 2026-08-23
+    implementedAt: ""
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0003
+      - RFC-0004
+      - PLAN-003
+    file: docs/rfcs/rfc-0005-web-app-enrichment.md
+  - id: RFC-0006
+    title: Extractor expansion — next-tier data types for all four games
+    status: draft
+    kind: architecture
+    createdAt: 2026-08-23
+    implementedAt: ""
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - PLAN-002
+      - PLAN-003
+    file: docs/rfcs/rfc-0006-extractor-expansion-next-tier.md
+  - id: RFC-0007
+    title: Infrastructure — CI/CD pipeline, canonical versioning, and quality gates
+    status: draft
+    kind: architecture
+    createdAt: 2026-08-23
+    implementedAt: ""
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0001
+      - PLAN-003
+    file: docs/rfcs/rfc-0007-infrastructure-ci-cd-versioning-quality-gates.md
