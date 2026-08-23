@@ -316,14 +316,14 @@ Client-side JavaScript uses progressive enhancement:
 
 ## Acceptance criteria
 
-- [ ] `/design` page shows design-space graph (not flat list) with primitives, pressures, and tensions
-- [ ] `/design` page shows design relations (fix: scope filter includes `cross_game`)
-- [ ] `/concepts` page lists all concepts grouped by `concept_type` with filtering
-- [ ] Individual concept record pages show definition, criteria, implementation refs, ancestry
-- [ ] `/compare` page shows concept coverage matrix and design primitive presence
-- [ ] `/games/[sourceId]/` pages show concept section with relevant primitives and mechanics
-- [ ] Web app builds without errors
-- [ ] All existing tests pass (no regressions)
+- [x] `/design` page shows design-space graph (not flat list) with primitives, pressures, and tensions (evidence: apps/web/src/components/DesignGraph.astro:1-120, apps/web/src/pages/design.astro:93-115)
+- [x] `/design` page shows design relations (fix: scope filter includes `cross_game`) (evidence: apps/web/src/lib/design-data.ts:28-30, build:check pass)
+- [x] `/concepts` page lists all concepts grouped by `concept_type` with filtering (evidence: apps/web/src/pages/concepts.astro:1-85, apps/web/src/lib/design-data.ts:129-139)
+- [x] Individual concept record pages show definition, criteria, implementation refs, ancestry (evidence: apps/web/src/components/ConceptDetails.astro:1-130, apps/web/src/pages/records/[...key].astro:90-92)
+- [x] `/compare` page shows concept coverage matrix and design primitive presence (evidence: apps/web/src/pages/compare/[...filter].astro:100-160, apps/web/src/lib/design-data.ts:148-189)
+- [x] `/games/[sourceId]/` pages show concept section with relevant primitives and mechanics (evidence: apps/web/src/pages/games/[sourceId]/[...filter].astro:131-168, apps/web/src/lib/design-data.ts:197-230)
+- [x] Web app builds without errors (evidence: pnpm --filter web run build:check — pass, 0 errors)
+- [x] All existing tests pass (no regressions) (evidence: pnpm exec vitest --run — 665 passed, 0 failed)
 
 ## Alternatives considered
 
