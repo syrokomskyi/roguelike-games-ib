@@ -30,7 +30,7 @@ import Base from "../layouts/Base.astro";
           <p class="text-sm font-medium text-ib-accent">YOUR DOSSIER</p>
           <h2 id="dossier-title" class="text-xl font-semibold text-ib-text"></h2>
         </div>
-        <a id="continue-to-quest" href="/inspiration" class="rounded-lg border border-ib-accent/50 px-4 py-2 text-sm font-medium text-ib-accent hover:bg-ib-accent/10">Turn this into a Creative Quest</a>
+        <a id="continue-to-quest" href="/laboratory" class="rounded-lg border border-ib-accent/50 px-4 py-2 text-sm font-medium text-ib-accent hover:bg-ib-accent/10">Turn this into a Creative Quest</a>
       </div>
       <div id="dossier-summary" class="rounded-xl border border-ib-border bg-ib-surface p-4 text-sm text-ib-muted"></div>
       <div id="dossier-hits" class="grid gap-3 md:grid-cols-2"></div>
@@ -105,7 +105,7 @@ import Base from "../layouts/Base.astro";
       summary.textContent = hits.length
         ? `${hits.length} grounded starting points. Treat them as ingredients to transform, not recipes to copy.`
         : "No grounded starting points were found. Reformulate around an emotion, constraint, interaction, or a known game.";
-      continueLink.href = `/inspiration?q=${encodeURIComponent(question)}`;
+      continueLink.href = `/laboratory?q=${encodeURIComponent(question)}`;
       hitsElement.replaceChildren(...hits.map(createHitCard));
     }
 
