@@ -3,7 +3,9 @@ import Base from "../../layouts/Base.astro";
 import { createWebContext } from "../../lib/context";
 import { getPageMetadata } from "../../lib/metadata";
 import CompareTable from "../../components/CompareTable.astro";
+import CollapsibleSection from "../../components/CollapsibleSection.astro";
 import { buildCompareRows } from "../../lib/page-data";
+import { buildCoverageMatrix, buildDesignData } from "../../lib/design-data";
 import { resolve } from "node:path";
 
 export async function getStaticPaths() {
@@ -18,6 +20,9 @@ export async function getStaticPaths() {
   const allTypes = ["all", ...types];
   const allSources = ["all", ...sources];
   const meta = getPageMetadata(ctx);
+  const coverageData = buildCoverageMatrix(ctx.store);
+  const { primitiveCards } = buildDesignData(ctx.store);
+  const primitivePresence = primitiveCards.map((p) => ({ key: p.key, title: p.title, sourceGames: p.sourceGames }));
 
   const paths = [];
 
@@ -45,6 +50,10 @@ export async function getStaticPaths() {
             currentPage: page,
             totalPages,
             meta,
+            coverageMatrix: coverageData.matrix,
+            coverageConceptTypes: coverageData.conceptTypes,
+            coverageSourceIds: coverageData.sourceIds,
+            primitivePresence,
           },
         });
       }
@@ -54,7 +63,7 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { pageRows, filteredCount, totalCount, types, sources, activeType, activeSource, currentPage, totalPages, meta } = Astro.props;
+const { pageRows, filteredCount, totalCount, types, sources, activeType, activeSource, currentPage, totalPages, meta, coverageMatrix, coverageConceptTypes, coverageSourceIds, primitivePresence } = Astro.props;
 
 const PAGE_SIZE = 25;
 const rangeStart = (currentPage - 1) * PAGE_SIZE + 1;
@@ -86,6 +95,68 @@ function compareUrl(type: string, source: string, page: number): string {
           <a href={compareUrl(activeType, s, 1)} class={`rounded-lg px-3 py-1.5 text-sm ${activeSource === s ? "border border-ib-accent2 bg-ib-accent2/15 text-ib-accent2" : "border border-ib-border bg-ib-surface text-ib-muted hover:text-ib-text"}`}>{s}</a>
         ))}
       </div>
+    )}
+
+    {activeType === "all" && activeSource === "all" && currentPage === 1 && coverageConceptTypes.length > 0 && (
+      <CollapsibleSection title="Concept coverage matrix" open>
+        <div class="overflow-x-auto rounded-lg border border-ib-border">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-ib-surface2 text-ib-muted">
+                <th class="px-3 py-2 text-left">Game</th>
+                {coverageConceptTypes.map((ct) => (
+                  <th class="px-3 py-2 text-right">{ct}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {coverageSourceIds.map((sid) => (
+                <tr class="border-t border-ib-border">
+                  <td class="px-3 py-2 font-mono text-xs text-ib-text">{sid}</td>
+                  {coverageConceptTypes.map((ct) => {
+                    const count = coverageMatrix[sid]?.[ct] ?? 0;
+                    return (
+                      <td class={`px-3 py-2 text-right ${count > 0 ? "text-ib-text" : "text-ib-muted"}`}>{count > 0 ? count : "—"}</td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSection>
+    )}
+
+    {activeType === "all" && activeSource === "all" && currentPage === 1 && primitivePresence.length > 0 && (
+      <CollapsibleSection title="Design primitive presence">
+        <div class="overflow-x-auto rounded-lg border border-ib-border">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-ib-surface2 text-ib-muted">
+                <th class="px-3 py-2 text-left">Primitive</th>
+                {coverageSourceIds.map((sid) => (
+                  <th class="px-3 py-2 text-center">{sid}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {primitivePresence.map((p) => (
+                <tr class="border-t border-ib-border">
+                  <td class="px-3 py-2">
+                    <a href={`/records/${p.key}/`} class="font-mono text-xs text-ib-accent hover:text-ib-accent2">{p.title}</a>
+                  </td>
+                  {coverageSourceIds.map((sid) => {
+                    const present = p.sourceGames.includes(sid);
+                    return (
+                      <td class="px-3 py-2 text-center">{present ? <span class="text-ib-green">✓</span> : <span class="text-ib-muted">—</span>}</td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSection>
     )}
 
     <CompareTable rows={pageRows} />
