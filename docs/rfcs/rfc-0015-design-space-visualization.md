@@ -203,9 +203,9 @@ The existing `DesignGraph.astro` component on `/design` is a static hierarchical
 
 ## Acceptance criteria
 
-- [ ] `/design-graph` page renders with all design concepts as nodes and design relations as edges
-- [ ] Nodes are color-coded by concept type per D3 color table
-- [ ] Clicking a node opens a detail panel with record info and links
-- [ ] Filters for concept type, relation type, and game presence work
-- [ ] Graph is responsive (mobile-friendly with collapsible sidebar)
-- [ ] Build-time graph data is correct (verified by conformance test)
+- [x] `/design-graph` page renders with all design concepts as nodes and design relations as edges (evidence: apps/web/src/pages/design-graph.astro:1, pnpm build:web — dist/design-graph/index.html 421KB)
+- [x] Nodes are color-coded by concept type per D3 color table (evidence: apps/web/src/pages/design-graph.astro:131, colorScale maps concept types to colors)
+- [x] Clicking a node opens a detail panel with record info and links (evidence: apps/web/src/pages/design-graph.astro:288, showDetail() function)
+- [x] Filters for concept type, relation type, and game presence work (evidence: apps/web/src/pages/design-graph.astro:330-355, filter event handlers)
+- [x] Graph is responsive (mobile-friendly with collapsible sidebar) (evidence: apps/web/src/pages/design-graph.astro:73, lg:grid-cols-[240px_1fr] + mobile defaults hide design_knob/mutation_vector)
+- [x] Build-time graph data is correct (verified by conformance test) (evidence: tests/conformance/c19-design-graph-data.test.ts, 3/3 tests pass)
