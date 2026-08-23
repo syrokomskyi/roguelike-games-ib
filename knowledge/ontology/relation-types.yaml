@@ -347,3 +347,27 @@ relations:
   - concept
   range:
   - concept
+- id: HAS_MUTATION_VECTOR
+  semantics: Source design primitive has target mutation vector as an axis of variation.
+  direction: directed
+  evidence_required: true
+  domain:
+  - concept
+  range:
+  - concept
+- id: IMPLEMENTED_AS
+  semantics: Source mutation vector is concretely realized as target design knob (a specific implementation choice along the axis).
+  direction: directed
+  evidence_required: true
+  domain:
+  - concept
+  range:
+  - concept
+- id: CAN_FAIL_AS
+  semantics: Source design primitive can degenerate into target failure mode when misbalanced.
+  direction: directed
+  evidence_required: true
+  domain:
+  - concept
+  range:
+  - concept
