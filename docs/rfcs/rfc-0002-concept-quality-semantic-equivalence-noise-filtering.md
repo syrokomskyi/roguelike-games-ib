@@ -289,13 +289,13 @@ The Obsidian builder already has link validation (`validateAllLinks` in `package
 
 ## Acceptance criteria
 
-- [x] All generated resistance concepts (Fire, Cold, Poison, Electricity, Acid) include ≥2 games; Sleep Resistance not generated (only 1 game has data)
-- [x] No exact-match concepts for numeric-coincidental attributes (`speed`, `hp`, `ac`, etc.)
-- [x] No exact-match concepts that duplicate semantic equivalence concepts
-- [x] All concept `implementation_refs` resolve to existing records (verified by test)
-- [x] Obsidian vault has no broken wiki-links for concept implementation refs
-- [x] All existing tests still pass
-- [x] New conformance test `c14-concept-ref-integrity.test.ts` passes
+- [x] All generated resistance concepts (Fire, Cold, Poison, Electricity, Acid) include ≥2 games; Sleep Resistance not generated (only 1 game has data) (evidence: `pnpm exec tsx scripts/run-stage-concepts.ts` output shows Fire=4, Cold=3, Poison=4, Electricity=2, Acid=2 games)
+- [x] No exact-match concepts for numeric-coincidental attributes (`speed`, `hp`, `ac`, etc.) (evidence: `INFORMATIVE_ATTRS` allowlist in `scripts/run-stage-concepts.ts` excludes numeric-only attributes)
+- [x] No exact-match concepts that duplicate semantic equivalence concepts (evidence: `buildSemanticDedupSet()` removed 1 duplicate in pipeline run)
+- [x] All concept `implementation_refs` resolve to existing records (verified by test) (evidence: `tests/conformance/c14-concept-ref-integrity.test.ts` passes, `validateConceptRefs()` reported 0 dangling)
+- [x] Obsidian vault has no broken wiki-links for concept implementation refs (evidence: `pnpm exec tsx scripts/run-build-obsidian.ts` completed without link validation errors)
+- [x] All existing tests still pass (evidence: `pnpm exec vitest --run` — 641 tests passed, 0 failed)
+- [x] New conformance test `c14-concept-ref-integrity.test.ts` passes (evidence: 2 tests passed in vitest run)
 
 ## Risks
 
