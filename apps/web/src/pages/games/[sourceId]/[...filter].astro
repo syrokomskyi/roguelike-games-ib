@@ -5,6 +5,7 @@ import { getPageMetadata } from "../../../lib/metadata";
 import SourceBindingPanel from "../../../components/SourceBindingPanel.astro";
 import CoveragePanel from "../../../components/CoveragePanel.astro";
 import { recordsForSource } from "../../../lib/page-data";
+import { buildGameConceptCoverage } from "../../../lib/design-data";
 import { evidenceForRecord } from "../../../lib/evidence";
 import SpriteIcon from "../../../components/SpriteIcon.astro";
 import CollapsibleSection from "../../../components/CollapsibleSection.astro";
@@ -29,6 +30,7 @@ export async function getStaticPaths() {
     const byType = [...byTypeMap.entries()].sort(([a], [b]) => a.localeCompare(b));
     const types = ["all", ...[...byTypeMap.keys()].sort()];
     const coverage = ctx.store.coverage.filter((c) => c.source_id === sourceId);
+    const conceptCoverage = buildGameConceptCoverage(ctx.store, sourceId);
 
     for (const type of types) {
       const filtered = type === "all" ? records : records.filter((r) => r.record_type === type);
@@ -51,6 +53,7 @@ export async function getStaticPaths() {
             totalPages,
             source,
             coverage,
+            conceptCoverage,
             meta,
           },
         });
@@ -61,7 +64,7 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { sourceId, pageRecords, filteredCount, totalCount, byType, activeType, currentPage, totalPages, source, coverage, meta } = Astro.props;
+const { sourceId, pageRecords, filteredCount, totalCount, byType, activeType, currentPage, totalPages, source, coverage, conceptCoverage, meta } = Astro.props;
 
 function gameUrl(sourceId: string, type: string, page: number): string {
   if (type === "all" && page === 1) return `/games/${sourceId}/`;
@@ -123,6 +126,45 @@ for (const r of pageRecords) {
 
     <CollapsibleSection title="Coverage">
       <CoveragePanel coverage={coverage} />
+    </CollapsibleSection>
+
+    <CollapsibleSection title={`Concepts (${conceptCoverage.designPrimitives.length + conceptCoverage.crossGameMechanics.length + conceptCoverage.designPressures.length})`}>
+      {conceptCoverage.designPrimitives.length > 0 || conceptCoverage.crossGameMechanics.length > 0 || conceptCoverage.designPressures.length > 0 ? (
+        <div class="space-y-4">
+          {conceptCoverage.designPrimitives.length > 0 && (
+            <div>
+              <h3 class="text-xs font-medium text-ib-accent">Design Primitives ({conceptCoverage.designPrimitives.length})</h3>
+              <div class="mt-1 flex flex-wrap gap-1">
+                {conceptCoverage.designPrimitives.map((c) => (
+                  <a href={`/records/${c.key}/`} class="rounded border border-ib-border bg-ib-surface px-2 py-1 font-mono text-xs text-ib-text transition-colors hover:border-ib-accent">{c.title}</a>
+                ))}
+              </div>
+            </div>
+          )}
+          {conceptCoverage.crossGameMechanics.length > 0 && (
+            <div>
+              <h3 class="text-xs font-medium text-ib-accent">Cross-Game Mechanics ({conceptCoverage.crossGameMechanics.length})</h3>
+              <div class="mt-1 flex flex-wrap gap-1">
+                {conceptCoverage.crossGameMechanics.map((c) => (
+                  <a href={`/records/${c.key}/`} class="rounded border border-ib-border bg-ib-surface px-2 py-1 font-mono text-xs text-ib-text transition-colors hover:border-ib-accent">{c.title}</a>
+                ))}
+              </div>
+            </div>
+          )}
+          {conceptCoverage.designPressures.length > 0 && (
+            <div>
+              <h3 class="text-xs font-medium text-ib-accent">Design Pressures ({conceptCoverage.designPressures.length})</h3>
+              <div class="mt-1 flex flex-wrap gap-1">
+                {conceptCoverage.designPressures.map((c) => (
+                  <a href={`/records/${c.key}/`} class="rounded border border-ib-border bg-ib-surface px-2 py-1 font-mono text-xs text-ib-text transition-colors hover:border-ib-accent">{c.title}</a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p class="text-sm text-ib-muted">No concepts found for this game.</p>
+      )}
     </CollapsibleSection>
 
     <div class="flex gap-4">
