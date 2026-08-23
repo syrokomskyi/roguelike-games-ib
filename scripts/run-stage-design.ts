@@ -109,7 +109,7 @@ function findRecordsByKeywords(state: { records: any[] }, keywords: string[], li
   const matches: { id: string; score: number }[] = [];
   for (const record of state.records) {
     if (record.record_type !== "definition") continue;
-    const name = ((record as any).name || record.key || "").toLowerCase();
+    const name = String((record as any).name || record.key || "").toLowerCase();
     let score = 0;
     for (const kw of keywords) {
       if (name.includes(kw.toLowerCase())) score++;
