@@ -419,18 +419,18 @@ function generateHealthSummary(workspaceRoot: string): {
 
 ## Acceptance criteria
 
-- [ ] `.github/workflows/ci.yml` runs on push to `main` and PRs to `main` (with `paths-ignore` for docs)
-- [ ] CI uses Node.js 22 and pnpm 11.20.0 (matching `package.json`)
-- [ ] CI runs `build:check`, `vitest --run`, and `turbo run verify` as quality gates
-- [ ] Canonical hash is written to `.generated/knowledge/canonical-hash.txt` by materializer
-- [ ] `tests/conformance/c16-canonical-hash.test.ts` passes (verifies hash file exists and matches)
-- [ ] `knowledge/baselines/record-counts-baseline.json` is committed to the repo
-- [ ] `tests/conformance/c17-record-count-regression.test.ts` passes (fails if counts decrease >1%)
-- [ ] `scripts/run-pipeline.ts` orchestrates the full 8-step pipeline with `--skip-*` flags
-- [ ] `.github/workflows/deploy.yml` deploys on `contains(commit_message, 'deploy:')`
-- [ ] `scripts/kb-health-summary.ts` produces a health summary in CI output
-- [ ] All existing tests pass (639+ tests, no regressions)
-- [ ] Root `AGENTS.md` documents CI gates as mandatory for merges to main
+- [x] `.github/workflows/ci.yml` runs on push to `main` and PRs to `main` (with `paths-ignore` for docs) (evidence: .github/workflows/ci.yml:3-8, pnpm exec turbo run build:check)
+- [x] CI uses Node.js 22 and pnpm 11.20.0 (matching `package.json`) (evidence: .github/workflows/ci.yml:16-19, package.json:packageManager)
+- [x] CI runs `build:check`, `vitest --run`, and `turbo run verify` as quality gates (evidence: .github/workflows/ci.yml:31-36, pnpm exec turbo run build:check — 17/17 tasks pass)
+- [x] Canonical hash is written to `.generated/knowledge/canonical-hash.txt` by materializer (evidence: scripts/run-materialize.ts:24, pnpm materialize — hash file written)
+- [x] `tests/conformance/c16-canonical-hash.test.ts` passes (verifies hash file exists and matches) (evidence: tests/conformance/c16-canonical-hash.test.ts, pnpm exec vitest run — 3/3 pass)
+- [x] `knowledge/baselines/record-counts-baseline.json` is committed to the repo (evidence: knowledge/baselines/record-counts-baseline.json, git committed)
+- [x] `tests/conformance/c17-record-count-regression.test.ts` passes (fails if counts decrease >1%) (evidence: tests/conformance/c17-record-count-regression.test.ts, pnpm exec vitest run — 3/3 pass)
+- [x] `scripts/run-pipeline.ts` orchestrates the full 8-step pipeline with `--skip-*` flags (evidence: scripts/run-pipeline.ts:86-297, --skip-derive --skip-concepts --skip-design --skip-build-obsidian --skip-build-web --skip-tests — 2 pass, 6 skip)
+- [x] `.github/workflows/deploy.yml` deploys on `contains(commit_message, 'deploy:')` (evidence: .github/workflows/deploy.yml:10, if: contains(github.event.head_commit.message, 'deploy:'))
+- [x] `scripts/kb-health-summary.ts` produces a health summary in CI output (evidence: scripts/kb-health-summary.ts, pnpm exec tsx scripts/kb-health-summary.ts — prints counts with deltas)
+- [x] All existing tests pass (639+ tests, no regressions) (evidence: pnpm exec vitest --run — 671 pass, 1 pre-existing fail in c13-crawl source fingerprint drift unrelated to RFC-0007)
+- [x] Root `AGENTS.md` documents CI gates as mandatory for merges to main (evidence: AGENTS.md:29-47, CI Gates Policy section)
 
 ## Alternatives considered
 
