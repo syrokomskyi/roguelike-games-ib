@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 
@@ -542,6 +542,23 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "search_design_space",
+    description: "Semantic search over concepts by meaning. Returns concept hits with quality_score from RFC-0009. Optionally filter by concept_type.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string" },
+        concept_type: { type: "string", enum: ["cross_game_mechanic", "design_primitive", "design_pressure", "player_sensation", "design_tension", "design_knob", "mutation_vector", "counterplay_pattern", "failure_mode", "negative_space", "emergent_pattern", "synergy_pattern"] },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      required: ["query"],
+      additionalProperties: false,
+    },
+    handler: searchDesignSpace,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -594,4 +611,5 @@ export const REQUIRED_TOOLS = [
   "compare_concept_implementations",
   "find_concept_gaps",
   "get_concept_quality",
+  "search_design_space",
 ];

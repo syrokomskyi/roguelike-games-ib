@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, and concept quality scoring.</purpose>
+<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, concept quality scoring, and semantic design-space search.</purpose>
 <non-goals>
   <item>Does not mutate or create records — all tools are read-only.</item>
 </non-goals>
@@ -9,6 +9,7 @@
   <item>Initial creation: find_semantic_records and get_derived_summary tool handlers.</item>
   <item>RFC-0004: Added get_coverage_matrix, get_concept_coverage, compare_concept_implementations, find_concept_gaps tools.</item>
   <item>RFC-0009: Added get_concept_quality tool for concept quality scoring.</item>
+  <item>RFC-0010: Added search_design_space tool for semantic concept search.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -511,4 +512,57 @@ function buildRichnessDetail(
     }
   }
   return detail;
+}
+
+export async function searchDesignSpace(
+  ctx: McpContext,
+  input: {
+    query: string;
+    concept_type?: string;
+    limit?: number;
+  },
+) {
+  const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
+  const overfetchLimit = input.concept_type ? limit * 3 : limit;
+
+  const result = await ctx.searchIndex.search({
+    text: input.query,
+    filters: { record_type: "concept" },
+    limit: overfetchLimit,
+  });
+
+  let hits = result.hits;
+
+  if (input.concept_type) {
+    hits = hits.filter((hit) => {
+      const record = JSON.parse(hit.record.json) as Record<string, unknown>;
+      return record["concept_type"] === input.concept_type;
+    });
+  }
+
+  const concepts = hits.slice(0, limit).map((hit) => {
+    const record = ctx.store.resolveRecordById(hit.record.id);
+    const fullRecord = record
+      ? (record as unknown as Record<string, unknown>)
+      : (JSON.parse(hit.record.json) as Record<string, unknown>);
+    const qualityScore = fullRecord["quality_score"] as
+      | { coverage: number; evidence: number; richness: number; overall: number }
+      | undefined;
+    const conceptType = fullRecord["concept_type"] as string | undefined;
+
+    return {
+      record_id: hit.record.id,
+      key: hit.record.key,
+      title: hit.record.title,
+      concept_type: conceptType ?? "concept",
+      quality_score: qualityScore ?? null,
+      score: hit.scores.final_score,
+    };
+  });
+
+  return envelope(ctx, {
+    concepts,
+    total: concepts.length,
+    query: input.query,
+  });
 }
