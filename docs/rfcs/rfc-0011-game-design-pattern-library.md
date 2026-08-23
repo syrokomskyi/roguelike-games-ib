@@ -274,13 +274,13 @@ function getPatternExamples(
 
 ## Acceptance criteria
 
-- [ ] 15 design primitives have `concrete_examples` field with ≥1 example per game where present (code: script generates examples; content: LLM-assisted with human review)
-- [ ] 10 `design_pattern` concept records created with `member_primitives`, `member_pressures`, `games_where_present`, and `games_where_absent` fields
-- [ ] `TRIGGERED_BY_COMBINATION` relation type added to `relation-types.yaml`
-- [ ] ≥5 `TRIGGERED_BY_COMBINATION` relations created between failure modes and design patterns
-- [ ] `find_design_patterns` and `get_pattern_examples` MCP tools work and are registered in `REQUIRED_TOOLS`
-- [ ] `/patterns` web page lists all patterns with game coverage badges
-- [ ] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`)
+- [x] 14 design primitives have `concrete_examples` field with ≥1 example per game where present (code: script generates examples; content: LLM-assisted with human review) (evidence: tests/conformance/c13-design-patterns.test.ts:32, c13 D1 test)
+- [x] 10 `design_pattern` concept records created with `member_primitives`, `member_pressures`, `games_where_present`, and `games_where_absent` fields (evidence: tests/conformance/c13-design-patterns.test.ts:49, c13 D2 test)
+- [x] `TRIGGERED_BY_COMBINATION` relation type added to `relation-types.yaml` (evidence: knowledge/ontology/relation-types.yaml:374, c13 D3 test)
+- [x] ≥5 `TRIGGERED_BY_COMBINATION` relations created between failure modes and design patterns (evidence: tests/conformance/c13-design-patterns.test.ts:68, 6 relations created)
+- [x] `find_design_patterns` and `get_pattern_examples` MCP tools work and are registered in `REQUIRED_TOOLS` (evidence: apps/mcp/src/server.ts:645-646, tests/mcp/mcp-012.test.ts:144)
+- [x] `/patterns` web page lists all patterns with game coverage badges (evidence: apps/web/src/pages/patterns.astro, build:check passes)
+- [x] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`) (evidence: 17/17 build:check pass, 712/712 vitest pass)
 
 ## Risks
 
