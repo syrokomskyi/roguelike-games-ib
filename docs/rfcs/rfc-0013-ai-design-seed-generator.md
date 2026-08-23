@@ -1,7 +1,7 @@
 ---
 id: RFC-0013
 title: "AI design seed generator (Laboratory) — sensation to structure dossier"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
