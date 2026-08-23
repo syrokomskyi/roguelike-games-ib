@@ -3,12 +3,22 @@ import Base from "../layouts/Base.astro";
 import { createWebContext } from "../lib/context";
 import { getPageMetadata } from "../lib/metadata";
 import { buildDesignData } from "../lib/design-data";
+import DesignGraph from "../components/DesignGraph.astro";
 
 const distDir = Astro.locals.distDir ?? "";
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 
 const { concepts, primitives, conceptCards, primitiveCards, designRelationCards, realizesCards } = buildDesignData(ctx.store);
+
+const graphConcepts = concepts.map((r) => {
+  const ra = r as Record<string, unknown>;
+  return { key: r.key, title: (ra["title"] as string) ?? r.key, conceptType: (ra["concept_type"] as string) ?? "unknown" };
+});
+const graphPrimitives = primitives.map((r) => {
+  const ra = r as Record<string, unknown>;
+  return { key: r.key, title: (ra["title"] as string) ?? r.key, conceptType: "design_primitive" };
+});
 ---
 
 <Base title="Design Explorer" metadata={meta} activeNav="design">
@@ -81,22 +91,26 @@ const { concepts, primitives, conceptCards, primitiveCards, designRelationCards,
     </section>
 
     <section>
-      <h2 class="atlas-label mb-5 text-ib-muted">03 / Design relations <span>({designRelationCards.length})</span></h2>
-      {designRelationCards.length > 0 ? (
-        <ul class="space-y-2">
-          {designRelationCards.map((rel) => (
-            <li class="border-t border-ib-border py-4">
-              <div class="text-sm">
-                <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
-                <span class="text-ib-accent2"> —{rel.relationType}→ </span>
-                <a href={`/records/${rel.targetKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.targetKey}</a>
-              </div>
-              {rel.rationale && <p class="mt-1 text-xs text-ib-muted">{rel.rationale}</p>}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="text-sm text-ib-muted">No design relations yet.</p>
+      <h2 class="atlas-label mb-5 text-ib-muted">03 / Design relations graph <span>({designRelationCards.length})</span></h2>
+      <div class="overflow-x-auto rounded-lg border border-ib-border bg-ib-surface2 p-4">
+        <DesignGraph designRelations={designRelationCards} concepts={graphConcepts} primitives={graphPrimitives} />
+      </div>
+      {designRelationCards.length > 0 && (
+        <details class="mt-4">
+          <summary class="cursor-pointer text-sm text-ib-muted">View as list ({designRelationCards.length})</summary>
+          <ul class="mt-3 space-y-2">
+            {designRelationCards.map((rel) => (
+              <li class="border-t border-ib-border py-4">
+                <div class="text-sm">
+                  <a href={`/records/${rel.sourceKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.sourceKey}</a>
+                  <span class="text-ib-accent2"> —{rel.relationType}→ </span>
+                  <a href={`/records/${rel.targetKey}/`} class="text-ib-accent hover:text-ib-accent2">{rel.targetKey}</a>
+                </div>
+                {rel.rationale && <p class="mt-1 text-xs text-ib-muted">{rel.rationale}</p>}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </section>
 

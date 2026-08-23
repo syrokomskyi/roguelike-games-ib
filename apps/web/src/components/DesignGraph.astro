@@ -1,0 +1,177 @@
+---
+interface DesignRelationCard {
+  sourceKey: string;
+  targetKey: string;
+  relationType: string;
+  rationale?: string;
+}
+
+interface ConceptSummary {
+  key: string;
+  title: string;
+  conceptType: string;
+}
+
+interface Props {
+  designRelations: DesignRelationCard[];
+  concepts: ConceptSummary[];
+  primitives: ConceptSummary[];
+}
+
+const { designRelations, concepts, primitives } = Astro.props;
+
+const allNodes = [...primitives, ...concepts.filter((c) => c.conceptType === "design_pressure")];
+const nodeMap = new Map(allNodes.map((n) => [n.key, n]));
+
+const primitiveKeys = new Set(primitives.map((p) => p.key));
+const pressureKeys = new Set(concepts.filter((c) => c.conceptType === "design_pressure").map((c) => c.key));
+
+const NODE_W = 140;
+const NODE_H = 40;
+const H_GAP = 30;
+const V_GAP = 120;
+const PADDING = 40;
+
+const primitivesPerRow = Math.min(primitives.length, 8);
+const primitiveRows = Math.ceil(primitives.length / primitivesPerRow);
+const pressures = concepts.filter((c) => c.conceptType === "design_pressure");
+const pressuresPerRow = Math.min(pressures.length, 10);
+const pressureRows = Math.ceil(pressures.length / pressuresPerRow);
+
+const rowWidth = (count: number, perRow: number) => perRow * (NODE_W + H_GAP) + PADDING * 2;
+const svgWidth = Math.max(rowWidth(primitives.length, primitivesPerRow), rowWidth(pressures.length, pressuresPerRow), 600);
+const svgHeight = primitiveRows * (NODE_H + V_GAP) + pressureRows * (NODE_H + V_GAP) + PADDING * 2;
+
+function nodeX(index: number, perRow: number): number {
+  const col = index % perRow;
+  return PADDING + col * (NODE_W + H_GAP);
+}
+
+function nodeY(row: number, baseOffset: number): number {
+  return PADDING + baseOffset + row * (NODE_H + V_GAP);
+}
+
+const primitivePositions = new Map<string, { x: number; y: number }>();
+primitives.forEach((p, i) => {
+  const row = Math.floor(i / primitivesPerRow);
+  primitivePositions.set(p.key, { x: nodeX(i, primitivesPerRow), y: nodeY(row, 0) });
+});
+
+const pressurePositions = new Map<string, { x: number; y: number }>();
+const pressureBaseOffset = primitiveRows * (NODE_H + V_GAP);
+pressures.forEach((p, i) => {
+  const row = Math.floor(i / pressuresPerRow);
+  pressurePositions.set(p.key, { x: nodeX(i, pressuresPerRow), y: nodeY(row, pressureBaseOffset) });
+});
+
+function getPos(key: string): { x: number; y: number } | undefined {
+  return primitivePositions.get(key) ?? pressurePositions.get(key);
+}
+
+const tensionRelations = designRelations.filter((r) => r.relationType === "tensions_with");
+const pressureRelations = designRelations.filter((r) => r.relationType === "CREATES_PRESSURE");
+const otherRelations = designRelations.filter((r) => r.relationType !== "tensions_with" && r.relationType !== "CREATES_PRESSURE");
+
+function shortenKey(key: string): string {
+  const parts = key.split("/");
+  return parts[parts.length - 1];
+}
+---
+
+{designRelations.length > 0 ? (
+  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} class="w-full overflow-visible" style="max-height: 600px;">
+    <defs>
+      <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" class="text-ib-accent" />
+      </marker>
+      <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" class="text-ib-accent2" />
+      </marker>
+    </defs>
+
+    {pressureRelations.map((rel) => {
+      const src = getPos(rel.sourceKey);
+      const tgt = getPos(rel.targetKey);
+      if (!src || !tgt) return null;
+      const x1 = src.x + NODE_W / 2;
+      const y1 = src.y + NODE_H;
+      const x2 = tgt.x + NODE_W / 2;
+      const y2 = tgt.y;
+      return (
+        <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" class="text-ib-accent" stroke-width="1.5" marker-end="url(#arrow-solid)" data-source={rel.sourceKey} data-target={rel.targetKey} />
+      );
+    })}
+
+    {tensionRelations.map((rel) => {
+      const src = getPos(rel.sourceKey);
+      const tgt = getPos(rel.targetKey);
+      if (!src || !tgt) return null;
+      const x1 = src.x + NODE_W / 2;
+      const y1 = src.y + NODE_H / 2;
+      const x2 = tgt.x + NODE_W / 2;
+      const y2 = tgt.y + NODE_H / 2;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2 - 20;
+      return (
+        <path d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`} fill="none" stroke="currentColor" class="text-ib-accent2" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-dashed)" data-source={rel.sourceKey} data-target={rel.targetKey} />
+      );
+    })}
+
+    {otherRelations.map((rel) => {
+      const src = getPos(rel.sourceKey);
+      const tgt = getPos(rel.targetKey);
+      if (!src || !tgt) return null;
+      const x1 = src.x + NODE_W / 2;
+      const y1 = src.y + NODE_H / 2;
+      const x2 = tgt.x + NODE_W / 2;
+      const y2 = tgt.y + NODE_H / 2;
+      return (
+        <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" class="text-ib-muted" stroke-width="1" opacity="0.4" data-source={rel.sourceKey} data-target={rel.targetKey} />
+      );
+    })}
+
+    {primitives.map((p) => {
+      const pos = primitivePositions.get(p.key)!;
+      return (
+        <a href={`/records/${p.key}/`} class="no-underline">
+          <rect x={pos.x} y={pos.y} width={NODE_W} height={NODE_H} rx="4" fill="var(--color-ib-surface)" stroke="currentColor" class="text-ib-accent" stroke-width="2" data-node={p.key} />
+          <text x={pos.x + NODE_W / 2} y={pos.y + NODE_H / 2 + 4} text-anchor="middle" class="fill-ib-text text-[10px] font-mono">{shortenKey(p.key)}</text>
+        </a>
+      );
+    })}
+
+    {pressures.map((p) => {
+      const pos = pressurePositions.get(p.key)!;
+      return (
+        <a href={`/records/${p.key}/`} class="no-underline">
+          <rect x={pos.x} y={pos.y} width={NODE_W} height={NODE_H} rx="20" fill="var(--color-ib-surface)" stroke="currentColor" class="text-ib-blue" stroke-width="1.5" data-node={p.key} />
+          <text x={pos.x + NODE_W / 2} y={pos.y + NODE_H / 2 + 4} text-anchor="middle" class="fill-ib-text text-[10px] font-mono">{shortenKey(p.key)}</text>
+        </a>
+      );
+    })}
+  </svg>
+) : (
+  <p class="text-sm text-ib-muted">No design relations found.</p>
+)}
+
+<script>
+  const nodes = document.querySelectorAll<SVGElement>("[data-node]");
+  const edges = document.querySelectorAll<SVGLineElement | SVGPathElement>("[data-source]");
+
+  nodes.forEach((node) => {
+    node.addEventListener("mouseenter", () => {
+      const key = node.dataset.node;
+      edges.forEach((edge) => {
+        const isRelated = edge.dataset.source === key || edge.dataset.target === key;
+        edge.style.opacity = isRelated ? "1" : "0.15";
+        if (isRelated) edge.style.strokeWidth = "2.5";
+      });
+    });
+    node.addEventListener("mouseleave", () => {
+      edges.forEach((edge) => {
+        edge.style.opacity = "";
+        edge.style.strokeWidth = "";
+      });
+    });
+  });
+</script>
