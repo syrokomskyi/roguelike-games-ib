@@ -141,8 +141,8 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     }
   });
 
-  it("REQUIRED_TOOLS has 28 entries", () => {
-    expect(REQUIRED_TOOLS).toHaveLength(28);
+  it("REQUIRED_TOOLS has 29 entries", () => {
+    expect(REQUIRED_TOOLS).toHaveLength(29);
   });
 
   // --- D1: compare_games with include_concepts ---
