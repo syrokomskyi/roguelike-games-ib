@@ -1,6 +1,6 @@
 command: rfc.index.generate
 generatedAt: 2026-08-23
-count: 8
+count: 14
 entries:
   - id: RFC-0001
     title: Extraction methodology for multi-game knowledge base
@@ -129,3 +129,100 @@ entries:
       - RFC-0001
       - RFC-0006
     file: docs/rfcs/archive/implemented/rfc-0008-supplemental-source-paths-for-evidence-extraction-outside-payload-root.md
+  - id: RFC-0009
+    title: Concept quality scoring — coverage, evidence, and richness scores
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0002
+      - RFC-0003
+      - RFC-0004
+    file: docs/rfcs/rfc-0009-concept-quality-scoring.md
+  - id: RFC-0010
+    title: Embedding search for concepts — semantic search over design space
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0003
+      - RFC-0004
+      - RFC-0009
+    file: docs/rfcs/rfc-0010-embedding-search-concepts.md
+  - id: RFC-0011
+    title: Game design pattern library — concrete examples, pattern combinations,
+      and anti-patterns
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0003
+      - RFC-0004
+      - RFC-0009
+    file: docs/rfcs/rfc-0011-game-design-pattern-library.md
+  - id: RFC-0012
+    title: Comparison reports — auto-generated markdown cross-game analysis
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0004
+      - RFC-0009
+      - RFC-0011
+    file: docs/rfcs/rfc-0012-comparison-reports.md
+  - id: RFC-0013
+    title: AI design seed generator (Laboratory) — sensation to structure dossier
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0003
+      - RFC-0009
+      - RFC-0010
+      - RFC-0011
+    file: docs/rfcs/rfc-0013-ai-design-seed-generator.md
+  - id: RFC-0014
+    title: Dataset versioning and publication — semantic versioning, dataset card,
+      citation
+    status: implemented
+    kind: policy
+    createdAt: 2026-08-23
+    implementedAt: 2026-08-23
+    closedAt: ""
+    supersedes: []
+    supersededBy: ""
+    amends: []
+    amendedBy: []
+    related:
+      - RFC-0007
+    file: docs/rfcs/rfc-0014-dataset-versioning-publication.md
