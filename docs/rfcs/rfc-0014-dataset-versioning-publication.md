@@ -1,7 +1,7 @@
 ---
 id: RFC-0014
 title: "Dataset versioning and publication — semantic versioning, dataset card, citation"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
