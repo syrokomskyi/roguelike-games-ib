@@ -243,14 +243,14 @@ After implementation, the next `pnpm materialize` run automatically computes and
 
 ## Acceptance criteria
 
-- [ ] Every concept in `dist/records.jsonl` has `quality_score` with `coverage`, `evidence`, `richness`, `overall`
-- [ ] `quality_score` appears in the SQLite read model (records table `json` column)
-- [ ] `get_concept_quality` MCP tool returns scores for individual concepts and supports `min_score` threshold
-- [ ] `get_concept_quality` returns `null` with fallback message for records without scores
-- [ ] Web app shows quality badges (A/B/C) on concept cards in `/design` and `/concepts`
-- [ ] `find_cross_game_concepts` sorts by quality by default (records without scores sort last)
-- [ ] Scoring thresholds are configurable via `knowledge.config.yaml`
-- [ ] All tests pass including edge case tests
+- [x] Every concept in `dist/records.jsonl` has `quality_score` with `coverage`, `evidence`, `richness`, `overall` (evidence: packages/materializer/src/build.ts:91-97, tests/materializer/quality-scores.test.ts)
+- [x] `quality_score` appears in the SQLite read model (records table `json` column) (evidence: packages/materializer/src/build.ts:91-97 — scores applied to state.records before buildSqlite call)
+- [x] `get_concept_quality` MCP tool returns scores for individual concepts and supports `min_score` threshold (evidence: apps/mcp/src/tools/derived.ts:405-466, apps/mcp/src/server.ts:529-543)
+- [x] `get_concept_quality` returns `null` with fallback message for records without scores (evidence: apps/mcp/src/tools/derived.ts:432-437)
+- [x] Web app shows quality badges (A/B/C) on concept cards in `/design` and `/concepts` (evidence: apps/web/src/pages/design.astro:37-43, apps/web/src/pages/concepts.astro:64-72)
+- [x] `find_cross_game_concepts` sorts by quality by default (records without scores sort last) (evidence: apps/mcp/src/tools/design.ts:33, sortByQuality at line 153)
+- [x] Scoring thresholds are configurable via `knowledge.config.yaml` (evidence: knowledge.config.yaml:21-28, packages/knowledge-core/src/config.ts:35-40, packages/materializer/src/build.ts:82-89)
+- [x] All tests pass including edge case tests (evidence: tests/materializer/quality-scores.test.ts — 16 tests, pnpm exec vitest --run — 704 passed)
 
 ## Risks
 
