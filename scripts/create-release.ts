@@ -12,20 +12,13 @@
 */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { parse as parseYaml } from "yaml";
 import { execSync } from "node:child_process";
+import type { VersionHistoryEntry } from "@roguelike-games-ib/knowledge-core";
 
 const WORKSPACE = resolve(__dirname, "..");
 const MANIFEST_PATH = join(WORKSPACE, "knowledge", "manifest.yaml");
-
-interface VersionHistoryEntry {
-  version: string;
-  date: string;
-  commit: string;
-  record_count: number;
-  concept_count: number;
-  changes: string;
-}
+const DIST_MANIFEST_PATH = join(WORKSPACE, ".generated", "knowledge", "dist", "manifest.json");
 
 interface Manifest {
   dataset_version: string;
@@ -95,21 +88,22 @@ function getShortCommit(): string {
   return execSync("git rev-parse --short HEAD", { cwd: WORKSPACE, encoding: "utf-8" }).trim();
 }
 
-function getRecordCount(): number {
-  const distManifest = join(WORKSPACE, ".generated", "knowledge", "dist", "manifest.json");
-  if (!existsSync(distManifest)) {
-    console.warn("WARNING: dist/manifest.json not found. Record count will be 0. Run `pnpm materialize` first.");
-    return 0;
-  }
-  const dist = JSON.parse(readFileSync(distManifest, "utf-8"));
-  return (dist.recordCounts?.records ?? 0) as number;
+interface DistStats {
+  recordCount: number;
+  conceptCount: number;
 }
 
-function getConceptCount(): number {
-  const distManifest = join(WORKSPACE, ".generated", "knowledge", "dist", "manifest.json");
-  if (!existsSync(distManifest)) return 0;
-  const dist = JSON.parse(readFileSync(distManifest, "utf-8"));
-  return (dist.recordCounts?.coverage ?? 0) as number;
+function readDistStats(): DistStats {
+  if (!existsSync(DIST_MANIFEST_PATH)) {
+    console.warn("WARNING: dist/manifest.json not found. Counts will be 0. Run `pnpm materialize` first.");
+    return { recordCount: 0, conceptCount: 0 };
+  }
+  const dist = JSON.parse(readFileSync(DIST_MANIFEST_PATH, "utf-8"));
+  const recordCounts = (dist.recordCounts ?? {}) as Record<string, number>;
+  return {
+    recordCount: recordCounts.records ?? 0,
+    conceptCount: recordCounts.claims ?? 0,
+  };
 }
 
 function generateReleaseNotes(lastTag: string | null): string {
@@ -149,8 +143,8 @@ function main(): void {
   console.log();
 
   if (lastEntry) {
-    const currentRecords = getRecordCount();
-    const delta = currentRecords - lastEntry.record_count;
+    const stats = readDistStats();
+    const delta = stats.recordCount - lastEntry.record_count;
     console.log(`Last release:    ${lastEntry.version} (${lastEntry.date}, ${lastEntry.record_count.toLocaleString()} records)`);
     console.log(`Record delta:    ${delta >= 0 ? "+" : ""}${delta}`);
     console.log();
@@ -177,23 +171,38 @@ function main(): void {
   checkTagExists(newVersion);
 
   const shortCommit = getShortCommit();
-  const recordCount = getRecordCount();
-  const conceptCount = getConceptCount();
+  const stats = readDistStats();
   const today = new Date().toISOString().slice(0, 10);
 
   const newEntry: VersionHistoryEntry = {
     version: newVersion,
     date: today,
     commit: shortCommit,
-    record_count: recordCount,
-    concept_count: conceptCount,
+    record_count: stats.recordCount,
+    concept_count: stats.conceptCount,
     changes: `Release ${newVersion}`,
   };
 
-  manifest.dataset_version = newVersion;
-  manifest.version_history = [...history, newEntry];
-
-  const updated = stringifyYaml(manifest);
+  const oldVersionLine = `dataset_version: "${currentVersion}"`;
+  const newVersionLine = `dataset_version: "${newVersion}"`;
+  
+  let updated = raw.replace(oldVersionLine, newVersionLine);
+  
+  const newHistoryEntry = `  - version: "${newVersion}"
+    date: "${today}"
+    commit: ${shortCommit}
+    record_count: ${stats.recordCount}
+    concept_count: ${stats.conceptCount}
+    changes: "Release ${newVersion}"`;
+  
+  if (history.length > 0) {
+    const lastHistoryEntry = history[history.length - 1];
+    const lastEntryPattern = `  - version: "${lastHistoryEntry.version}"\n    date: "${lastHistoryEntry.date}"\n    commit: ${lastHistoryEntry.commit}\n    record_count: ${lastHistoryEntry.record_count}\n    concept_count: ${lastHistoryEntry.concept_count}\n    changes: "${lastHistoryEntry.changes}"`;
+    updated = updated.replace(lastEntryPattern, lastEntryPattern + "\n" + newHistoryEntry);
+  } else {
+    updated = updated.replace("version_history:\n", "version_history:\n" + newHistoryEntry + "\n");
+  }
+  
   writeFileSync(MANIFEST_PATH, updated, "utf-8");
   console.log(`Updated manifest: ${MANIFEST_PATH}`);
 
