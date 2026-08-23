@@ -224,11 +224,11 @@ After implementation:
 
 ## Acceptance criteria
 
-- [ ] Search API `/api/search` supports `concept_type` query parameter for filtering by concept type
-- [ ] Concept embeddings include `inclusion_criteria` in the `summary` field
-- [ ] `search_design_space` MCP tool returns concept hits with `quality_score` from local store
-- [ ] Web app `/search` has "Concepts only" toggle and `concept_type` dropdown
-- [ ] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`)
+- [x] Search API `/api/search` supports `concept_type` query parameter for filtering by concept type (evidence: apps/search-api/src/index.ts:77,89 — `conceptType` read from URL params and added to Vectorize filter object)
+- [x] Concept embeddings include `inclusion_criteria` in the `summary` field (evidence: scripts/index-embeddings.ts:64-68 — `toIndexRecord()` appends inclusion_criteria for concept records)
+- [x] `search_design_space` MCP tool returns concept hits with `quality_score` from local store (evidence: apps/mcp/src/tools/derived.ts:516-567 — `searchDesignSpace()` calls `ctx.searchIndex.search()` with `record_type: "concept"` filter, looks up `quality_score` from `ctx.store`; apps/mcp/src/server.ts:545-560 — registered with `readOnly: true`; server.ts:614 — added to `REQUIRED_TOOLS`)
+- [x] Web app `/search` has "Concepts only" toggle and `concept_type` dropdown (evidence: apps/web/src/pages/search.astro:64 — reads `concept_type` from URL params; search.astro:79 — passes to API; search.astro:154-173 — renders concept_type filter links; apps/web/src/components/SearchBox.astro:19,30 — `conceptType` prop and hidden input)
+- [x] All tests pass (`pnpm exec turbo run build:check && pnpm exec vitest --run`) (evidence: `pnpm --filter @roguelike-games-ib/search-api run build:check` exit 0; `pnpm --filter @roguelike-games-ib/mcp run build:check` exit 0; `pnpm --filter @roguelike-games-ib/web run build:check` exit 0; `pnpm exec vitest --run` — 704 tests passed, 0 failed)
 
 ## Risks
 
