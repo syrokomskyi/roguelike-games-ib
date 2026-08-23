@@ -1082,21 +1082,21 @@ Respond with JSON:
     const patternId = patternConceptIds.get(pattern.slug)!;
 
     for (const link of pattern.failure_mode_links) {
-      const fmKey = `${link.primitive_slug}/${slugify(link.failure_mode_slug)}`;
-      const fmId = failureModeIds.get(fmKey);
-      if (!fmId) {
-        console.warn(`  [WARN] Failure mode not found for key: ${fmKey}`);
-        continue;
-      }
+      // Match all failure modes from the specified primitive (LLM-generated slugs are unpredictable)
+      const primSlug = link.primitive_slug;
+      for (const [fmKey, fmId] of failureModeIds) {
+        if (!fmKey.startsWith(`${primSlug}/`)) continue;
 
-      const relId = createRecordId();
-      const relKey = `cross-game/relation/${pattern.slug}-triggered_by_combination-${link.primitive_slug}-${slugify(link.failure_mode_slug)}`;
-      relations.push({
-        ...makePatternRelationEnvelope(relKey, relId, "TRIGGERED_BY_COMBINATION", fmId, patternId, "cross_game", {
-          trigger_conditions: link.trigger_conditions,
-        }, [designEvId]),
-      });
-      antiPatternCount++;
+        const relId = createRecordId();
+        const fmSlug = fmKey.split("/")[1];
+        const relKey = `cross-game/relation/${pattern.slug}-triggered_by_combination-${primSlug}-${fmSlug}`;
+        relations.push({
+          ...makePatternRelationEnvelope(relKey, relId, "TRIGGERED_BY_COMBINATION", fmId, patternId, "cross_game", {
+            trigger_conditions: link.trigger_conditions,
+          }, [designEvId]),
+        });
+        antiPatternCount++;
+      }
     }
   }
   console.log(`Generated ${antiPatternCount} anti-pattern relations`);
