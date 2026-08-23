@@ -153,6 +153,7 @@ export function materialize(options: MaterializationOptions): MaterializationRes
   const manifest = createManifest({
     datasetId: paths.manifest.id,
     datasetVersion: paths.manifest.dataset_version,
+    versionHistory: paths.manifest.version_history,
     modelVersion: paths.manifest.model_version,
     canonicalHash,
     license: paths.config.publication.dataset_license,

@@ -7,11 +7,13 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: createManifest and writeManifest functions.</item>
+  <item>RFC-0014: Added versionHistory parameter to createManifest for dataset version tracking.</item>
 </CHANGE_SUMMARY>
 */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJsonStringify } from "@roguelike-games-ib/knowledge-core";
+import { VersionHistoryEntry } from "@roguelike-games-ib/knowledge-core";
 import { MaterializationManifest } from "./types.ts";
 
 /**
@@ -20,6 +22,7 @@ import { MaterializationManifest } from "./types.ts";
 export function createManifest(params: {
   datasetId: string;
   datasetVersion: string;
+  versionHistory?: VersionHistoryEntry[];
   modelVersion: string;
   canonicalHash: string;
   license: string;
@@ -31,6 +34,7 @@ export function createManifest(params: {
     schema: "rgkb/materialization-manifest@2",
     datasetId: params.datasetId,
     datasetVersion: params.datasetVersion,
+    versionHistory: params.versionHistory,
     modelVersion: params.modelVersion,
     canonicalHash: params.canonicalHash,
     license: params.license,

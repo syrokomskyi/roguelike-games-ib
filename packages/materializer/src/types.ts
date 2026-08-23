@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: CanonicalRecord, CanonicalState, VerificationResult, MaterializationManifest, MaterializationOptions, MaterializationResult types.</item>
   <item>RFC-0009: Added QualityScore and QualityScoringConfig types for concept quality scoring.</item>
+  <item>RFC-0014: Added versionHistory field to MaterializationManifest for dataset version tracking.</item>
 </CHANGE_SUMMARY>
 */
 import { ClaimRecord } from "@roguelike-games-ib/knowledge-core";
@@ -18,6 +19,7 @@ import { KeyEntry, AliasEntry } from "@roguelike-games-ib/knowledge-core";
 import { SourceBinding } from "@roguelike-games-ib/knowledge-core";
 import { CoverageRecord } from "@roguelike-games-ib/knowledge-core";
 import { RelationTypeDefinition } from "@roguelike-games-ib/knowledge-core";
+import { VersionHistoryEntry } from "@roguelike-games-ib/knowledge-core";
 
 export interface CanonicalRecord {
   id: string;
@@ -49,6 +51,7 @@ export interface MaterializationManifest {
   schema: string;
   datasetId: string;
   datasetVersion: string;
+  versionHistory?: VersionHistoryEntry[];
   modelVersion: string;
   canonicalHash: string;
   license: string;

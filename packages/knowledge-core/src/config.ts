@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: readKnowledgeConfig, readKnowledgeManifest, resolveKnowledgePaths, resolveSourceRoot.</item>
   <item>RFC-0009: Added quality_scoring optional field to KnowledgeConfig for concept quality scoring config.</item>
+  <item>RFC-0014: Added version_history optional field to KnowledgeManifest for dataset version tracking.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -40,11 +41,21 @@ export interface KnowledgeConfig {
   };
 }
 
+export interface VersionHistoryEntry {
+  version: string;
+  date: string;
+  commit: string;
+  record_count: number;
+  concept_count: number;
+  changes: string;
+}
+
 export interface KnowledgeManifest {
   schema: string;
   id: string;
   model_version: string;
   dataset_version: string;
+  version_history?: VersionHistoryEntry[];
   canonical_language: string;
   source_root: {
     strategy: string;

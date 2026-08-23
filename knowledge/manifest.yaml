@@ -1,7 +1,14 @@
 schema: rgkb/knowledge-manifest@2
 id: roguelike-games-ib
 model_version: 2.0.0
-dataset_version: 0.1.0-dev
+dataset_version: "1.0.0"
+version_history:
+  - version: "1.0.0"
+    date: "2026-08-23"
+    commit: "5172992"
+    record_count: 22476
+    concept_count: 469
+    changes: "Initial versioned release"
 canonical_language: en
 source_root:
   strategy: sibling_suffix
