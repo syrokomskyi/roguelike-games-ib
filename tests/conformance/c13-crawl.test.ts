@@ -185,6 +185,45 @@ describe("C13: Dungeon Crawl Stone Soup scale trial", () => {
     expect(totalVaults).toBeGreaterThanOrEqual(6000);
   });
 
+  it("population counts match manifest for all dimensions", async () => {
+    const binding = createSourceBinding(
+      "crawl",
+      "crawl",
+      "0.32.0",
+      "semver",
+      "other",
+      computeSourceFingerprint(SOURCE_ROOT),
+      { repository: "https://github.com/crawl/crawl", commit: null, clean: null, default_branch: "master" },
+      "crawl-ref/source/dat",
+    );
+    const extractor = createCrawlExtractor();
+    const stagingDir = join(WORKSPACE, "staging", "c13-pop");
+
+    const source = new ReadonlySourceReader(SOURCE_ROOT);
+    const evidence = new EvidenceFactory("crawl", binding.binding_digest, source);
+    const ids = new RefreshIdentityResolver([], [], "crawl");
+    const schemas = createNullSchemaFacade();
+    const output = new CandidateWriter(stagingDir, "pop-run", "crawl", "crawl-factual", "1.0.0");
+    const ctx = createExtractorContext(source, binding, schemas, evidence, ids, output);
+
+    const result = await extractor.run(ctx);
+    const pop = result.populationCounts as Array<{ dimension: string; expected: number; extracted: number }>;
+    const byDim = Object.fromEntries(pop.map((p) => [p.dimension, p.extracted]));
+
+    expect(byDim["monsters"]).toBe(680);
+    expect(byDim["species"]).toBe(48);
+    expect(byDim["jobs"]).toBe(26);
+    expect(byDim["vaults"]).toBe(6246);
+    expect(byDim["spells"]).toBe(418);
+    expect(byDim["branches"]).toBe(41);
+    expect(byDim["forms"]).toBe(35);
+    expect(byDim["abilities"]).toBe(216);
+    expect(byDim["gods"]).toBe(27);
+    expect(byDim["brands"]).toBe(37);
+    expect(byDim["item_types"]).toBe(20);
+    expect(byDim["clouds"]).toBe(40);
+  });
+
   it("extraction runtime is under 10 seconds", async () => {
     const binding = createSourceBinding(
       "crawl",

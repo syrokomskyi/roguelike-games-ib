@@ -32,7 +32,22 @@ import {
 } from "./yaml-parser.ts";
 import { createCrawlSpritePipeline } from "./sprite-pipeline.ts";
 import { parseDesVaults, type VaultEntry } from "./des-parser.ts";
-import { parseSpellData, parseBranchData, parseAbilityTypes, type SpellEntry, type BranchEntry, type AbilityEntry } from "./c-struct-parser.ts";
+import {
+  parseSpellData,
+  parseBranchData,
+  parseAbilityTypes,
+  parseGodTypes,
+  parseBrandTypes,
+  parseObjectClassTypes,
+  parseCloudTypes,
+  type SpellEntry,
+  type BranchEntry,
+  type AbilityEntry,
+  type GodEntry,
+  type BrandEntry,
+  type ItemTypeEntry,
+  type CloudEntry,
+} from "./c-struct-parser.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const SPRITE_TILE_COORDS = { x: 0, y: 0, w: 32, h: 32 };
@@ -42,7 +57,7 @@ const manifest: ExtractorManifest = {
   extractorId: "crawl-factual",
   extractorVersion: "1.0.0",
   sourceKinds: ["game_repository"],
-  recordKinds: ["creature", "species", "profession", "vault", "spell", "branch", "mutation", "ability"],
+  recordKinds: ["creature", "species", "profession", "vault", "spell", "branch", "mutation", "ability", "deity", "item", "effect"],
   deterministic: true,
   parserMode: "static",
   exhaustivePopulations: [
@@ -93,6 +108,30 @@ const manifest: ExtractorManifest = {
       denominatorKind: "extractor_population",
       expected: 216,
       description: "All ABIL_* enum entries in ability-type.h (TAG_MAJOR_VERSION == 34, excluding aliases, sentinels, and WIZARD-only entries)",
+    },
+    {
+      dimension: "gods",
+      denominatorKind: "extractor_population",
+      expected: 27,
+      description: "All GOD_* enum entries in god-type.h (TAG_MAJOR_VERSION == 34, excluding GOD_NO_GOD, NUM_GODS, GOD_RANDOM, GOD_NAMELESS, GOD_ECUMENICAL)",
+    },
+    {
+      dimension: "brands",
+      denominatorKind: "extractor_population",
+      expected: 37,
+      description: "All SPWPN_* enum entries in item-prop-enum.h brand_type (TAG_MAJOR_VERSION == 34, excluding SPWPN_FORBID_BRAND and non-SPWPN sentinels)",
+    },
+    {
+      dimension: "item_types",
+      denominatorKind: "extractor_population",
+      expected: 20,
+      description: "All OBJ_* enum entries in object-class-type.h (TAG_MAJOR_VERSION == 34, excluding NUM_OBJECT_CLASSES, OBJ_UNASSIGNED, OBJ_RANDOM, OBJ_DETECTED)",
+    },
+    {
+      dimension: "clouds",
+      denominatorKind: "extractor_population",
+      expected: 40,
+      description: "All CLOUD_* enum entries in cloud-type.h (TAG_MAJOR_VERSION == 34, excluding CLOUD_NONE, NUM_CLOUD_TYPES, CLOUD_RANDOM_SMOKE, CLOUD_RANDOM, CLOUD_DEBUGGING)",
     },
   ],
 };
@@ -415,6 +454,90 @@ function abilitySpec(entries: AbilityEntry[]): EntitySpec<AbilityEntry> {
   };
 }
 
+function godSpec(entries: GodEntry[]): EntitySpec<GodEntry> {
+  return {
+    kind: "deity",
+    entries,
+    adapter: {
+      nativeKind: "god",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `god:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: () => ({}),
+      populationDimension: "gods",
+    },
+  };
+}
+
+function brandSpec(entries: BrandEntry[]): EntitySpec<BrandEntry> {
+  return {
+    kind: "item",
+    entries,
+    adapter: {
+      nativeKind: "brand",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `brand:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: () => ({}),
+      populationDimension: "brands",
+    },
+  };
+}
+
+function itemTypeSpec(entries: ItemTypeEntry[]): EntitySpec<ItemTypeEntry> {
+  return {
+    kind: "item",
+    entries,
+    adapter: {
+      nativeKind: "item_type",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `item_type:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: () => ({}),
+      populationDimension: "item_types",
+    },
+  };
+}
+
+function cloudSpec(entries: CloudEntry[]): EntitySpec<CloudEntry> {
+  return {
+    kind: "effect",
+    entries,
+    adapter: {
+      nativeKind: "cloud",
+      originActorId: "crawl-factual",
+      getSourcePath: (e) => e.filePath,
+      getSymbolName: (e) => e.nativeId,
+      getSlug: (e) => e.nativeId.replace(/[^a-z0-9_]/gi, "_").toLowerCase(),
+      getNativeId: (e) => `cloud:${e.nativeId}`,
+      getCanonicalName: (e) => e.name,
+      getOriginalName: (e) => e.nativeId,
+      getLineRange: (e) => ({ lineStart: e.lineStart, lineEnd: e.lineEnd }),
+      getDataKey: (e) => e.nativeId,
+      getAttributes: () => ({}),
+      populationDimension: "clouds",
+    },
+  };
+}
+
 export function createCrawlExtractor(): Extractor {
   return {
     manifest,
@@ -499,6 +622,50 @@ export function createCrawlExtractor(): Extractor {
         console.warn(`[crawl-extractor] Failed to parse ability-type.h: ${err}`);
       }
 
+      const godSourcePath = resolve(sourceRoot, "../god-type.h");
+      const godCopyPath = resolve(sourceRoot, "god-type.h");
+      let godEntries: GodEntry[] = [];
+      try {
+        const godSource = readFileSync(godSourcePath, "utf-8");
+        writeFileSync(godCopyPath, godSource);
+        godEntries = parseGodTypes(godSource, "god-type.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse god-type.h: ${err}`);
+      }
+
+      const brandSourcePath = resolve(sourceRoot, "../item-prop-enum.h");
+      const brandCopyPath = resolve(sourceRoot, "item-prop-enum.h");
+      let brandEntries: BrandEntry[] = [];
+      try {
+        const brandSource = readFileSync(brandSourcePath, "utf-8");
+        writeFileSync(brandCopyPath, brandSource);
+        brandEntries = parseBrandTypes(brandSource, "item-prop-enum.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse item-prop-enum.h: ${err}`);
+      }
+
+      const itemTypeSourcePath = resolve(sourceRoot, "../object-class-type.h");
+      const itemTypeCopyPath = resolve(sourceRoot, "object-class-type.h");
+      let itemTypeEntries: ItemTypeEntry[] = [];
+      try {
+        const itemTypeSource = readFileSync(itemTypeSourcePath, "utf-8");
+        writeFileSync(itemTypeCopyPath, itemTypeSource);
+        itemTypeEntries = parseObjectClassTypes(itemTypeSource, "object-class-type.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse object-class-type.h: ${err}`);
+      }
+
+      const cloudSourcePath = resolve(sourceRoot, "../cloud-type.h");
+      const cloudCopyPath = resolve(sourceRoot, "cloud-type.h");
+      let cloudEntries: CloudEntry[] = [];
+      try {
+        const cloudSource = readFileSync(cloudSourcePath, "utf-8");
+        writeFileSync(cloudCopyPath, cloudSource);
+        cloudEntries = parseCloudTypes(cloudSource, "cloud-type.h");
+      } catch (err) {
+        console.warn(`[crawl-extractor] Failed to parse cloud-type.h: ${err}`);
+      }
+
       const specs: EntitySpec<any>[] = [];
       if (monsterEntries.length > 0) specs.push(monsterSpec(monsterEntries, sprite));
       if (speciesEntries.length > 0) specs.push(speciesSpec(speciesEntries));
@@ -508,6 +675,10 @@ export function createCrawlExtractor(): Extractor {
       if (branchEntries.length > 0) specs.push(branchSpec(branchEntries));
       if (formEntries.length > 0) specs.push(formSpec(formEntries));
       if (abilityEntries.length > 0) specs.push(abilitySpec(abilityEntries));
+      if (godEntries.length > 0) specs.push(godSpec(godEntries));
+      if (brandEntries.length > 0) specs.push(brandSpec(brandEntries));
+      if (itemTypeEntries.length > 0) specs.push(itemTypeSpec(itemTypeEntries));
+      if (cloudEntries.length > 0) specs.push(cloudSpec(cloudEntries));
 
       const { dimensionCounts } = await runEntityPipeline(ctx, specs);
 

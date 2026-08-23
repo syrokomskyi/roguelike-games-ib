@@ -44,6 +44,38 @@ export interface AbilityEntry {
   lineEnd: number;
 }
 
+export interface GodEntry {
+  nativeId: string;
+  name: string;
+  filePath: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export interface BrandEntry {
+  nativeId: string;
+  name: string;
+  filePath: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export interface ItemTypeEntry {
+  nativeId: string;
+  name: string;
+  filePath: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
+export interface CloudEntry {
+  nativeId: string;
+  name: string;
+  filePath: string;
+  lineStart: number;
+  lineEnd: number;
+}
+
 function parseEntryFields(text: string): string[] {
   const fields: string[] = [];
   let depth = 0;
@@ -384,6 +416,186 @@ export function parseAbilityTypes(source: string, filePath: string): AbilityEntr
       nativeId,
       name,
       value,
+      filePath,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return results;
+}
+
+function deriveName(nativeId: string, prefix: string): string {
+  return nativeId
+    .replace(new RegExp(`^${prefix}`), "")
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function parseGodTypes(source: string, filePath: string): GodEntry[] {
+  const lines = preprocessCSource(source);
+  const results: GodEntry[] = [];
+  let inEnum = false;
+  const skipNames = new Set(["GOD_NO_GOD", "NUM_GODS", "GOD_RANDOM", "GOD_NAMELESS", "GOD_ECUMENICAL"]);
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+
+    if (!inEnum) {
+      if (/enum\s+god_type/.test(trimmed)) {
+        inEnum = true;
+        if (trimmed.includes("{")) inEnum = true;
+      }
+      continue;
+    }
+
+    if (trimmed === "};") break;
+
+    const commentIdx = trimmed.indexOf("//");
+    const line = commentIdx >= 0 ? trimmed.substring(0, commentIdx).trim() : trimmed;
+    if (!line) continue;
+
+    const m = line.match(/^(GOD_\w+)\s*(?:=\s*.+)?[,]?$/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+
+    results.push({
+      nativeId,
+      name: deriveName(nativeId, "GOD_"),
+      filePath,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return results;
+}
+
+export function parseBrandTypes(source: string, filePath: string): BrandEntry[] {
+  const lines = preprocessCSource(source);
+  const results: BrandEntry[] = [];
+  let inEnum = false;
+  const skipNames = new Set([
+    "SPWPN_FORBID_BRAND", "MAX_GHOST_BRAND", "NUM_REAL_SPECIAL_WEAPONS",
+    "NUM_SPECIAL_WEAPONS",
+  ]);
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+
+    if (!inEnum) {
+      if (/enum\s+brand_type/.test(trimmed)) {
+        inEnum = true;
+        if (trimmed.includes("{")) inEnum = true;
+      }
+      continue;
+    }
+
+    if (trimmed === "};") break;
+
+    const commentIdx = trimmed.indexOf("//");
+    const line = commentIdx >= 0 ? trimmed.substring(0, commentIdx).trim() : trimmed;
+    if (!line) continue;
+
+    const m = line.match(/^(SPWPN_\w+)\s*(?:=\s*.+)?[,]?$/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+
+    results.push({
+      nativeId,
+      name: deriveName(nativeId, "SPWPN_"),
+      filePath,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return results;
+}
+
+export function parseObjectClassTypes(source: string, filePath: string): ItemTypeEntry[] {
+  const lines = preprocessCSource(source);
+  const results: ItemTypeEntry[] = [];
+  let inEnum = false;
+  const skipNames = new Set([
+    "NUM_OBJECT_CLASSES", "OBJ_UNASSIGNED", "OBJ_RANDOM", "OBJ_DETECTED",
+  ]);
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+
+    if (!inEnum) {
+      if (/enum\s+object_class_type/.test(trimmed)) {
+        inEnum = true;
+        if (trimmed.includes("{")) inEnum = true;
+      }
+      continue;
+    }
+
+    if (trimmed === "};") break;
+
+    const commentIdx = trimmed.indexOf("//");
+    const line = commentIdx >= 0 ? trimmed.substring(0, commentIdx).trim() : trimmed;
+    if (!line) continue;
+
+    const m = line.match(/^(OBJ_\w+)\s*(?:=\s*.+)?[,]?$/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+
+    results.push({
+      nativeId,
+      name: deriveName(nativeId, "OBJ_"),
+      filePath,
+      lineStart: i + 1,
+      lineEnd: i + 1,
+    });
+  }
+
+  return results;
+}
+
+export function parseCloudTypes(source: string, filePath: string): CloudEntry[] {
+  const lines = preprocessCSource(source);
+  const results: CloudEntry[] = [];
+  let inEnum = false;
+  const skipNames = new Set([
+    "CLOUD_NONE", "NUM_CLOUD_TYPES", "CLOUD_RANDOM_SMOKE",
+    "CLOUD_RANDOM", "CLOUD_DEBUGGING",
+  ]);
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+
+    if (!inEnum) {
+      if (/enum\s+cloud_type/.test(trimmed)) {
+        inEnum = true;
+        if (trimmed.includes("{")) inEnum = true;
+      }
+      continue;
+    }
+
+    if (trimmed === "};") break;
+
+    const commentIdx = trimmed.indexOf("//");
+    const line = commentIdx >= 0 ? trimmed.substring(0, commentIdx).trim() : trimmed;
+    if (!line) continue;
+
+    const m = line.match(/^(CLOUD_\w+)\s*(?:=\s*.+)?[,]?$/);
+    if (!m) continue;
+
+    const nativeId = m[1];
+    if (skipNames.has(nativeId)) continue;
+
+    results.push({
+      nativeId,
+      name: deriveName(nativeId, "CLOUD_"),
       filePath,
       lineStart: i + 1,
       lineEnd: i + 1,

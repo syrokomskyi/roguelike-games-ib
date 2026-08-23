@@ -44,6 +44,7 @@ const GROUPING_ATTRIBUTES = [
   "ability_flags", "flags1", "flags2", "flags3",
   "is_buff", "is_always_active",
   "schools", "parent_branch", "artifact_type", "trap_value", "skill_value",
+  "god",
 ];
 
 interface DerivedData {
