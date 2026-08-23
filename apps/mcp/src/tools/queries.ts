@@ -5,6 +5,10 @@
   <item>Does not mutate or create records — all tools are read-only.</item>
 </non-goals>
 </MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>Initial creation: claim search, concept member resolution, design tensions, attribute search.</item>
+  <item>RFC-0003: Extended getDesignTensions to return counterplay patterns via HAS_COUNTERPLAY relations.</item>
+</CHANGE_SUMMARY>
 */
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";

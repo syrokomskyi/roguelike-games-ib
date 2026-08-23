@@ -74,6 +74,8 @@ loadEnv();
 
 const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const LLM_MODEL = "gpt-4o-mini";
+let llmCallCount = 0;
+let llmTotalCalls = 0;
 
 const CACHE_DIR = join(WORKSPACE, "systems-cache");
 const CACHE_PATH = join(CACHE_DIR, "llm-design-cache.json");
@@ -92,7 +94,8 @@ function hashKey(s: string) { return createHash("md5").update(s).digest("hex"); 
 async function llm(prompt: string): Promise<string> {
   const k = hashKey(prompt);
   if (llmCache[k]) return llmCache[k];
-  console.log(`  [LLM] calling ${LLM_MODEL}...`);
+  llmCallCount++;
+  console.log(`  [LLM ${llmCallCount}/${llmTotalCalls}] calling ${LLM_MODEL} (cache: miss)...`);
   const result = await generateText({ model: openai(LLM_MODEL), prompt, temperature: 0.7 });
   llmCache[k] = result.text;
   saveCache();
@@ -483,9 +486,17 @@ const DESIGN_PRIMITIVES: DesignPrimitive[] = [
 ];
 
 async function main() {
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn("WARNING: OPENAI_API_KEY not found in environment. LLM calls will fail and fall back to defaults.");
+  }
+
   console.log("Cleaning previous design data...");
   cleanDesignData();
   loadCache();
+
+  // Estimate total LLM calls for progress reporting
+  const totalDims = DESIGN_PRIMITIVES.reduce((sum, dp) => sum + dp.mutation_dimensions.length, 0);
+  llmTotalCalls = totalDims * 2 + 34 + DESIGN_PRIMITIVES.length; // vectors + knobs + counterplay + failure modes
 
   console.log("Reading canonical state...");
   const state = readCanonicalState(CANONICAL_ROOT);
@@ -630,7 +641,8 @@ This dimension describes an axis along which this primitive can vary across diff
 
 Respond with JSON:
 {"title": "Human-readable title", "definition": "What this dimension controls and how it varies (1-2 sentences)", "inclusion_criteria": ["criterion1", "criterion2"], "exclusion_criteria": ["what is NOT this dimension"]}`);
-      } catch {
+      } catch (e) {
+        console.warn(`  [WARN] LLM failed for mutation vector ${dp.slug}/${dim}:`, e instanceof Error ? e.message : e);
         fields = {
           title: dim.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
           definition: `How ${dp.title.toLowerCase()} varies along the ${dim.replace(/_/g, " ")} axis across games.`,
@@ -686,7 +698,8 @@ Given the design primitive "${dp.title}" and mutation dimension "${dim}", genera
 
 Respond with JSON array:
 [{"slug": "short_id", "title": "Implementation Choice Name", "definition": "How this works (1-2 sentences)", "source_games": ["nethack"|"broguece"|"cataclysm-bn"|"crawl"], "search_keywords": ["keyword1", "keyword2"]}]`);
-      } catch {
+      } catch (e) {
+        console.warn(`  [WARN] LLM failed for knobs ${dp.slug}/${dim}:`, e instanceof Error ? e.message : e);
         knobs = [
           { slug: "low", title: `Low ${dim}`, definition: `Minimal ${dim.replace(/_/g, " ")} setting.`, source_games: ["broguece"], search_keywords: [dim] },
           { slug: "high", title: `High ${dim}`, definition: `Maximal ${dim.replace(/_/g, " ")} setting.`, source_games: ["nethack"], search_keywords: [dim] },
@@ -747,7 +760,8 @@ If the pressure is abstract and has no meaningful counterplay, return an empty a
 
 Respond with JSON array:
 [{"slug": "short_id", "title": "Counterplay Name", "definition": "How this counterplay works (1-2 sentences)", "source_games": ["nethack"|"broguece"|"cataclysm-bn"|"crawl"], "search_keywords": ["keyword1", "keyword2"]}]`);
-    } catch {
+    } catch (e) {
+      console.warn(`  [WARN] LLM failed for counterplay ${pressureTitle}:`, e instanceof Error ? e.message : e);
       patterns = [];
     }
 
@@ -809,7 +823,8 @@ Given the design primitive "${dp.title}" (definition: ${dp.definition}), generat
 
 Respond with JSON array:
 [{"slug": "short_id", "title": "Failure Mode Name", "definition": "What goes wrong and why (1-2 sentences)", "inclusion_criteria": ["symptom1", "symptom2"], "exclusion_criteria": ["what is NOT this failure"]}]`);
-    } catch {
+    } catch (e) {
+      console.warn(`  [WARN] LLM failed for failure mode ${dp.slug}:`, e instanceof Error ? e.message : e);
       modes = [{ slug: "degenerate", title: `Degenerate ${dp.title}`, definition: `${dp.title} becomes trivial or dominant.`, inclusion_criteria: ["Game becomes trivial"], exclusion_criteria: ["Normal difficulty"] }];
     }
 
