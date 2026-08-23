@@ -39,3 +39,39 @@ jobs:
         run: pnpm exec turbo run verify
       - name: Knowledge base health summary
         run: pnpm exec tsx scripts/kb-health-summary.ts
+      - name: Dataset release check
+        run: |
+          node -e "
+          const fs = require('fs');
+          const { parse: parseYaml } = require('yaml');
+          const manifest = parseYaml(fs.readFileSync('knowledge/manifest.yaml', 'utf-8'));
+          
+          if (!manifest.dataset_version) {
+            console.error('FAIL: manifest.yaml must have dataset_version');
+            process.exit(1);
+          }
+          
+          const semverRe = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$/;
+          if (!semverRe.test(manifest.dataset_version)) {
+            console.error('FAIL: dataset_version must be valid SemVer, got: ' + manifest.dataset_version);
+            process.exit(1);
+          }
+          
+          if (manifest.version_history) {
+            const { execSync } = require('child_process');
+            try {
+              const diff = execSync('git diff HEAD~1 -- knowledge/manifest.yaml', { encoding: 'utf-8' });
+              const lines = diff.split('\n');
+              const removedLines = lines.filter(l => l.startsWith('-') && !l.startsWith('---') && l.includes('version:'));
+              if (removedLines.length > 0) {
+                console.error('FAIL: version_history is append-only — detected modification of existing entries');
+                console.error(removedLines.join('\n'));
+                process.exit(1);
+              }
+            } catch {
+              // No previous commit (first commit) — skip append-only check
+            }
+          }
+          
+          console.log('PASS: dataset_version=' + manifest.dataset_version);
+          "
