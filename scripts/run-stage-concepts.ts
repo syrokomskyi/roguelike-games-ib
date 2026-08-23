@@ -28,9 +28,9 @@ const SEMANTIC_EQUIVALENCES: {
     kind: "creature",
     description: "Creatures that resist or are immune to fire damage across roguelike games.",
     attrMapping: [
-      { sourceId: "broguece", attr: "conveys" },
+      { sourceId: "broguece", attr: "flags" },
       { sourceId: "nethack", attr: "resistances" },
-      { sourceId: "crawl", attr: "resists" },
+      { sourceId: "nethack", attr: "conveys" },
       { sourceId: "cataclysm-bn", attr: "flags" },
     ],
   },
@@ -39,9 +39,9 @@ const SEMANTIC_EQUIVALENCES: {
     kind: "creature",
     description: "Creatures that resist or are immune to cold damage across roguelike games.",
     attrMapping: [
-      { sourceId: "broguece", attr: "conveys" },
       { sourceId: "nethack", attr: "resistances" },
-      { sourceId: "crawl", attr: "resists" },
+      { sourceId: "nethack", attr: "conveys" },
+      { sourceId: "cataclysm-bn", attr: "flags" },
     ],
   },
   {
@@ -49,9 +49,9 @@ const SEMANTIC_EQUIVALENCES: {
     kind: "creature",
     description: "Creatures that resist or are immune to poison across roguelike games.",
     attrMapping: [
-      { sourceId: "broguece", attr: "conveys" },
       { sourceId: "nethack", attr: "resistances" },
-      { sourceId: "crawl", attr: "resists" },
+      { sourceId: "nethack", attr: "conveys" },
+      { sourceId: "cataclysm-bn", attr: "flags" },
     ],
   },
   {
@@ -59,9 +59,27 @@ const SEMANTIC_EQUIVALENCES: {
     kind: "creature",
     description: "Creatures that resist or are immune to electrical damage across roguelike games.",
     attrMapping: [
-      { sourceId: "broguece", attr: "conveys" },
       { sourceId: "nethack", attr: "resistances" },
-      { sourceId: "crawl", attr: "resists" },
+      { sourceId: "nethack", attr: "conveys" },
+    ],
+  },
+  {
+    conceptName: "Acid Resistance",
+    kind: "creature",
+    description: "Creatures that resist or are immune to acid damage across roguelike games.",
+    attrMapping: [
+      { sourceId: "nethack", attr: "resistances" },
+      { sourceId: "nethack", attr: "conveys" },
+      { sourceId: "cataclysm-bn", attr: "flags" },
+    ],
+  },
+  {
+    conceptName: "Sleep Resistance",
+    kind: "creature",
+    description: "Creatures that resist or are immune to sleep attacks across roguelike games.",
+    attrMapping: [
+      { sourceId: "nethack", attr: "resistances" },
+      { sourceId: "nethack", attr: "conveys" },
     ],
   },
   {
@@ -79,16 +97,16 @@ const SEMANTIC_EQUIVALENCES: {
     description: "Creatures with an alignment or moral axis that affects gameplay interactions.",
     attrMapping: [
       { sourceId: "nethack", attr: "alignment" },
-      { sourceId: "crawl", attr: "holiness" },
     ],
   },
   {
-    conceptName: "Mutation System",
-    kind: "mutation",
-    description: "Character modification systems where mutations grant new abilities or change properties, often with progression chains.",
+    conceptName: "Flight Capability",
+    kind: "creature",
+    description: "Creatures capable of flight, enabling aerial movement and bypassing ground-based obstacles.",
     attrMapping: [
-      { sourceId: "broguece", attr: "conveys" },
-      { sourceId: "cataclysm-bn", attr: "leads_to" },
+      { sourceId: "broguece", attr: "flags" },
+      { sourceId: "crawl", attr: "flags" },
+      { sourceId: "cataclysm-bn", attr: "flags" },
     ],
   },
   {
@@ -105,48 +123,66 @@ const SEMANTIC_EQUIVALENCES: {
 // Value normalization: map game-specific values to canonical concept values
 const VALUE_NORMALIZATIONS: Record<string, Record<string, string>> = {
   "Fire Resistance": {
+    "mr_fire": "fire",
     "fire": "fire",
     "rf": "fire",
     "resist_fire": "fire",
     "fire_resist": "fire",
     "rfire": "fire",
-    "RESIST_FIRE": "fire",
-    "FIRE_RES": "fire",
-    "FIREY": "fire",
-    "FIRE": "fire",
+    "fire_res": "fire",
+    "firey": "fire",
+    "monst_immune_to_fire": "fire",
+    "fireproof": "fire",
   },
   "Cold Resistance": {
+    "mr_cold": "cold",
     "cold": "cold",
     "rc": "cold",
     "resist_cold": "cold",
     "cold_resist": "cold",
     "rcold": "cold",
-    "RESIST_COLD": "cold",
-    "COLD_RES": "cold",
-    "COLDY": "cold",
-    "COLD": "cold",
+    "cold_res": "cold",
+    "coldy": "cold",
+    "coldproof": "cold",
   },
   "Poison Resistance": {
+    "mr_poison": "poison",
     "poison": "poison",
     "rp": "poison",
     "resist_poison": "poison",
     "poison_resist": "poison",
     "rpois": "poison",
-    "RESIST_POISON": "poison",
-    "POISON_RES": "poison",
-    "POISONOUS": "poison",
-    "POISON": "poison",
+    "poison_res": "poison",
+    "poisonous": "poison",
+    "bioproof": "poison",
   },
   "Electricity Resistance": {
+    "mr_elec": "electricity",
     "electricity": "electricity",
     "relec": "electricity",
     "resist_electric": "electricity",
     "elec_resist": "electricity",
     "rlec": "electricity",
-    "RESIST_ELECTRIC": "electricity",
-    "ELEC_RES": "electricity",
-    "ELECTRIC": "electricity",
-    "LIGHTNING": "electricity",
+    "elec_res": "electricity",
+    "electric": "electricity",
+    "lightning": "electricity",
+  },
+  "Acid Resistance": {
+    "mr_acid": "acid",
+    "acid": "acid",
+    "acidproof": "acid",
+  },
+  "Sleep Resistance": {
+    "mr_sleep": "sleep",
+    "sleep": "sleep",
+  },
+  "Flight Capability": {
+    "flies": "flight",
+    "monst_flies": "flight",
+    "fly": "flight",
+    "flying": "flight",
+    "flight": "flight",
+    "can_fly": "flight",
   },
 };
 
@@ -205,13 +241,30 @@ function cleanConceptData() {
 
 function normalizeValue(conceptName: string, value: string): string | null {
   const normMap = VALUE_NORMALIZATIONS[conceptName];
-  if (normMap) {
-    const lower = value.toLowerCase();
-    for (const [key, canonical] of Object.entries(normMap)) {
-      if (lower === key || lower.includes(key)) return canonical;
-    }
+  if (!normMap) return null;
+  const lower = value.toLowerCase().trim();
+  // Try exact match first
+  if (normMap[lower]) return normMap[lower];
+  // Try includes match
+  for (const [key, canonical] of Object.entries(normMap)) {
+    if (lower === key || lower.includes(key)) return canonical;
   }
   return null;
+}
+
+function extractAttributeValues(attrValue: unknown): string[] {
+  if (attrValue === null || attrValue === undefined || attrValue === "") return [];
+  if (Array.isArray(attrValue)) {
+    return attrValue.filter((v) => typeof v === "string").map((v) => String(v));
+  }
+  if (typeof attrValue === "string") {
+    // Split pipe-separated strings (NetHack format: "MR_FIRE | MR_COLD")
+    if (attrValue.includes("|")) {
+      return attrValue.split("|").map((v) => v.trim());
+    }
+    return [attrValue];
+  }
+  return [];
 }
 
 function generateExactMatchConcepts(records: any[]): any[] {
@@ -219,6 +272,9 @@ function generateExactMatchConcepts(records: any[]): any[] {
 
   // Group by (kind, attribute, valueSlug) across games
   const groups = new Map<string, { kind: string; attr: string; value: string; valueSlug: string; members: any[]; sourceIds: Set<string> }>();
+
+  // Skip attributes that produce noisy or trivial concepts
+  const NOISY_ATTRS = new Set(["id", "key", "schema", "record_type", "language", "activation", "evidence_refs", "decision_refs", "sprite_path", "tile_coords", "tile", "glyph", "color", "symbol", "sound", "geno_flags", "flags3"]);
 
   for (const record of records) {
     if (record.record_type !== "definition") continue;
@@ -232,12 +288,17 @@ function generateExactMatchConcepts(records: any[]): any[] {
 
     for (const [attrName, attrValue] of Object.entries(attrs)) {
       if (attrValue === null || attrValue === undefined || attrValue === "") continue;
+      if (NOISY_ATTRS.has(attrName)) continue;
 
       const values = Array.isArray(attrValue) ? attrValue : [attrValue];
       for (const v of values) {
         if (typeof v !== "string" && typeof v !== "number" && typeof v !== "boolean") continue;
         const vStr = String(v);
         if (!vStr || vStr.length < 2) continue;
+        // Exclude trivial/noisy values
+        const vLower = vStr.toLowerCase();
+        if (["0", "1", "yes", "no", "none", "null", "true", "false", "0x0", "[]", "{}"].includes(vLower)) continue;
+        if (/^\d+$/.test(vStr) && vStr.length > 4) continue;
         const vSlug = slugify(v);
         if (!vSlug) continue;
         const groupKey = `${kind}|${attrName}|${vSlug}`;
@@ -255,7 +316,7 @@ function generateExactMatchConcepts(records: any[]): any[] {
   // Create concepts for groups spanning 2+ games with 5+ members
   for (const group of groups.values()) {
     if (group.sourceIds.size < 2) continue;
-    if (group.members.length < 5) continue;
+    if (group.members.length < 8) continue;
 
     // Limit implementation refs to 20 per game to keep concepts manageable
     const refsByGame = new Map<string, string[]>();
@@ -318,25 +379,31 @@ function generateSemanticEquivalenceConcepts(records: any[]): any[] {
       );
 
       const matched: any[] = [];
+      const seenIds = new Set<string>();
       for (const record of gameRecords) {
+        if (seenIds.has(record.id)) continue;
         const attrs = record.attributes as Record<string, unknown> | undefined;
         if (!attrs) continue;
         const attrValue = attrs[mapping.attr];
-        if (attrValue === null || attrValue === undefined || attrValue === "") continue;
-
-        const values = Array.isArray(attrValue) ? attrValue : [attrValue];
+        const values = extractAttributeValues(attrValue);
         for (const v of values) {
-          if (typeof v !== "string") continue;
           const normalized = normalizeValue(equiv.conceptName, v);
           if (normalized) {
             matched.push(record);
+            seenIds.add(record.id);
             break;
           }
         }
       }
 
+      // Merge with existing matches for this sourceId (multiple attrs per game)
       if (matched.length > 0) {
-        membersByGame.set(mapping.sourceId, matched);
+        const existing = membersByGame.get(mapping.sourceId) ?? [];
+        const existingIds = new Set(existing.map((m) => m.id));
+        for (const m of matched) {
+          if (!existingIds.has(m.id)) existing.push(m);
+        }
+        membersByGame.set(mapping.sourceId, existing);
       }
     }
 
