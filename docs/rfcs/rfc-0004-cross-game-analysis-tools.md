@@ -1,7 +1,7 @@
 ---
 id: RFC-0004
 title: "Cross-game analysis tools — concept-aware comparison and coverage matrix"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
