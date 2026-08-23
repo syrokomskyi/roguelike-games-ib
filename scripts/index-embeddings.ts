@@ -8,6 +8,7 @@
 <CHANGE_SUMMARY>
   <item>Initial creation: batch indexing script with token auth.</item>
   <item>Update indexing script: add kind/semantic_type to MaterializedRecord and toIndexRecord, add extractBodySummary for semantic_record body, add computeStats, add dry-run mode with --dry-run flag, improve output with stats and batch info</item>
+  <item>RFC-0010: Enrich concept summary with inclusion_criteria in toIndexRecord().</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync, existsSync } from "node:fs";
@@ -59,7 +60,14 @@ function toIndexRecord(r: MaterializedRecord): IndexRecord {
     r.scope?.source_id ??
     "";
 
-  const summary = r.summary ?? r.definition ?? extractBodySummary(r.body) ?? "";
+  let summary = r.summary ?? r.definition ?? extractBodySummary(r.body) ?? "";
+
+  if (r.record_type === "concept") {
+    const inclusionCriteria = r["inclusion_criteria"];
+    if (Array.isArray(inclusionCriteria) && inclusionCriteria.length > 0) {
+      summary = `${summary} Inclusion criteria: ${inclusionCriteria.join(", ")}.`;
+    }
+  }
 
   return {
     vector_id: createHash("sha256").update(r.id).digest("base64url"),
