@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Provides a sandboxed read-only source reader that prevents path traversal and symlink escapes while exposing file read, stat, walk, and parse utilities.</purpose>
+<purpose>Provides a sandboxed read-only source reader that prevents path traversal and symlink escapes while exposing file read, stat, walk, and parse utilities. Supports optional supplemental roots for evidence extraction outside payload root.</purpose>
 <non-goals>
   <item>Does not write or modify source files — read-only access.</item>
   <item>Does not follow symlinks — skips them during walk.</item>
@@ -8,6 +8,7 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: ReadonlySourceReader with path-safe resolution, read, stat, walk, and parse methods.</item>
+  <item>RFC-0008: Added supplemental roots support — constructor accepts optional SupplementalRoot[], resolveSafe checks supplemental roots for prefixed paths.</item>
 </CHANGE_SUMMARY>
 */
 import { existsSync, realpathSync, readFileSync, statSync, readdirSync } from "node:fs";
@@ -15,9 +16,24 @@ import { resolve, relative, isAbsolute, join, sep, posix } from "node:path";
 import { SourceRootError } from "@roguelike-games-ib/knowledge-core";
 import { parse as parseYaml } from "yaml";
 
+export interface SupplementalRoot {
+  name: string;
+  root: string;
+  glob: string;
+}
+
 export class ReadonlySourceReader {
-  constructor(private readonly root: string) {
+  private readonly supplementalRoots: SupplementalRoot[];
+
+  constructor(
+    private readonly root: string,
+    supplementalRoots: SupplementalRoot[] = [],
+  ) {
     this.root = realpathSync(root);
+    this.supplementalRoots = supplementalRoots.map((sr) => ({
+      ...sr,
+      root: realpathSync(sr.root),
+    }));
   }
 
   resolveSafe(relativePath: string): string {
@@ -33,14 +49,33 @@ export class ReadonlySourceReader {
       );
     }
 
-    const resolved = resolve(this.root, relativePath);
+    const supplemental = this.matchSupplemental(relativePath);
+    if (supplemental) {
+      return this.resolveInRoot(supplemental.root, supplemental.remaining, relativePath);
+    }
+
+    return this.resolveInRoot(this.root, relativePath, relativePath);
+  }
+
+  private matchSupplemental(relativePath: string): { root: string; remaining: string } | null {
+    const slashIdx = relativePath.indexOf("/");
+    if (slashIdx === -1) return null;
+    const prefix = relativePath.slice(0, slashIdx);
+    const remaining = relativePath.slice(slashIdx + 1);
+    const sr = this.supplementalRoots.find((s) => s.name === prefix);
+    if (!sr) return null;
+    return { root: sr.root, remaining };
+  }
+
+  private resolveInRoot(root: string, relativePath: string, originalPath: string): string {
+    const resolved = resolve(root, relativePath);
 
     if (existsSync(resolved)) {
       const real = realpathSync(resolved);
-      const rel = relative(this.root, real);
+      const rel = relative(root, real);
       if (rel.startsWith("..") || isAbsolute(rel)) {
         throw new SourceRootError(
-          `Symlink escapes source root: '${relativePath}' -> '${real}'`,
+          `Symlink escapes source root: '${originalPath}' -> '${real}'`,
         );
       }
     }
@@ -121,5 +156,9 @@ export class ReadonlySourceReader {
 
   getRoot(): string {
     return this.root;
+  }
+
+  getSupplementalRoots(): SupplementalRoot[] {
+    return this.supplementalRoots;
   }
 }

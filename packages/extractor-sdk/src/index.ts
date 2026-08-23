@@ -24,6 +24,7 @@ export type {
 
 // Source reader
 export { ReadonlySourceReader } from "./source-reader.ts";
+export type { SupplementalRoot } from "./source-reader.ts";
 
 // Manifest
 export { validateManifest } from "./manifest.ts";
