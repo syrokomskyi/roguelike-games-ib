@@ -1,12 +1,12 @@
 {
   "aliases": 0,
-  "claims": 112772,
+  "claims": 113291,
   "contradictions": 0,
   "coverage": 4,
-  "evidence_public": 20519,
-  "evidence_total": 20520,
-  "keys": 22314,
-  "records": 22002,
+  "evidence_public": 37489,
+  "evidence_total": 37490,
+  "keys": 22836,
+  "records": 22476,
   "relations": 35839,
   "sources": 4
 }

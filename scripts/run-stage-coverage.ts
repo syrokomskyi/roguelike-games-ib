@@ -70,6 +70,9 @@ async function main() {
     makeDimension("cb_skills", "extractor_population", 28, 28, 28, "extractor_population", "All skill entries with type=skill in data/json/skills.json"),
     makeDimension("effects", "extractor_population", 237, 237, 237, "extractor_population", "All effect entries with type=effect_type in data/json/effects.json"),
     makeDimension("factions", "extractor_population", 71, 71, 71, "extractor_population", "All faction entries: 17 NPC factions (npcs/factions.json) + 54 monster factions (monster_factions.json)"),
+    makeDimension("martial_arts", "extractor_population", 31, 31, 31, "extractor_population", "All martial_art entries in martialarts.json"),
+    makeDimension("npc_classes", "extractor_population", 30, 30, 30, "extractor_population", "All npc_class entries in npcs/classes.json"),
+    makeDimension("monster_groups", "extractor_population", 200, 200, 200, "extractor_population", "All monstergroup entries in monstergroups/*.json"),
     makeDimension("semantic_records", "qualitative", null, 6, 6, "qualitative", "6 semantic records covering mutation, faction, crafting, profession, species, encumbrance systems"),
     makeDimension("concepts", "qualitative", null, 2, 2, "qualitative", "2 concepts: mutation progression tree, faction-based emergent infighting"),
   ];
@@ -88,6 +91,8 @@ async function main() {
     makeDimension("races", "extractor_population", 5, 5, 5, "extractor_population", "All races in role.c (struct Race entries, excluding UNDEFINED_RACE terminator)"),
     makeDimension("branches", "extractor_population", 9, 9, 9, "extractor_population", "All dungeon branches in dungeon.lua (top-level entries in dungeon table)"),
     makeDimension("skills", "extractor_population", 37, 37, 37, "extractor_population", "All skills in skills.h (enum p_skills entries P_DAGGER through P_RIDING, excluding sentinels)"),
+    makeDimension("attack_types", "extractor_population", 17, 17, 17, "extractor_population", "All AT_* #define entries in monattk.h (excluding AT_ANY wildcard)"),
+    makeDimension("monster_abilities", "extractor_population", 72, 72, 72, "extractor_population", "All M1_*/M2_*/M3_* #define entries in monflag.h (excluding composite aliases)"),
     makeDimension("semantic_records", "qualitative", null, 6, 6, "qualitative", "6 semantic records covering difficulty, identification, resistance, alignment, artifact, genocide systems"),
     makeDimension("concepts", "qualitative", null, 2, 2, "qualitative", "2 concepts: corpse-conveyed resistance, risk-reward item identification"),
   ];
@@ -103,8 +108,12 @@ async function main() {
     makeDimension("branches", "extractor_population", 41, 41, 41, "extractor_population", "All branch entries in branches[] array in branch-data.h (TAG_MAJOR_VERSION == 34)"),
     makeDimension("forms", "extractor_population", 35, 35, 35, "extractor_population", "All form YAML files in dat/forms/"),
     makeDimension("abilities", "extractor_population", 216, 216, 216, "extractor_population", "All ABIL_* enum entries in ability-type.h (TAG_MAJOR_VERSION == 34, excluding aliases, sentinels, and WIZARD-only entries)"),
+    makeDimension("gods", "extractor_population", 27, 27, 27, "extractor_population", "All GOD_* enum entries in religion.h (TAG_MAJOR_VERSION == 34)"),
+    makeDimension("brands", "extractor_population", 37, 37, 37, "extractor_population", "All brand enum entries in brand.h (TAG_MAJOR_VERSION == 34)"),
+    makeDimension("item_types", "extractor_population", 20, 20, 20, "extractor_population", "All object class type enum entries in object.h (TAG_MAJOR_VERSION == 34)"),
+    makeDimension("clouds", "extractor_population", 40, 40, 40, "extractor_population", "All cloud type enum entries in cloud.h (TAG_MAJOR_VERSION == 34)"),
   ];
-  const crawlCoverage = computeCoverage("crawl", "ed51ed562b68f13972eb4cf3f2a43c275d266ed468260ab0c2635dc5cb2260a0", crawlDims);
+  const crawlCoverage = computeCoverage("crawl", "bc1ecb51a2ae22f4fdd65e84806d57c3235841f1eadb2ac88e2b1cffe3abfdb9", crawlDims);
 
   // Write coverage files directly to canonical
   const coverageDir = join(CANONICAL_ROOT, "coverage");
