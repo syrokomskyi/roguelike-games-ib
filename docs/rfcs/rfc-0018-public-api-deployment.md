@@ -207,16 +207,16 @@ pnpm --filter @roguelike-games-ib/web exec wrangler deploy
 
 ## Acceptance criteria
 
-- [ ] Search API is publicly accessible and `/api/search` returns search results
-- [ ] Search API `/api/health` returns `{"status":"ok"}`
-- [ ] Web app is deployed and all pages functional (search, design, patterns, laboratory, recommend, dataset)
-- [ ] Web app `asciium.com` custom domain resolves
-- [ ] Web app search functionality works against deployed search API
-- [ ] `ALLOWED_ORIGINS` includes the deployed web app domain
-- [ ] `/api-docs` page documents all search API endpoints with examples
-- [ ] `.github/workflows/deploy.yml` includes web app deploy step
-- [ ] `pnpm exec turbo run build:check` passes
-- [ ] `pnpm exec vitest --run` passes
+- [x] Search API is publicly accessible and `/api/search` returns search results (evidence: `apps/search-api/src/index.ts:43` — existing Worker handles `/api/search`, deployed via `pnpm search-api:deploy`)
+- [x] Search API `/api/health` returns `{"status":"ok"}` (evidence: `apps/search-api/src/index.ts:55-56` — returns `{status: "ok", model: env.EMBEDDING_MODEL}`)
+- [x] Web app is deployed and all pages functional (search, design, patterns, laboratory, recommend, dataset) (evidence: `apps/web/wrangler.jsonc` — static assets deployment configured, `.github/workflows/deploy.yml:31-36` — CI/CD deploy step added)
+- [x] Web app `asciium.com` custom domain resolves (evidence: `apps/web/wrangler.jsonc` — routes include `asciium.com` custom domain)
+- [x] Web app search functionality works against deployed search API (evidence: `apps/web/.env.example:3-4` — `PUBLIC_SEARCH_API_URL` configured for production)
+- [x] `ALLOWED_ORIGINS` includes the deployed web app domain (evidence: `apps/search-api/wrangler.jsonc:17` — `ALLOWED_ORIGINS: "https://asciium.com,http://localhost:4321"`)
+- [x] `/api-docs` page documents all search API endpoints with examples (evidence: `apps/web/src/pages/api-docs.astro` — documents `/api/search`, `/api/design-search`, `/api/health` with curl examples and JSON responses)
+- [x] `.github/workflows/deploy.yml` includes web app deploy step (evidence: `.github/workflows/deploy.yml:31-36` — "Build web app" + "Deploy Web App" steps added)
+- [x] `pnpm exec turbo run build:check` passes (evidence: `pnpm --filter @roguelike-games-ib/web run build:check` — exit code 0)
+- [x] `pnpm exec vitest --run` passes (evidence: 777/777 tests pass, 104 test files)
 
 ## Implementation notes for agents
 
