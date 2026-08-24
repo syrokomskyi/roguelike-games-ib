@@ -175,7 +175,7 @@ const PRIMITIVE_KIND_MAP: Record<string, string[]> = {
   stealth_and_awareness: ["creature", "effect"],
   shop_and_economy: ["item"],
   pet_and_companion: ["creature"],
-  religion_and_god: ["deity", "god"],
+  religion_and_god: ["deity", "god", "class", "faction"],
   level_progression: ["species", "profession", "role", "race"],
   magic_and_spellcasting: ["spell", "ability", "mutation"],
   crafting_system: ["recipe", "item", "bionic"],
