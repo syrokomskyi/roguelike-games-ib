@@ -226,10 +226,10 @@ interface RecommendationData {
 
 ## Acceptance criteria
 
-- [ ] `recommend_games` MCP tool returns ranked games for given sensations (e.g., `recommend_games({ sensations: ["dread"] })` returns a non-empty array with `source_id`, `score`, `matched_patterns`, `matched_primitives`, `rationale`)
-- [ ] Tool is in `REQUIRED_TOOLS` and read-only (`readOnly: true` in `server.ts`)
-- [ ] `/recommend` page lets users select sensations via checkboxes and see ranked results client-side
-- [ ] Each recommendation includes matched patterns (with titles), matched primitives (with titles), and template-generated rationale per D4
-- [ ] Unknown sensations (e.g., "boredom") fall back to `search_design_space` — verified by conformance test with a sensation not in `SENSATION_MAP`
-- [ ] Missing `quality_score` fallback works — concepts with `quality_score: null` use weight = 1.0
-- [ ] Conformance test `tests/conformance/c16-game-recommender.test.ts` verifies tool registration, output shape, and unknown-sensation fallback
+- [x] `recommend_games` MCP tool returns ranked games for given sensations (e.g., `recommend_games({ sensations: ["dread"] })` returns a non-empty array with `source_id`, `score`, `matched_patterns`, `matched_primitives`, `rationale`) (evidence: apps/mcp/src/tools/derived.ts:930-1085, tests/conformance/c16-game-recommender.test.ts:118-130)
+- [x] Tool is in `REQUIRED_TOOLS` and read-only (`readOnly: true` in `server.ts`) (evidence: apps/mcp/src/server.ts:629-644, apps/mcp/src/server.ts:703, tests/conformance/c16-game-recommender.test.ts:104-115)
+- [x] `/recommend` page lets users select sensations via checkboxes and see ranked results client-side (evidence: apps/web/src/pages/recommend.astro:1-120)
+- [x] Each recommendation includes matched patterns (with titles), matched primitives (with titles), and template-generated rationale per D4 (evidence: apps/mcp/src/tools/derived.ts:1041-1066, tests/conformance/c16-game-recommender.test.ts:197-206)
+- [x] Unknown sensations (e.g., "boredom") fall back to `search_design_space` — verified by conformance test with a sensation not in `SENSATION_MAP` (evidence: apps/mcp/src/tools/derived.ts:961-970, tests/conformance/c16-game-recommender.test.ts:168-174)
+- [x] Missing `quality_score` fallback works — concepts with `quality_score: null` use weight = 1.0 (evidence: apps/mcp/src/tools/derived.ts:1003, tests/conformance/c16-game-recommender.test.ts:177-188)
+- [x] Conformance test `tests/conformance/c16-game-recommender.test.ts` verifies tool registration, output shape, and unknown-sensation fallback (evidence: tests/conformance/c16-game-recommender.test.ts:1-215, 11 tests pass)
