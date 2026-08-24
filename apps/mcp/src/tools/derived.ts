@@ -1013,10 +1013,11 @@ export async function recommendGames(
         }
 
         totalWeight += weight;
+        totalCount++;
+
         if (present) {
           weightedSum += weight;
           matchedCount++;
-          totalCount++;
 
           const title = (ra["title"] as string) ?? conceptRef.key;
           if (conceptRef.concept_type === "design_pattern") {

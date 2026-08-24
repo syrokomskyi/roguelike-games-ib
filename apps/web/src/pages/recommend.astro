@@ -73,6 +73,15 @@ const recDataJson = JSON.stringify(recData);
     return Array.from(checkboxes).map((cb) => cb.value);
   }
 
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function renderResults(recs: RecommendationItem[]): string {
     if (recs.length === 0) {
       return '<div class="border border-ib-border bg-ib-surface p-8"><p class="text-lg text-ib-muted">No games match the selected sensations. Try different combinations.</p></div>';
@@ -81,11 +90,11 @@ const recDataJson = JSON.stringify(recData);
     return recs.map((rec, i) => {
       const scorePercent = Math.round(rec.score * 100);
       const patternsHtml = rec.matched_patterns.map((p) =>
-        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-accent hover:bg-ib-accent/10">${p.title}</a>`
+        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-accent hover:bg-ib-accent/10">${escapeHtml(p.title)}</a>`
       ).join(" ");
 
       const primitivesHtml = rec.matched_primitives.map((p) =>
-        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-muted hover:text-ib-accent">${p.title}</a>`
+        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-muted hover:text-ib-accent">${escapeHtml(p.title)}</a>`
       ).join(" ");
 
       return `
@@ -94,9 +103,9 @@ const recDataJson = JSON.stringify(recData);
             <div>
               <div class="flex items-center gap-3">
                 <span class="font-mono text-xs text-ib-muted">#${i + 1}</span>
-                <a href="/games/${encodeURIComponent(rec.source_id)}/" class="text-2xl font-medium hover:text-ib-accent">${rec.source_id}</a>
+                <a href="/games/${encodeURIComponent(rec.source_id)}/" class="text-2xl font-medium hover:text-ib-accent">${escapeHtml(rec.source_id)}</a>
               </div>
-              <p class="mt-3 text-ib-muted leading-7">${rec.rationale}</p>
+              <p class="mt-3 text-ib-muted leading-7">${escapeHtml(rec.rationale)}</p>
             </div>
             <div class="flex-shrink-0 text-right">
               <div class="text-4xl font-medium text-ib-accent">${scorePercent}<span class="text-lg text-ib-muted">%</span></div>

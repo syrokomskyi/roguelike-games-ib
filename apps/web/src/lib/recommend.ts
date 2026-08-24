@@ -156,10 +156,11 @@ export function computeRecommendations(
         }
 
         totalWeight += weight;
+        totalCount++;
+
         if (present) {
           weightedSum += weight;
           matchedCount++;
-          totalCount++;
 
           if (conceptRef.concept_type === "design_pattern") {
             allMatchedPatterns.set(conceptRef.key, concept.title);
