@@ -55,7 +55,7 @@ import Base from "../layouts/Base.astro";
 
         <div class="mt-4">
           <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
-          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/search?q=permadeath&limit=5"</code></pre>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.<account>.workers.dev/api/search?q=permadeath&limit=5"</code></pre>
         </div>
 
         <div class="mt-4">
@@ -104,7 +104,27 @@ import Base from "../layouts/Base.astro";
 
         <div class="mt-4">
           <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
-          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/design-search?q=resource scarcity"</code></pre>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.<account>.workers.dev/api/design-search?q=resource scarcity"</code></pre>
+        </div>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Response</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>{`{
+  "hits": [
+    {
+      "id": "crawl:concept:resource_scarcity",
+      "source_id": "crawl",
+      "record_type": "concept",
+      "kind": "mutation_vector",
+      "name": "Resource scarcity",
+      "score": 0.84,
+      "metadata": { "concept_type": "mutation_vector" }
+    }
+  ],
+  "total": 1,
+  "query": "resource scarcity",
+  "mode": "semantic"
+}`}</code></pre>
         </div>
       </div>
 
@@ -117,7 +137,7 @@ import Base from "../layouts/Base.astro";
 
         <div class="mt-4">
           <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
-          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/health"</code></pre>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.<account>.workers.dev/api/health"</code></pre>
         </div>
 
         <div class="mt-4">
