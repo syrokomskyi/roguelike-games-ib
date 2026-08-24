@@ -1,7 +1,7 @@
 ---
 id: RFC-0018
 title: "Public API and deployment — Cloudflare Workers for search-api and web app"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
