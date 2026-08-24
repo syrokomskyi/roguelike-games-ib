@@ -1,7 +1,7 @@
 ---
 id: RFC-0020
 title: "MCP server Workers deployment — D1-backed remote MCP endpoint"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
