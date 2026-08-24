@@ -165,56 +165,41 @@ function getRecordsByKind(state: { records: any[] }, game: string, kind: string,
   return results;
 }
 
+const PRIMITIVE_KIND_MAP: Record<string, string[]> = {
+  permadeath: ["creature"],
+  procedural_generation: ["vault", "branch"],
+  inventory_management: ["item"],
+  turn_based_combat: ["creature"],
+  identification_system: ["item", "spell", "potion", "scroll"],
+  hunger_clock: ["item", "food"],
+  stealth_and_awareness: ["creature", "effect"],
+  shop_and_economy: ["item"],
+  pet_and_companion: ["creature"],
+  religion_and_god: ["deity", "god"],
+  level_progression: ["species", "profession", "role", "race"],
+  magic_and_spellcasting: ["spell", "ability", "mutation"],
+  crafting_system: ["recipe", "item", "bionic"],
+  skill_training: ["skill", "ability"],
+  // Aliases used by DESIGN_PATTERNS member_primitives
+  character_progression: ["species", "profession", "role", "race"],
+  skill_progression: ["skill", "ability"],
+};
+
 async function matchPrimitiveToGame(
   state: { records: any[] },
   primitive: { slug: string; title: string; definition: string },
   game: string,
 ): Promise<string[]> {
-  const kinds = getGameKinds(state, game);
-  if (kinds.length === 0) return [];
+  const gameKinds = new Set(getGameKinds(state, game).map(k => k.kind));
+  if (gameKinds.size === 0) return [];
 
-  let relevantKinds: string[];
-  try {
-    const prompt = `You are a game design expert analyzing roguelike games.
-
-Given the design primitive "${primitive.title}" (definition: ${primitive.definition}), and the following record kinds available in the game "${game}" with their counts:
-
-${kinds.map(k => `- ${k.kind}: ${k.count} records`).join("\n")}
-
-Which of these record kinds are relevant to implementing this design primitive? Select only kinds that contain records directly implementing or embodying this primitive.
-
-Respond with JSON array of kind strings, e.g. ["creature", "item"]`;
-    relevantKinds = await llmJson<string[]>(prompt);
-  } catch (e) {
-    console.warn(`  [WARN] Step A failed for ${primitive.slug}/${game}:`, e instanceof Error ? e.message : e);
-    return [];
-  }
+  const targetKinds = (PRIMITIVE_KIND_MAP[primitive.slug] ?? []).filter(k => gameKinds.has(k));
+  if (targetKinds.length === 0) return [];
 
   const allRefs: string[] = [];
-  for (const kind of relevantKinds) {
-    const sample = getRecordsByKind(state, game, kind, 50);
-    if (sample.length === 0) continue;
-
-    try {
-      const prompt = `You are a game design expert analyzing roguelike games.
-
-Given the design primitive "${primitive.title}" (definition: ${primitive.definition}), and the following ${kind} records from "${game}" (showing up to 50 of ${kinds.find(k => k.kind === kind)?.count ?? sample.length} total):
-
-${sample.map(r => `- ${r.id}: ${r.name}`).join("\n")}
-
-Select the record IDs that implement or embody this design primitive. If ALL records of this kind are relevant, set select_all to true.
-
-Respond with JSON: {"select_all": false, "record_ids": ["urn:..."]}`;
-      const result = await llmJson<{ select_all: boolean; record_ids: string[] }>(prompt);
-      if (result.select_all) {
-        const allRecords = getRecordsByKind(state, game, kind, Infinity);
-        allRefs.push(...allRecords.map(r => r.id));
-      } else {
-        allRefs.push(...(result.record_ids || []));
-      }
-    } catch (e) {
-      console.warn(`  [WARN] Step B failed for ${primitive.slug}/${game}/${kind}:`, e instanceof Error ? e.message : e);
-    }
+  for (const kind of targetKinds) {
+    const records = getRecordsByKind(state, game, kind, 10);
+    allRefs.push(...records.map(r => r.id));
   }
   return allRefs;
 }
@@ -223,63 +208,24 @@ async function matchPatternToGame(
   state: { records: any[] },
   pattern: { slug: string; title: string; definition: string; member_primitives: string[] },
   game: string,
-  primitiveTitles: Map<string, string>,
+  _primitiveTitles: Map<string, string>,
 ): Promise<string[]> {
-  const kinds = getGameKinds(state, game);
-  if (kinds.length === 0) return [];
+  const gameKinds = new Set(getGameKinds(state, game).map(k => k.kind));
+  if (gameKinds.size === 0) return [];
 
-  const memberContext = pattern.member_primitives
-    .map(slug => `- ${primitiveTitles.get(slug) ?? slug}`)
-    .join("\n");
-
-  let relevantKinds: string[];
-  try {
-    const prompt = `You are a game design expert analyzing roguelike games.
-
-Given the design pattern "${pattern.title}" (definition: ${pattern.definition}), which combines these design primitives:
-${memberContext}
-
-And the following record kinds available in the game "${game}" with their counts:
-
-${kinds.map(k => `- ${k.kind}: ${k.count} records`).join("\n")}
-
-Which of these record kinds are relevant to implementing this design pattern? Select only kinds that contain records directly implementing or embodying this pattern.
-
-Respond with JSON array of kind strings, e.g. ["creature", "item"]`;
-    relevantKinds = await llmJson<string[]>(prompt);
-  } catch (e) {
-    console.warn(`  [WARN] Step A failed for pattern ${pattern.slug}/${game}:`, e instanceof Error ? e.message : e);
-    return [];
+  // Collect relevant kinds from all member primitives
+  const targetKinds = new Set<string>();
+  for (const memberSlug of pattern.member_primitives) {
+    for (const kind of PRIMITIVE_KIND_MAP[memberSlug] ?? []) {
+      if (gameKinds.has(kind)) targetKinds.add(kind);
+    }
   }
+  if (targetKinds.size === 0) return [];
 
   const allRefs: string[] = [];
-  for (const kind of relevantKinds) {
-    const sample = getRecordsByKind(state, game, kind, 50);
-    if (sample.length === 0) continue;
-
-    try {
-      const prompt = `You are a game design expert analyzing roguelike games.
-
-Given the design pattern "${pattern.title}" (definition: ${pattern.definition}), which combines these design primitives:
-${memberContext}
-
-And the following ${kind} records from "${game}" (showing up to 50 of ${kinds.find(k => k.kind === kind)?.count ?? sample.length} total):
-
-${sample.map(r => `- ${r.id}: ${r.name}`).join("\n")}
-
-Select the record IDs that implement or embody this design pattern. If ALL records of this kind are relevant, set select_all to true.
-
-Respond with JSON: {"select_all": false, "record_ids": ["urn:..."]}`;
-      const result = await llmJson<{ select_all: boolean; record_ids: string[] }>(prompt);
-      if (result.select_all) {
-        const allRecords = getRecordsByKind(state, game, kind, Infinity);
-        allRefs.push(...allRecords.map(r => r.id));
-      } else {
-        allRefs.push(...(result.record_ids || []));
-      }
-    } catch (e) {
-      console.warn(`  [WARN] Step B failed for pattern ${pattern.slug}/${game}/${kind}:`, e instanceof Error ? e.message : e);
-    }
+  for (const kind of targetKinds) {
+    const records = getRecordsByKind(state, game, kind, 5);
+    allRefs.push(...records.map(r => r.id));
   }
   return allRefs;
 }
@@ -708,7 +654,7 @@ const DESIGN_PATTERNS: DesignPattern[] = [
     slug: "god_relationship",
     title: "God Relationship",
     definition: "A design pattern where religion, piety, and alignment systems create a relationship with divine entities. Players must balance worship costs against divine rewards.",
-    member_primitives: ["character_progression"],
+    member_primitives: ["character_progression", "religion_and_god"],
     member_pressures: ["consequence_persistence"],
     games_where_present: ["nethack", "crawl", "cataclysm-bn"],
     games_where_absent: ["broguece"],
