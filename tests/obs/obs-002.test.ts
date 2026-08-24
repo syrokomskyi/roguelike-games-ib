@@ -46,8 +46,8 @@ describe("OBS-002: every wiki-link resolves uniquely", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("all wiki-links in generated notes resolve to exactly one note file", () => {
-    const result = buildObsidianVault({
+  it("all wiki-links in generated notes resolve to exactly one note file", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

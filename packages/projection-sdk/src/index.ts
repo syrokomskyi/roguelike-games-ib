@@ -10,10 +10,12 @@
   <item>Deepened: exports ProjectionStore class with query methods; removed shallow satellite exports.</item>
   <item>Removed authority module exports.</item>
   <item>Removed dead resolution API exports.</item>
+  <item>RFC-0020: exports IProjectionStore interface, RecordFilter, RelationFilter types.</item>
 </CHANGE_SUMMARY>
 */
 export { openProjection } from "./open.ts";
 export type { ProjectionStore } from "./open.ts";
+export type { IProjectionStore, RecordFilter, RelationFilter } from "./types.ts";
 export { readManifest, isManifestSupported, SUPPORTED_MANIFEST_SCHEMA } from "./manifest.ts";
 export type { KeyMap, AliasMap } from "./records.ts";
 export { groupRelationsByType } from "./graph.ts";

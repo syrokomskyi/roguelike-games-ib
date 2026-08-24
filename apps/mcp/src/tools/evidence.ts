@@ -15,11 +15,11 @@ import { envelope } from "../envelope.ts";
 import { isRestricted, buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import { NotFoundError } from "../errors.ts";
 
-export function getEvidence(
+export async function getEvidence(
   ctx: McpContext,
   input: { evidence_id: string },
 ) {
-  const evidence = ctx.store.evidence.find((e) => e.id === input.evidence_id);
+  const evidence = await ctx.store.findEvidenceById(input.evidence_id);
   if (!evidence) {
     throw new NotFoundError(`Evidence not found: ${input.evidence_id}`);
   }
@@ -51,6 +51,6 @@ export function getEvidence(
     fragment_hash: evidence.fragment_hash,
     excerpt: evidence.excerpt,
     license_ref: evidence.license_ref,
-    github_url: buildEvidenceUrl(evidence, ctx.store.sources),
+    github_url: buildEvidenceUrl(evidence, await ctx.store.findAllSources()),
   });
 }

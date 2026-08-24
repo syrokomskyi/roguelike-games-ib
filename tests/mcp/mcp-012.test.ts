@@ -147,8 +147,8 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
 
   // --- D1: compare_games with include_concepts ---
 
-  it("compare_games with include_concepts returns concept_coverage per game", () => {
-    const result = compareGames(setup.ctx, { source_ids: ["src-a", "src-b"], include_concepts: true });
+  it("compare_games with include_concepts returns concept_coverage per game", async () => {
+    const result = await compareGames(setup.ctx, { source_ids: ["src-a", "src-b"], include_concepts: true });
     const games = result.data.games as Array<Record<string, unknown>>;
     expect(games).toHaveLength(2);
     const gameA = games.find((g) => g.source_id === "src-a");
@@ -159,8 +159,8 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(coverage["cross_game_mechanic_count"]).toBe(2);
   });
 
-  it("compare_games without include_concepts does not have concept_coverage", () => {
-    const result = compareGames(setup.ctx, { source_ids: ["src-a", "src-b"] });
+  it("compare_games without include_concepts does not have concept_coverage", async () => {
+    const result = await compareGames(setup.ctx, { source_ids: ["src-a", "src-b"] });
     const games = result.data.games as Array<Record<string, unknown>>;
     const gameA = games.find((g) => g.source_id === "src-a");
     expect(gameA!.concept_coverage).toBeUndefined();
@@ -168,8 +168,8 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
 
   // --- D2: get_coverage_matrix ---
 
-  it("get_coverage_matrix returns correct counts", () => {
-    const result = getCoverageMatrix(setup.ctx, {});
+  it("get_coverage_matrix returns correct counts", async () => {
+    const result = await getCoverageMatrix(setup.ctx, {});
     expect(result.data.source_ids).toContain("src-a");
     expect(result.data.source_ids).toContain("src-b");
     expect(result.data.concept_types).toContain("cross_game_mechanic");
@@ -180,15 +180,15 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(matrix["src-a"]["design_primitive"]).toBe(1);
   });
 
-  it("get_coverage_matrix includes all registered source_ids", () => {
-    const result = getCoverageMatrix(setup.ctx, {});
+  it("get_coverage_matrix includes all registered source_ids", async () => {
+    const result = await getCoverageMatrix(setup.ctx, {});
     expect(result.data.source_ids).toHaveLength(2);
   });
 
   // --- D3: get_concept_coverage ---
 
-  it("get_concept_coverage returns member counts and observed_in_notes per game", () => {
-    const result = getConceptCoverage(setup.ctx, { key: "fire-resistance" });
+  it("get_concept_coverage returns member counts and observed_in_notes per game", async () => {
+    const result = await getConceptCoverage(setup.ctx, { key: "fire-resistance" });
     expect(result.data.concept.record_key).toBe("fire-resistance");
     const coverage = result.data.coverage_by_game as Record<string, Record<string, unknown>>;
     expect(coverage["src-a"]).toBeDefined();
@@ -198,14 +198,14 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(observedIn).toContain("monsters.h resistance flags");
   });
 
-  it("get_concept_coverage identifies gaps correctly", () => {
-    const result = getConceptCoverage(setup.ctx, { key: "shop-and-economy" });
+  it("get_concept_coverage identifies gaps correctly", async () => {
+    const result = await getConceptCoverage(setup.ctx, { key: "shop-and-economy" });
     expect(result.data.gaps).toContain("src-b");
     expect(result.data.gaps).not.toContain("src-a");
   });
 
-  it("get_concept_coverage handles concept with no ancestry (no error)", () => {
-    const result = getConceptCoverage(setup.ctx, { key: "permadeath" });
+  it("get_concept_coverage handles concept with no ancestry (no error)", async () => {
+    const result = await getConceptCoverage(setup.ctx, { key: "permadeath" });
     expect(result.data.gaps).toContain("src-a");
     expect(result.data.gaps).toContain("src-b");
     const coverage = result.data.coverage_by_game as Record<string, Record<string, unknown>>;
@@ -213,44 +213,44 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(coverage["src-b"].member_count).toBe(0);
   });
 
-  it("get_concept_coverage works with record_id", () => {
-    const result = getConceptCoverage(setup.ctx, { record_id: id4 });
+  it("get_concept_coverage works with record_id", async () => {
+    const result = await getConceptCoverage(setup.ctx, { record_id: id4 });
     expect(result.data.concept.record_key).toBe("fire-resistance");
   });
 
-  it("get_concept_coverage rejects non-concept record", () => {
-    expect(() => getConceptCoverage(setup.ctx, { key: "goblin" })).toThrow();
+  it("get_concept_coverage rejects non-concept record", async () => {
+    await expect(getConceptCoverage(setup.ctx, { key: "goblin" })).rejects.toThrow();
   });
 
   // --- D4: compare_concept_implementations ---
 
-  it("compare_concept_implementations returns summaries for games with curated notes", () => {
-    const result = compareConceptImplementations(setup.ctx, { concept_key: "permadeath", source_ids: ["src-a"] });
+  it("compare_concept_implementations returns summaries for games with curated notes", async () => {
+    const result = await compareConceptImplementations(setup.ctx, { concept_key: "permadeath", source_ids: ["src-a"] });
     expect(result.data.concept.record_key).toBe("permadeath");
     const comparisons = result.data.comparisons as Array<Record<string, unknown>>;
     expect(comparisons).toHaveLength(1);
   });
 
-  it("compare_concept_implementations returns null summary for games without curated notes", () => {
-    const result = compareConceptImplementations(setup.ctx, { concept_key: "fire-resistance", source_ids: ["src-a"] });
+  it("compare_concept_implementations returns null summary for games without curated notes", async () => {
+    const result = await compareConceptImplementations(setup.ctx, { concept_key: "fire-resistance", source_ids: ["src-a"] });
     const comparisons = result.data.comparisons as Array<Record<string, unknown>>;
     expect(comparisons[0].implementation_summary).toBeNull();
   });
 
-  it("compare_concept_implementations defaults to all sources", () => {
-    const result = compareConceptImplementations(setup.ctx, { concept_key: "permadeath" });
+  it("compare_concept_implementations defaults to all sources", async () => {
+    const result = await compareConceptImplementations(setup.ctx, { concept_key: "permadeath" });
     const comparisons = result.data.comparisons as Array<Record<string, unknown>>;
     expect(comparisons).toHaveLength(2);
   });
 
-  it("compare_concept_implementations rejects non-concept record", () => {
-    expect(() => compareConceptImplementations(setup.ctx, { concept_key: "goblin" })).toThrow();
+  it("compare_concept_implementations rejects non-concept record", async () => {
+    await expect(compareConceptImplementations(setup.ctx, { concept_key: "goblin" })).rejects.toThrow();
   });
 
   // --- D5: find_concept_gaps ---
 
-  it("find_concept_gaps identifies concepts missing from specific games", () => {
-    const result = findConceptGaps(setup.ctx, {});
+  it("find_concept_gaps identifies concepts missing from specific games", async () => {
+    const result = await findConceptGaps(setup.ctx, {});
     const gaps = result.data.gaps as Array<Record<string, unknown>>;
     expect(gaps.length).toBeGreaterThan(0);
     const shopGap = gaps.find((g) => g.concept_key === "shop-and-economy");
@@ -259,24 +259,24 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(shopGap!.present_in).toEqual(["src-a"]);
   });
 
-  it("find_concept_gaps filters by concept_type", () => {
-    const result = findConceptGaps(setup.ctx, { concept_type: "design_primitive" });
+  it("find_concept_gaps filters by concept_type", async () => {
+    const result = await findConceptGaps(setup.ctx, { concept_type: "design_primitive" });
     const gaps = result.data.gaps as Array<Record<string, unknown>>;
     for (const g of gaps) {
       expect(g.concept_type).toBe("design_primitive");
     }
   });
 
-  it("find_concept_gaps filters by source_id", () => {
-    const result = findConceptGaps(setup.ctx, { source_id: "src-b" });
+  it("find_concept_gaps filters by source_id", async () => {
+    const result = await findConceptGaps(setup.ctx, { source_id: "src-b" });
     const gaps = result.data.gaps as Array<Record<string, unknown>>;
     for (const g of gaps) {
       expect((g.missing_from as string[])).toContain("src-b");
     }
   });
 
-  it("find_concept_gaps summary has correct counts", () => {
-    const result = findConceptGaps(setup.ctx, {});
+  it("find_concept_gaps summary has correct counts", async () => {
+    const result = await findConceptGaps(setup.ctx, {});
     const summary = result.data.summary as Record<string, unknown>;
     expect(summary.total_concepts).toBe(4);
     expect(summary.concepts_with_gaps).toBeGreaterThan(0);
@@ -284,8 +284,8 @@ describe("MCP-012: cross-game analysis tools (RFC-0004)", () => {
     expect(gamesWithMostGaps.length).toBeGreaterThan(0);
   });
 
-  it("find_concept_gaps handles concept with no ancestry as gap for all games", () => {
-    const result = findConceptGaps(setup.ctx, { concept_type: "design_primitive" });
+  it("find_concept_gaps handles concept with no ancestry as gap for all games", async () => {
+    const result = await findConceptGaps(setup.ctx, { concept_type: "design_primitive" });
     const gaps = result.data.gaps as Array<Record<string, unknown>>;
     const permadeathGap = gaps.find((g) => g.concept_key === "permadeath");
     expect(permadeathGap).toBeDefined();

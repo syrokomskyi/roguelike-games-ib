@@ -13,7 +13,7 @@ import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
 
-export function getRecord(
+export async function getRecord(
   ctx: McpContext,
   input: { id?: string; key?: string },
 ) {
@@ -26,9 +26,9 @@ export function getRecord(
 
   let record;
   if (input.id) {
-    record = ctx.store.resolveRecordById(input.id);
+    record = await ctx.store.resolveRecordById(input.id);
   } else {
-    record = ctx.store.resolveRecordByKey(input.key!);
+    record = await ctx.store.resolveRecordByKey(input.key!);
   }
 
   if (!record) {
@@ -43,17 +43,17 @@ export function getRecord(
   });
 }
 
-export function resolveKey(
+export async function resolveKey(
   ctx: McpContext,
   input: { key_or_alias: string },
 ) {
-  const record = ctx.store.resolveRecord(input.key_or_alias);
+  const record = await ctx.store.resolveRecord(input.key_or_alias);
   if (!record) {
     throw new NotFoundError(`Cannot resolve: ${input.key_or_alias}`);
   }
 
-  const isAlias = !ctx.store.resolveRecordByKey(input.key_or_alias)
-    && !ctx.store.resolveRecordById(input.key_or_alias);
+  const isAlias = !await ctx.store.resolveRecordByKey(input.key_or_alias)
+    && !await ctx.store.resolveRecordById(input.key_or_alias);
 
   return envelope(ctx, {
     record_id: record.id,

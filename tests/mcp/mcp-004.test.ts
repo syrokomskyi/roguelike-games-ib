@@ -27,16 +27,16 @@ describe("MCP-004: cursor bound to canonical hash", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("valid cursor works within same canonical hash", () => {
-    const page1 = listSources(setup.ctx, { limit: 2 });
+  it("valid cursor works within same canonical hash", async () => {
+    const page1 = await listSources(setup.ctx, { limit: 2 });
     expect(page1.data.cursor).not.toBeNull();
 
-    const page2 = listSources(setup.ctx, { limit: 2, cursor: page1.data.cursor! });
+    const page2 = await listSources(setup.ctx, { limit: 2, cursor: page1.data.cursor! });
     expect(page2.data.sources).toHaveLength(2);
   });
 
-  it("cursor with wrong canonical hash throws StaleCursorError", () => {
-    const page1 = listSources(setup.ctx, { limit: 2 });
+  it("cursor with wrong canonical hash throws StaleCursorError", async () => {
+    const page1 = await listSources(setup.ctx, { limit: 2 });
     expect(page1.data.cursor).not.toBeNull();
 
     const cursor = page1.data.cursor!;
@@ -44,14 +44,14 @@ describe("MCP-004: cursor bound to canonical hash", () => {
     payload.h = "0000000000000000000000000000000000000000000000000000000000000000";
     const tamperedCursor = Buffer.from(JSON.stringify(payload), "utf-8").toString("base64url");
 
-    expect(() => listSources(setup.ctx, { limit: 2, cursor: tamperedCursor })).toThrow(StaleCursorError);
+    await expect(listSources(setup.ctx, { limit: 2, cursor: tamperedCursor })).rejects.toThrow(StaleCursorError);
   });
 
-  it("tampered cursor throws InvalidCursorError", () => {
-    expect(() => listSources(setup.ctx, { limit: 2, cursor: "invalid-base64url!!" })).toThrow();
+  it("tampered cursor throws InvalidCursorError", async () => {
+    await expect(listSources(setup.ctx, { limit: 2, cursor: "invalid-base64url!!" })).rejects.toThrow();
   });
 
-  it("garbage cursor throws", () => {
-    expect(() => listSources(setup.ctx, { limit: 2, cursor: "not-a-real-cursor" })).toThrow();
+  it("garbage cursor throws", async () => {
+    await expect(listSources(setup.ctx, { limit: 2, cursor: "not-a-real-cursor" })).rejects.toThrow();
   });
 });

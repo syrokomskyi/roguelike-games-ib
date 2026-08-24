@@ -15,7 +15,7 @@ import { envelope } from "../envelope.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
 import { getConceptSourceIds } from "./derived.ts";
 
-export function compareRecords(
+export async function compareRecords(
   ctx: McpContext,
   input: { record_ids: string[] },
 ) {
@@ -25,12 +25,12 @@ export function compareRecords(
 
   const records = [];
   for (const id of input.record_ids) {
-    const record = ctx.store.resolveRecordById(id);
+    const record = await ctx.store.resolveRecordById(id);
     if (!record) {
       throw new NotFoundError(`Record not found: ${id}`);
     }
-    const claims = ctx.store.claimsForRecord(id);
-    const { outgoing, incoming } = ctx.store.relationsForRecord(id);
+    const claims = await ctx.store.claimsForRecord(id);
+    const { outgoing, incoming } = await ctx.store.relationsForRecord(id);
     records.push({
       record_id: record.id,
       record_key: record.key,
@@ -46,7 +46,7 @@ export function compareRecords(
   return envelope(ctx, { records });
 }
 
-export function compareGames(
+export async function compareGames(
   ctx: McpContext,
   input: { source_ids: string[]; concept_key?: string; include_concepts?: boolean },
 ) {
@@ -54,21 +54,18 @@ export function compareGames(
     throw new ValidationError("compare_games requires 2..8 source_ids");
   }
 
-  const concepts = input.include_concepts
-    ? ctx.store.records.filter((r) => r.record_type === "concept")
+  const allRecords = input.include_concepts
+    ? await ctx.store.findRecords({ record_type: "concept" })
     : [];
 
   const games = [];
   for (const sourceId of input.source_ids) {
-    const source = ctx.store.findSourceById(sourceId);
+    const source = await ctx.store.findSourceById(sourceId);
     if (!source) {
       throw new NotFoundError(`Source not found: ${sourceId}`);
     }
 
-    let records = ctx.store.records.filter((r) => {
-      const si = (r as unknown as Record<string, unknown>)["source_identity"] as Record<string, unknown> | undefined;
-      return si?.["source_id"] === sourceId;
-    });
+    let records = await ctx.store.findRecords({ source_id: sourceId });
 
     if (input.concept_key) {
       records = records.filter((r) => r.key === input.concept_key);
@@ -91,7 +88,12 @@ export function compareGames(
     };
 
     if (input.include_concepts) {
-      const gameConcepts = concepts.filter((c) => getConceptSourceIds(ctx, c).has(sourceId));
+      const conceptsWithSources = await Promise.all(
+        allRecords.map(async (c) => ({ c, sourceIds: await getConceptSourceIds(ctx, c) })),
+      );
+      const gameConcepts = conceptsWithSources
+        .filter(({ sourceIds }) => sourceIds.has(sourceId))
+        .map(({ c }) => c);
       const byType: Record<string, string[]> = {};
       for (const c of gameConcepts) {
         const ct = (c as unknown as Record<string, unknown>)["concept_type"] as string ?? "unknown";

@@ -27,9 +27,9 @@ export async function getStaticPaths() {
 const ctx = await createWebContext(distDir);
 const meta = getPageMetadata(ctx);
 const record = Astro.props.record as CanonicalRecord;
-const claims = ctx.store.claimsForRecord(record.id);
-const refClaims = ctx.store.claimsReferencingRecord(record.id);
-const { outgoing, incoming } = ctx.store.relationsForRecord(record.id);
+const claims = await ctx.store.claimsForRecord(record.id);
+const refClaims = await ctx.store.claimsReferencingRecord(record.id);
+const { outgoing, incoming } = await ctx.store.relationsForRecord(record.id);
 const allRelations = [...outgoing, ...incoming];
 const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
 const evidenceRefs = [...claims.flatMap((c) => c.evidence_refs), ...refClaims.flatMap((c) => c.evidence_refs), ...recordEvidenceRefs];

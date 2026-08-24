@@ -31,26 +31,26 @@ describe("MCP-002: get_record by id and key agrees", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("get_record by id and by key return same record", () => {
-    const byId = getRecord(setup.ctx, { id: testId(1) });
-    const byKey = getRecord(setup.ctx, { key: "goblin" });
+  it("get_record by id and by key return same record", async () => {
+    const byId = await getRecord(setup.ctx, { id: testId(1) });
+    const byKey = await getRecord(setup.ctx, { key: "goblin" });
 
     expect(byId.data.record_id).toBe(byKey.data.record_id);
     expect(byId.data.record_key).toBe(byKey.data.record_key);
     expect(byId.data.record).toEqual(byKey.data.record);
   });
 
-  it("get_record by id and by key agree for second record", () => {
-    const byId = getRecord(setup.ctx, { id: testId(2) });
-    const byKey = getRecord(setup.ctx, { key: "kobold" });
+  it("get_record by id and by key agree for second record", async () => {
+    const byId = await getRecord(setup.ctx, { id: testId(2) });
+    const byKey = await getRecord(setup.ctx, { key: "kobold" });
 
     expect(byId.data.record_id).toBe(testId(2));
     expect(byKey.data.record_id).toBe(testId(2));
     expect(byId.data.record).toEqual(byKey.data.record);
   });
 
-  it("response includes dataset and authority metadata", () => {
-    const result = getRecord(setup.ctx, { key: "goblin" });
+  it("response includes dataset and authority metadata", async () => {
+    const result = await getRecord(setup.ctx, { key: "goblin" });
     expect(result.dataset.canonical_hash).toBe(setup.canonicalHash);
     expect(result.dataset.license).toBe("CC-BY-4.0");
     expect(result.authority).toBe("canonical");

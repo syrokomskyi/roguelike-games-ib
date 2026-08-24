@@ -14,14 +14,15 @@ import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 import { NotFoundError } from "../errors.ts";
 
-export function listSources(
+export async function listSources(
   ctx: McpContext,
   input: { cursor?: string; limit?: number },
 ) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
   const filters: Record<string, unknown> = {};
+  const sources = await ctx.store.findAllSources();
   const { items, nextCursor } = paginate(
-    ctx.store.sources.map((s) => ({
+    sources.map((s) => ({
       ...s,
       key: s.source_id,
       id: s.source_id,
@@ -44,23 +45,18 @@ export function listSources(
   });
 }
 
-export function getSourceStatus(
+export async function getSourceStatus(
   ctx: McpContext,
   input: { source_id: string },
 ) {
-  const source = ctx.store.sources.find((s) => s.source_id === input.source_id);
+  const source = await ctx.store.findSourceById(input.source_id);
   if (!source) {
     throw new NotFoundError(`Source not found: ${input.source_id}`);
   }
 
-  const coverage = ctx.store.coverage.filter((c) => c.source_id === input.source_id);
-  const recordCount = ctx.store.records.filter(
-    (r) => {
-      const sourceId = (r as unknown as Record<string, unknown>)["source_identity"] as
-        Record<string, unknown> | undefined;
-      return sourceId?.["source_id"] === input.source_id;
-    },
-  ).length;
+  const coverage = await ctx.store.findCoverageBySource(input.source_id);
+  const records = await ctx.store.findRecords({ source_id: input.source_id });
+  const recordCount = records.length;
 
   return envelope(ctx, {
     source_id: source.source_id,

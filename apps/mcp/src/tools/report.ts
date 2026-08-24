@@ -27,7 +27,7 @@ interface GenerateComparisonReportInput {
   sections?: string[];
 }
 
-export function generateComparisonReport(
+export async function generateComparisonReport(
   ctx: McpContext,
   input: GenerateComparisonReportInput,
 ) {
@@ -43,22 +43,22 @@ export function generateComparisonReport(
   const sectionData: Record<string, unknown> = {};
 
   for (const section of requestedSections) {
-    sectionData[section] = buildSection(ctx, section, input);
+    sectionData[section] = await buildSection(ctx, section, input);
   }
 
   if (format === "json") {
     return envelope(ctx, { sections: sectionData });
   }
 
-  const markdown = assembleMarkdown(ctx, input, requestedSections, sectionData);
+  const markdown = await assembleMarkdown(ctx, input, requestedSections, sectionData);
   return envelope(ctx, { report: markdown });
 }
 
-function buildSection(
+async function buildSection(
   ctx: McpContext,
   section: SectionName,
   input: GenerateComparisonReportInput,
-): unknown {
+): Promise<unknown> {
   switch (section) {
     case "overview":
       return buildOverviewSection(ctx, input);
@@ -75,13 +75,13 @@ function buildSection(
   }
 }
 
-function buildOverviewSection(ctx: McpContext, input: GenerateComparisonReportInput): unknown {
-  const result = compareGames(ctx, { source_ids: input.source_ids, include_concepts: true });
+async function buildOverviewSection(ctx: McpContext, input: GenerateComparisonReportInput): Promise<unknown> {
+  const result = await compareGames(ctx, { source_ids: input.source_ids, include_concepts: true });
   return result.data;
 }
 
-function buildCoverageSection(ctx: McpContext, input: GenerateComparisonReportInput): unknown {
-  const result = getCoverageMatrix(ctx, {});
+async function buildCoverageSection(ctx: McpContext, input: GenerateComparisonReportInput): Promise<unknown> {
+  const result = await getCoverageMatrix(ctx, {});
   const data = result.data as {
     matrix: Record<string, Record<string, number>>;
     concept_types: string[];
@@ -100,13 +100,13 @@ function buildCoverageSection(ctx: McpContext, input: GenerateComparisonReportIn
   };
 }
 
-function buildPrimitivesSection(
+async function buildPrimitivesSection(
   ctx: McpContext,
   input: GenerateComparisonReportInput,
-): unknown {
+): Promise<unknown> {
   if (input.concept_key) {
     try {
-      const result = compareConceptImplementations(ctx, {
+      const result = await compareConceptImplementations(ctx, {
         concept_key: input.concept_key,
         source_ids: input.source_ids,
       });
@@ -116,7 +116,8 @@ function buildPrimitivesSection(
     }
   }
 
-  const designPrimitives = ctx.store.records.filter(
+  const allRecords = await ctx.store.findAllRecords();
+  const designPrimitives = allRecords.filter(
     (r) =>
       r.record_type === "concept" &&
       (r as unknown as Record<string, unknown>)["concept_type"] === "design_primitive",
@@ -125,7 +126,7 @@ function buildPrimitivesSection(
   const comparisons: unknown[] = [];
   for (const primitive of designPrimitives) {
     try {
-      const result = compareConceptImplementations(ctx, {
+      const result = await compareConceptImplementations(ctx, {
         concept_key: primitive.key,
         source_ids: input.source_ids,
       });
@@ -142,8 +143,8 @@ function buildPrimitivesSection(
   return { primitives: comparisons };
 }
 
-function buildGapsSection(ctx: McpContext, input: GenerateComparisonReportInput): unknown {
-  const result = findConceptGaps(ctx, {});
+async function buildGapsSection(ctx: McpContext, input: GenerateComparisonReportInput): Promise<unknown> {
+  const result = await findConceptGaps(ctx, {});
   const data = result.data as {
     gaps: Array<{
       concept_key: string;
@@ -167,20 +168,18 @@ function buildGapsSection(ctx: McpContext, input: GenerateComparisonReportInput)
   return { gaps: filteredGaps, summary: data.summary };
 }
 
-function buildTensionsSection(ctx: McpContext, _input: GenerateComparisonReportInput): unknown {
-  const result = queryDesignSpace(ctx, { limit: 100 });
+async function buildTensionsSection(ctx: McpContext, _input: GenerateComparisonReportInput): Promise<unknown> {
+  const result = await queryDesignSpace(ctx, { limit: 100 });
   return result.data;
 }
 
-function buildAttributesSection(ctx: McpContext, input: GenerateComparisonReportInput): unknown {
-  const sourceRecords = input.source_ids.map((sid) => {
-    const records = ctx.store.records.filter((r) => {
-      const si = (r as unknown as Record<string, unknown>)["source_identity"] as
-        Record<string, unknown> | undefined;
-      return si?.["source_id"] === sid;
-    });
-    return { source_id: sid, records };
-  });
+async function buildAttributesSection(ctx: McpContext, input: GenerateComparisonReportInput): Promise<unknown> {
+  const sourceRecords = await Promise.all(
+    input.source_ids.map(async (sid) => {
+      const records = await ctx.store.findRecords({ source_id: sid });
+      return { source_id: sid, records };
+    }),
+  );
 
   const attributeValueCounts: Record<string, Record<string, Map<string, number>>> = {};
   for (const { source_id, records } of sourceRecords) {
@@ -225,16 +224,18 @@ function buildAttributesSection(ctx: McpContext, input: GenerateComparisonReport
   return { attributes: top5 };
 }
 
-function assembleMarkdown(
+async function assembleMarkdown(
   ctx: McpContext,
   input: GenerateComparisonReportInput,
   sections: SectionName[],
   sectionData: Record<string, unknown>,
-): string {
-  const sourceLabels = input.source_ids.map((sid) => {
-    const source = ctx.store.findSourceById(sid);
-    return source?.source_id ?? sid;
-  });
+): Promise<string> {
+  const sourceLabels = await Promise.all(
+    input.source_ids.map(async (sid) => {
+      const source = await ctx.store.findSourceById(sid);
+      return source?.source_id ?? sid;
+    }),
+  );
 
   const lines: string[] = [];
   const title = input.concept_key

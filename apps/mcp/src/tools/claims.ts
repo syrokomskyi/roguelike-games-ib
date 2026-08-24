@@ -14,18 +14,18 @@ import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { NotFoundError } from "../errors.ts";
 
-export function getClaims(
+export async function getClaims(
   ctx: McpContext,
   input: { record_id: string; predicate?: string; cursor?: string; limit?: number },
 ) {
-  const record = ctx.store.resolveRecordById(input.record_id);
+  const record = await ctx.store.resolveRecordById(input.record_id);
   if (!record) {
     throw new NotFoundError(`Record not found: ${input.record_id}`);
   }
 
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
 
-  let claims = ctx.store.claimsForRecord(input.record_id);
+  let claims = await ctx.store.claimsForRecord(input.record_id);
   if (input.predicate) {
     claims = claims.filter((c) => c.predicate === input.predicate);
   }

@@ -16,7 +16,7 @@ import { NotFoundError, ValidationError } from "../errors.ts";
 
 const MAX_DEPTH = 3;
 
-export function traverseRelations(
+export async function traverseRelations(
   ctx: McpContext,
   input: {
     record_id: string;
@@ -26,7 +26,7 @@ export function traverseRelations(
     limit?: number;
   },
 ) {
-  const record = ctx.store.resolveRecordById(input.record_id);
+  const record = await ctx.store.resolveRecordById(input.record_id);
   if (!record) {
     throw new NotFoundError(`Record not found: ${input.record_id}`);
   }
@@ -55,7 +55,7 @@ export function traverseRelations(
     const { id, depth: currentDepth } = queue.shift()!;
     if (currentDepth >= depth) continue;
 
-    const { outgoing, incoming } = ctx.store.relationsForRecord(id);
+    const { outgoing, incoming } = await ctx.store.relationsForRecord(id);
 
     const filterByType = (rels: typeof outgoing) =>
       input.relation_types
@@ -67,7 +67,7 @@ export function traverseRelations(
         if (edges.length >= limit) break;
         if (visited.has(rel.target_record_id)) continue;
         visited.add(rel.target_record_id);
-        const target = ctx.store.resolveRecordById(rel.target_record_id);
+        const target = await ctx.store.resolveRecordById(rel.target_record_id);
         edges.push({
           relation_type: rel.relation_type,
           direction: "outgoing",
@@ -85,7 +85,7 @@ export function traverseRelations(
         if (edges.length >= limit) break;
         if (visited.has(rel.source_record_id)) continue;
         visited.add(rel.source_record_id);
-        const source = ctx.store.resolveRecordById(rel.source_record_id);
+        const source = await ctx.store.resolveRecordById(rel.source_record_id);
         edges.push({
           relation_type: rel.relation_type,
           direction: "incoming",

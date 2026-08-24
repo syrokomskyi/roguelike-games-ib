@@ -114,8 +114,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
 
   // --- Markdown report ---
 
-  it("generates markdown report for 2-game comparison", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("generates markdown report for 2-game comparison", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
     });
 
@@ -130,8 +130,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
     expect(report).toContain("## Attribute comparison");
   });
 
-  it("includes all 6 sections by default", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("includes all 6 sections by default", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
     });
 
@@ -142,8 +142,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
 
   // --- Sections filter ---
 
-  it("sections parameter filters to only requested sections", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("sections parameter filters to only requested sections", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       sections: ["overview", "coverage"],
     });
@@ -157,8 +157,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
     expect(report).not.toContain("## Attribute comparison");
   });
 
-  it("invalid section names are silently ignored", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("invalid section names are silently ignored", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       sections: ["overview", "invalid_section", "coverage"],
     });
@@ -171,8 +171,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
 
   // --- JSON format ---
 
-  it("format: json returns structured JSON object", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("format: json returns structured JSON object", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       format: "json",
     });
@@ -189,8 +189,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
 
   // --- concept_key mode ---
 
-  it("concept_key generates single-concept comparison", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("concept_key generates single-concept comparison", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       concept_key: "fire-resistance",
     });
@@ -199,8 +199,8 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
     expect(report).toContain("Cross-game comparison: fire-resistance");
   });
 
-  it("missing concept_key shows note in primitives section", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("missing concept_key shows note in primitives section", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       concept_key: "nonexistent-concept",
       sections: ["primitives"],
@@ -212,21 +212,21 @@ describe("MCP-013: generate_comparison_report (RFC-0012)", () => {
 
   // --- Edge cases ---
 
-  it("throws ValidationError for fewer than 2 source_ids", () => {
-    expect(() =>
+  it("throws ValidationError for fewer than 2 source_ids", async () => {
+    await expect(
       generateComparisonReport(setup.ctx, { source_ids: ["src-a"] }),
-    ).toThrow(ValidationError);
+    ).rejects.toThrow(ValidationError);
   });
 
-  it("throws ValidationError for more than 8 source_ids", () => {
+  it("throws ValidationError for more than 8 source_ids", async () => {
     const many = Array.from({ length: 9 }, (_, i) => `src-${i}`);
-    expect(() =>
+    await expect(
       generateComparisonReport(setup.ctx, { source_ids: many }),
-    ).toThrow(ValidationError);
+    ).rejects.toThrow(ValidationError);
   });
 
-  it("missing curated summary shows fallback text", () => {
-    const result = generateComparisonReport(setup.ctx, {
+  it("missing curated summary shows fallback text", async () => {
+    const result = await generateComparisonReport(setup.ctx, {
       source_ids: ["src-a", "src-b"],
       sections: ["primitives"],
     });

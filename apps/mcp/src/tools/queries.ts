@@ -11,6 +11,7 @@
 </CHANGE_SUMMARY>
 */
 import type { McpContext } from "../context.ts";
+import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
@@ -19,7 +20,7 @@ import { NotFoundError, ValidationError } from "../errors.ts";
  * Search claims across ALL records by predicate.
  * Optionally filter by source_id or assertion_state.
  */
-export function getClaimsByPredicate(
+export async function getClaimsByPredicate(
   ctx: McpContext,
   input: {
     predicate: string;
@@ -38,21 +39,7 @@ export function getClaimsByPredicate(
   if (input.source_id) filters.source_id = input.source_id;
   if (input.assertion_state) filters.assertion_state = input.assertion_state;
 
-  let claims = ctx.store.claims.filter((c) => c.predicate === input.predicate);
-
-  if (input.source_id) {
-    claims = claims.filter((c) => {
-      const record = ctx.store.resolveRecordById(c.subject_id);
-      if (!record) return false;
-      const si = (record as unknown as Record<string, unknown>)["source_identity"] as
-        Record<string, unknown> | undefined;
-      return si?.["source_id"] === input.source_id;
-    });
-  }
-
-  if (input.assertion_state) {
-    claims = claims.filter((c) => c.assertion_state === input.assertion_state);
-  }
+  let claims = await ctx.store.findClaimsByPredicate(input.predicate, input.source_id, input.assertion_state);
 
   const sorted = [...claims].sort((a, b) => {
     if (a.id < b.id) return -1;
@@ -68,11 +55,9 @@ export function getClaimsByPredicate(
     limit,
   );
 
-  return envelope(ctx, {
-    predicate: input.predicate,
-    total: sorted.length,
-    claims: items.map((c) => {
-      const record = ctx.store.resolveRecordById(c.subject_id);
+  const claimsWithRecords = await Promise.all(
+    items.map(async (c) => {
+      const record = await ctx.store.resolveRecordById(c.subject_id);
       return {
         claim_id: c.id,
         subject_record_id: c.subject_id,
@@ -85,6 +70,12 @@ export function getClaimsByPredicate(
         evidence_refs: c.evidence_refs,
       };
     }),
+  );
+
+  return envelope(ctx, {
+    predicate: input.predicate,
+    total: sorted.length,
+    claims: claimsWithRecords,
     cursor: nextCursor,
   });
 }
@@ -92,7 +83,7 @@ export function getClaimsByPredicate(
 /**
  * Resolve member records of a cross-game concept via ancestry.derived_from.
  */
-export function getConceptMembers(
+export async function getConceptMembers(
   ctx: McpContext,
   input: { record_id?: string; key?: string; cursor?: string; limit?: number },
 ) {
@@ -103,11 +94,11 @@ export function getConceptMembers(
     throw new ValidationError("Only one of record_id or key is allowed");
   }
 
-  let concept;
+  let concept: CanonicalRecord | undefined;
   if (input.record_id) {
-    concept = ctx.store.resolveRecordById(input.record_id);
+    concept = await ctx.store.resolveRecordById(input.record_id);
   } else {
-    concept = ctx.store.resolveRecordByKey(input.key!);
+    concept = await ctx.store.resolveRecordByKey(input.key!);
   }
 
   if (!concept) {
@@ -123,9 +114,9 @@ export function getConceptMembers(
     Record<string, unknown> | undefined;
   const derivedFrom = (ancestry?.["derived_from"] as string[]) ?? [];
 
-  const members = derivedFrom
-    .map((urn) => ctx.store.resolveRecordById(urn))
-    .filter((r) => r !== undefined);
+  const members = (await Promise.all(
+    derivedFrom.map((urn) => ctx.store.resolveRecordById(urn)),
+  )).filter((r): r is CanonicalRecord => r !== undefined);
 
   const grouped: Record<string, { record_id: string; record_key: string; record_type: string; title: string | null }[]> = {};
   for (const m of members) {
@@ -178,21 +169,20 @@ export function getConceptMembers(
 /**
  * Get tension pairs involving a specific design primitive or pressure.
  */
-export function getDesignTensions(
+export async function getDesignTensions(
   ctx: McpContext,
   input: { record_key?: string; record_id?: string; cursor?: string; limit?: number },
 ) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
 
-  let tensions = ctx.store.relations.filter(
-    (r) => r.relation_type === "tensions_with",
-  );
+  const allRelations = await ctx.store.findAllRelations();
+  let tensions = allRelations.filter((r) => r.relation_type === "tensions_with");
 
   let targetId: string | null = null;
   if (input.record_id) {
     targetId = input.record_id;
   } else if (input.record_key) {
-    const record = ctx.store.resolveRecordByKey(input.record_key);
+    const record = await ctx.store.resolveRecordByKey(input.record_key);
     if (!record) {
       throw new NotFoundError(`Record not found: ${input.record_key}`);
     }
@@ -219,27 +209,32 @@ export function getDesignTensions(
     limit,
   );
 
-  return envelope(ctx, {
-    total: sorted.length,
-    tensions: items.map((r) => {
-      const source = ctx.store.resolveRecordById(r.source_record_id);
-      const target = ctx.store.resolveRecordById(r.target_record_id);
+  const tensionsWithRecords = await Promise.all(
+    items.map(async (r) => {
+      const source = await ctx.store.resolveRecordById(r.source_record_id);
+      const target = await ctx.store.resolveRecordById(r.target_record_id);
 
-      const sourceCounterplay = ctx.store.relations
-        .filter((cr) => cr.relation_type === "HAS_COUNTERPLAY" && cr.source_record_id === r.source_record_id)
-        .map((cr) => {
-          const cp = ctx.store.resolveRecordById(cr.target_record_id);
-          return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
-        })
-        .filter(Boolean);
+      const counterplayRels = allRelations.filter(
+        (cr) => cr.relation_type === "HAS_COUNTERPLAY",
+      );
 
-      const targetCounterplay = ctx.store.relations
-        .filter((cr) => cr.relation_type === "HAS_COUNTERPLAY" && cr.source_record_id === r.target_record_id)
-        .map((cr) => {
-          const cp = ctx.store.resolveRecordById(cr.target_record_id);
-          return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
-        })
-        .filter(Boolean);
+      const sourceCounterplay = (await Promise.all(
+        counterplayRels
+          .filter((cr) => cr.source_record_id === r.source_record_id)
+          .map(async (cr) => {
+            const cp = await ctx.store.resolveRecordById(cr.target_record_id);
+            return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
+          }),
+      )).filter(Boolean);
+
+      const targetCounterplay = (await Promise.all(
+        counterplayRels
+          .filter((cr) => cr.source_record_id === r.target_record_id)
+          .map(async (cr) => {
+            const cp = await ctx.store.resolveRecordById(cr.target_record_id);
+            return cp ? { record_id: cp.id, record_key: cp.key, title: (cp as unknown as Record<string, unknown>)["title"] ?? null } : null;
+          }),
+      )).filter(Boolean);
 
       return {
         relation_id: r.id,
@@ -255,6 +250,11 @@ export function getDesignTensions(
         },
       };
     }),
+  );
+
+  return envelope(ctx, {
+    total: sorted.length,
+    tensions: tensionsWithRecords,
     cursor: nextCursor,
   });
 }
@@ -263,7 +263,7 @@ export function getDesignTensions(
  * Cross-game structured attribute search.
  * Find records where a specific attribute key matches a value (exact or contains).
  */
-export function findByAttribute(
+export async function findByAttribute(
   ctx: McpContext,
   input: {
     attribute: string;
@@ -292,7 +292,8 @@ export function findByAttribute(
 
   const targetValue = input.value.toLowerCase();
 
-  let records = ctx.store.records.filter((r) => {
+  const allRecords = await ctx.store.findAllRecords();
+  let records = allRecords.filter((r) => {
     if (input.record_type && r.record_type !== input.record_type) return false;
 
     if (input.source_id) {

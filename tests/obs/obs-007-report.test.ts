@@ -63,8 +63,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("generates report notes when reports: true", () => {
-    const result = buildObsidianVault({
+  it("generates report notes when reports: true", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -75,8 +75,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
     expect(existsSync(reportPath)).toBe(true);
   });
 
-  it("report note contains comparison title and sections", () => {
-    const result = buildObsidianVault({
+  it("report note contains comparison title and sections", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -91,8 +91,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
     expect(content).toContain("## Concept gaps");
   });
 
-  it("report note contains wiki-links to concepts", () => {
-    const result = buildObsidianVault({
+  it("report note contains wiki-links to concepts", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -104,8 +104,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
     expect(content).toContain("[[");
   });
 
-  it("does NOT generate report notes when reports is not set", () => {
-    const result = buildObsidianVault({
+  it("does NOT generate report notes when reports is not set", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -115,8 +115,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
     expect(existsSync(reportDir)).toBe(false);
   });
 
-  it("MOC includes Comparison Reports section when reports are generated", () => {
-    const result = buildObsidianVault({
+  it("MOC includes Comparison Reports section when reports are generated", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -129,8 +129,8 @@ describe("OBS-007: comparison report notes (RFC-0012)", () => {
     expect(mocContent).toContain("reports/comparisons/src-a-vs-src-b");
   });
 
-  it("MOC does NOT include Comparison Reports section when reports are not generated", () => {
-    const result = buildObsidianVault({
+  it("MOC does NOT include Comparison Reports section when reports are not generated", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

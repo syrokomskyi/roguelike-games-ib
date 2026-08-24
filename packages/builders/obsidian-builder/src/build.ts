@@ -41,7 +41,7 @@ export interface ObsidianBuildResult {
   notePaths: string[];
 }
 
-export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuildResult {
+export async function buildObsidianVault(options: ObsidianBuildOptions): Promise<ObsidianBuildResult> {
   const paths = resolveKnowledgePaths(options.workspaceRoot);
   const distDir = options.distDir ?? join(paths.generatedRoot, "dist");
   const vaultRoot = resolve(options.vaultDir ?? join(paths.generatedRoot, "obsidian"));
@@ -70,7 +70,7 @@ export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuild
     const fullPath = join(vaultRoot, notePath);
     const dir = join(fullPath, "..");
     mkdirSync(dir, { recursive: true });
-    const content = renderRecordNote(store, resolver, record);
+    const content = await renderRecordNote(store, resolver, record);
     writeFileSync(fullPath, content, "utf-8");
     notePaths.push(notePath);
 
@@ -106,7 +106,7 @@ export function buildObsidianVault(options: ObsidianBuildOptions): ObsidianBuild
 
   let reportNotePaths: string[] = [];
   if (options.reports) {
-    reportNotePaths = generateComparisonNotes(store, resolver, vaultRoot);
+    reportNotePaths = await generateComparisonNotes(store, resolver, vaultRoot);
     notePaths.push(...reportNotePaths);
   }
 

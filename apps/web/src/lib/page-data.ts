@@ -38,10 +38,10 @@ export interface CompareRow {
   sprite_path: string | null;
 }
 
-export function buildCompareRows(store: ProjectionStore): CompareRow[] {
-  return store.records.map((r) => {
-    const claims = store.claimsForRecord(r.id);
-    const { outgoing, incoming } = store.relationsForRecord(r.id);
+export async function buildCompareRows(store: ProjectionStore): Promise<CompareRow[]> {
+  const rows = await Promise.all(store.records.map(async (r) => {
+    const claims = await store.claimsForRecord(r.id);
+    const { outgoing, incoming } = await store.relationsForRecord(r.id);
     const ra = r as Record<string, unknown>;
     const source_id = getSourceId(ra) || "all";
     return {
@@ -57,7 +57,8 @@ export function buildCompareRows(store: ProjectionStore): CompareRow[] {
       source_id,
       sprite_path: getSpritePath(ra),
     };
-  });
+  }));
+  return rows;
 }
 
 export interface GameRecord {

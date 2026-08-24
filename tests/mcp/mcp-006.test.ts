@@ -56,26 +56,27 @@ describe("MCP-006: restricted evidence redacted", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("public evidence returns full content", () => {
-    const result = getEvidence(setup.ctx, { evidence_id: "ev-001" });
+  it("public evidence returns full content", async () => {
+    const result = await getEvidence(setup.ctx, { evidence_id: "ev-001" });
     expect(result.data.restricted).toBe(false);
     expect(result.data.excerpt).toBe("A small green creature");
     expect(result.data.artifact_path).toBe("data.json");
     expect(result.data.locator).not.toBeNull();
   });
 
-  it("restricted evidence is not in the projection store — redacted by materializer", () => {
-    const allEvidenceIds = setup.ctx.store.evidence.map((e) => e.id);
+  it("restricted evidence is not in the projection store — redacted by materializer", async () => {
+    const store = setup.ctx.store as unknown as { evidence: Array<{ id: string }> };
+    const allEvidenceIds = store.evidence.map((e) => e.id);
     expect(allEvidenceIds).toContain("ev-001");
     expect(allEvidenceIds).not.toContain("ev-002");
   });
 
-  it("restricted evidence ID returns NotFoundError via get_evidence", () => {
-    expect(() => getEvidence(setup.ctx, { evidence_id: "ev-002" })).toThrow();
+  it("restricted evidence ID returns NotFoundError via get_evidence", async () => {
+    await expect(getEvidence(setup.ctx, { evidence_id: "ev-002" })).rejects.toThrow();
   });
 
-  it("public evidence does not expose restricted content", () => {
-    const result = getEvidence(setup.ctx, { evidence_id: "ev-001" });
+  it("public evidence does not expose restricted content", async () => {
+    const result = await getEvidence(setup.ctx, { evidence_id: "ev-001" });
     expect(result.data.restricted).toBe(false);
     expect(result.data.excerpt).not.toContain("Secret internal data");
   });

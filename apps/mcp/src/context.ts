@@ -8,18 +8,19 @@
 </MODULE_CONTRACT>
 <CHANGE_SUMMARY>
   <item>Initial creation: MCP context with projection store, search index, and dataset envelope.</item>
+  <item>RFC-0020: McpContext uses IProjectionStore and SearchBackend interfaces instead of concrete classes.</item>
 </CHANGE_SUMMARY>
 */
-import { openProjection, type ProjectionStore } from "@roguelike-games-ib/projection-sdk";
-import { buildSearchIndex, type SearchIndex } from "@roguelike-games-ib/search";
+import { openProjection } from "@roguelike-games-ib/projection-sdk";
+import type { IProjectionStore } from "@roguelike-games-ib/projection-sdk";
+import { buildSearchIndex, LocalSearchBackend, type SearchBackend } from "@roguelike-games-ib/search";
 import type { MaterializationManifest } from "@roguelike-games-ib/materializer";
 import { join } from "node:path";
 
 export interface McpContext {
-  distDir: string;
   manifest: MaterializationManifest;
-  store: ProjectionStore;
-  searchIndex: SearchIndex;
+  store: IProjectionStore;
+  searchBackend: SearchBackend;
   canonicalHash: string;
   license: string;
   datasetId: string;
@@ -35,12 +36,12 @@ export async function createMcpContext(distDir: string): Promise<McpContext> {
     dbPath,
     canonicalHash: manifest.canonicalHash,
   });
+  const searchBackend = new LocalSearchBackend(searchIndex);
 
   return {
-    distDir,
     manifest,
     store,
-    searchIndex,
+    searchBackend,
     canonicalHash: manifest.canonicalHash,
     license: manifest.license,
     datasetId: manifest.datasetId,

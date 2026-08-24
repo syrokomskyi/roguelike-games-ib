@@ -40,8 +40,8 @@ describe("OBS-006: localized projection preserves canonical id", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("every note preserves record_id and record_key from canonical", () => {
-    const result = buildObsidianVault({
+  it("every note preserves record_id and record_key from canonical", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -66,8 +66,8 @@ describe("OBS-006: localized projection preserves canonical id", () => {
     expect(canonicalKeys.has("cross-game/concept/hidden-decaying-field")).toBe(true);
   });
 
-  it("alias-resolved record preserves original canonical id", () => {
-    const result = buildObsidianVault({
+  it("alias-resolved record preserves original canonical id", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

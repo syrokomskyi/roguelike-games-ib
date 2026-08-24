@@ -13,16 +13,16 @@ import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { NotFoundError } from "../errors.ts";
 
-export function getCoverage(
+export async function getCoverage(
   ctx: McpContext,
   input: { source_id: string },
 ) {
-  const source = ctx.store.findSourceById(input.source_id);
+  const source = await ctx.store.findSourceById(input.source_id);
   if (!source) {
     throw new NotFoundError(`Source not found: ${input.source_id}`);
   }
 
-  const coverage = ctx.store.coverageForSource(input.source_id);
+  const coverage = await ctx.store.findCoverageBySource(input.source_id);
 
   return envelope(ctx, {
     source_id: input.source_id,

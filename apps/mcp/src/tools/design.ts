@@ -16,7 +16,7 @@ import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 
-export function findCrossGameConcepts(
+export async function findCrossGameConcepts(
   ctx: McpContext,
   input: { concept_type?: string; cursor?: string; limit?: number },
 ) {
@@ -24,7 +24,7 @@ export function findCrossGameConcepts(
   const filters: Record<string, unknown> = {};
   if (input.concept_type) filters.concept_type = input.concept_type;
 
-  let concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  let concepts = await ctx.store.findRecords({ record_type: "concept" });
   if (input.concept_type) {
     concepts = concepts.filter(
       (r) => (r as unknown as Record<string, unknown>)["concept_type"] === input.concept_type,
@@ -53,16 +53,16 @@ export function findCrossGameConcepts(
   });
 }
 
-export function findDesignPrimitives(
+export async function findDesignPrimitives(
   ctx: McpContext,
   input: { cursor?: string; limit?: number },
 ) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
   const filters: Record<string, unknown> = {};
 
-  const primitives = ctx.store.records.filter(
+  const allConcepts = await ctx.store.findRecords({ record_type: "concept" });
+  const primitives = allConcepts.filter(
     (r) =>
-      r.record_type === "concept" &&
       (r as unknown as Record<string, unknown>)["concept_type"] === "design_primitive",
   );
 
@@ -87,7 +87,7 @@ export function findDesignPrimitives(
   });
 }
 
-export function queryDesignSpace(
+export async function queryDesignSpace(
   ctx: McpContext,
   input: {
     primitive_key?: string;
@@ -98,9 +98,8 @@ export function queryDesignSpace(
 ) {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
 
-  let designRelations = ctx.store.relations.filter(
-    (r) => r.relation_scope === "design" || r.relation_scope === "cross_game",
-  );
+  let designRelations = (await ctx.store.findRelations({ relation_scope: "design" }))
+    .concat(await ctx.store.findRelations({ relation_scope: "cross_game" }));
 
   // Further filter to design-space relation types only
   const designRelationTypes = new Set([
@@ -110,7 +109,7 @@ export function queryDesignSpace(
   designRelations = designRelations.filter((r) => designRelationTypes.has(r.relation_type));
 
   if (input.primitive_key) {
-    const primitive = ctx.store.records.find((r) => r.key === input.primitive_key);
+    const primitive = await ctx.store.resolveRecordByKey(input.primitive_key);
     if (primitive) {
       designRelations = designRelations.filter(
         (r) => r.source_record_id === primitive.id || r.target_record_id === primitive.id,
@@ -131,10 +130,10 @@ export function queryDesignSpace(
 
   const page = sorted.slice(0, limit);
 
-  return envelope(ctx, {
-    relations: page.map((r) => {
-      const source = resolveRecordByIdSafe(ctx, r.source_record_id);
-      const target = resolveRecordByIdSafe(ctx, r.target_record_id);
+  const relationsWithRecords = await Promise.all(
+    page.map(async (r) => {
+      const source = await resolveRecordByIdSafe(ctx, r.source_record_id);
+      const target = await resolveRecordByIdSafe(ctx, r.target_record_id);
       return {
         relation_id: r.id,
         relation_type: r.relation_type,
@@ -142,12 +141,16 @@ export function queryDesignSpace(
         target: target ? { record_id: target.id, record_key: target.key, record_type: target.record_type } : null,
       };
     }),
+  );
+
+  return envelope(ctx, {
+    relations: relationsWithRecords,
     count: page.length,
   });
 }
 
-function resolveRecordByIdSafe(ctx: McpContext, id: string) {
-  return ctx.store.records.find((r) => r.id === id);
+async function resolveRecordByIdSafe(ctx: McpContext, id: string) {
+  return ctx.store.resolveRecordById(id);
 }
 
 function sortByQuality(records: CanonicalRecord[]) {

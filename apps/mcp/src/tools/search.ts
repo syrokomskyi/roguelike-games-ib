@@ -38,7 +38,7 @@ export async function searchRecords(
     }
   }
 
-  const result = await ctx.searchIndex.search({
+  const result = await ctx.searchBackend.search({
     text: input.query,
     filters: input.filters,
     limit,

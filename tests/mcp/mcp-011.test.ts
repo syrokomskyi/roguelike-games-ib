@@ -140,27 +140,27 @@ describe("MCP-011: new query tools", () => {
 
   // --- get_claims_by_predicate ---
 
-  it("get_claims_by_predicate returns all claims for a predicate", () => {
-    const result = getClaimsByPredicate(setup.ctx, { predicate: "has_resistance" });
+  it("get_claims_by_predicate returns all claims for a predicate", async () => {
+    const result = await getClaimsByPredicate(setup.ctx, { predicate: "has_resistance" });
     expect(result.data.predicate).toBe("has_resistance");
     expect(result.data.claims).toHaveLength(3);
     expect(result.data.total).toBe(3);
   });
 
-  it("get_claims_by_predicate filters by source_id", () => {
-    const result = getClaimsByPredicate(setup.ctx, { predicate: "has_resistance", source_id: "src-a" });
+  it("get_claims_by_predicate filters by source_id", async () => {
+    const result = await getClaimsByPredicate(setup.ctx, { predicate: "has_resistance", source_id: "src-a" });
     expect(result.data.claims).toHaveLength(1);
     expect(result.data.claims[0].subject_record_key).toBe("goblin");
   });
 
-  it("get_claims_by_predicate returns empty for unknown predicate", () => {
-    const result = getClaimsByPredicate(setup.ctx, { predicate: "nonexistent" });
+  it("get_claims_by_predicate returns empty for unknown predicate", async () => {
+    const result = await getClaimsByPredicate(setup.ctx, { predicate: "nonexistent" });
     expect(result.data.claims).toHaveLength(0);
     expect(result.data.total).toBe(0);
   });
 
-  it("get_claims_by_predicate includes subject record info", () => {
-    const result = getClaimsByPredicate(setup.ctx, { predicate: "has_resistance" });
+  it("get_claims_by_predicate includes subject record info", async () => {
+    const result = await getClaimsByPredicate(setup.ctx, { predicate: "has_resistance" });
     for (const claim of result.data.claims) {
       expect(claim.subject_record_id).toBeTruthy();
       expect(claim.subject_record_key).toBeTruthy();
@@ -170,60 +170,60 @@ describe("MCP-011: new query tools", () => {
 
   // --- get_concept_members ---
 
-  it("get_concept_members resolves derived_from records", () => {
-    const result = getConceptMembers(setup.ctx, { key: "fire-resistance" });
+  it("get_concept_members resolves derived_from records", async () => {
+    const result = await getConceptMembers(setup.ctx, { key: "fire-resistance" });
     expect(result.data.concept_key).toBe("fire-resistance");
     expect(result.data.total_members).toBe(2);
     expect(result.data.members).toHaveLength(2);
   });
 
-  it("get_concept_members groups by source", () => {
-    const result = getConceptMembers(setup.ctx, { key: "fire-resistance" });
+  it("get_concept_members groups by source", async () => {
+    const result = await getConceptMembers(setup.ctx, { key: "fire-resistance" });
     expect(result.data.members_by_source["src-a"]).toBeDefined();
     expect(result.data.members_by_source["src-a"].count).toBe(1);
     expect(result.data.members_by_source["src-b"]).toBeDefined();
     expect(result.data.members_by_source["src-b"].count).toBe(1);
   });
 
-  it("get_concept_members returns empty for concept with no members", () => {
-    const result = getConceptMembers(setup.ctx, { key: "shop-and-economy" });
+  it("get_concept_members returns empty for concept with no members", async () => {
+    const result = await getConceptMembers(setup.ctx, { key: "shop-and-economy" });
     expect(result.data.total_members).toBe(0);
     expect(result.data.members).toHaveLength(0);
   });
 
-  it("get_concept_members rejects non-concept record", () => {
-    expect(() => getConceptMembers(setup.ctx, { key: "goblin" })).toThrow();
+  it("get_concept_members rejects non-concept record", async () => {
+    await expect(getConceptMembers(setup.ctx, { key: "goblin" })).rejects.toThrow();
   });
 
-  it("get_concept_members works with record_id", () => {
-    const result = getConceptMembers(setup.ctx, { record_id: id4 });
+  it("get_concept_members works with record_id", async () => {
+    const result = await getConceptMembers(setup.ctx, { record_id: id4 });
     expect(result.data.concept_key).toBe("fire-resistance");
     expect(result.data.total_members).toBe(2);
   });
 
   // --- get_design_tensions ---
 
-  it("get_design_tensions returns all tensions without filter", () => {
-    const result = getDesignTensions(setup.ctx, {});
+  it("get_design_tensions returns all tensions without filter", async () => {
+    const result = await getDesignTensions(setup.ctx, {});
     expect(result.data.total).toBe(2);
     expect(result.data.tensions).toHaveLength(2);
   });
 
-  it("get_design_tensions filters by record_key", () => {
-    const result = getDesignTensions(setup.ctx, { record_key: "shop-and-economy" });
+  it("get_design_tensions filters by record_key", async () => {
+    const result = await getDesignTensions(setup.ctx, { record_key: "shop-and-economy" });
     expect(result.data.total).toBe(2);
     expect(result.data.tensions).toHaveLength(2);
   });
 
-  it("get_design_tensions filters by record_id", () => {
-    const result = getDesignTensions(setup.ctx, { record_id: id6 });
+  it("get_design_tensions filters by record_id", async () => {
+    const result = await getDesignTensions(setup.ctx, { record_id: id6 });
     expect(result.data.total).toBe(1);
     expect(result.data.tensions[0].source!.record_key).toBe("shop-and-economy");
     expect(result.data.tensions[0].target!.record_key).toBe("permadeath");
   });
 
-  it("get_design_tensions returns tensions involving concept records", () => {
-    const result = getDesignTensions(setup.ctx, { record_key: "fire-resistance" });
+  it("get_design_tensions returns tensions involving concept records", async () => {
+    const result = await getDesignTensions(setup.ctx, { record_key: "fire-resistance" });
     expect(result.data.total).toBe(1);
     expect(result.data.tensions[0].source!.record_key).toBe("shop-and-economy");
     expect(result.data.tensions[0].target!.record_key).toBe("fire-resistance");
@@ -231,8 +231,8 @@ describe("MCP-011: new query tools", () => {
 
   // --- find_by_attribute ---
 
-  it("find_by_attribute finds records with exact match in array", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF" });
+  it("find_by_attribute finds records with exact match in array", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF" });
     expect(result.data.total).toBe(2);
     expect(result.data.records).toHaveLength(2);
     const keys = result.data.records.map((r) => r.record_key);
@@ -240,35 +240,35 @@ describe("MCP-011: new query tools", () => {
     expect(keys).toContain("dragon");
   });
 
-  it("find_by_attribute filters by source_id", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF", source_id: "src-b" });
+  it("find_by_attribute filters by source_id", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF", source_id: "src-b" });
     expect(result.data.total).toBe(1);
     expect(result.data.records[0].record_key).toBe("dragon");
   });
 
-  it("find_by_attribute filters by record_type", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF", record_type: "creature" });
+  it("find_by_attribute filters by record_type", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF", record_type: "creature" });
     expect(result.data.total).toBe(2);
   });
 
-  it("find_by_attribute supports contains mode", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "flags", value: "fire", match_mode: "contains" });
+  it("find_by_attribute supports contains mode", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "flags", value: "fire", match_mode: "contains" });
     expect(result.data.total).toBe(2);
   });
 
-  it("find_by_attribute matches scalar attributes", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "hp", value: "50" });
+  it("find_by_attribute matches scalar attributes", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "hp", value: "50" });
     expect(result.data.total).toBe(1);
     expect(result.data.records[0].record_key).toBe("dragon");
   });
 
-  it("find_by_attribute returns empty for nonexistent attribute", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "nonexistent", value: "test" });
+  it("find_by_attribute returns empty for nonexistent attribute", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "nonexistent", value: "test" });
     expect(result.data.total).toBe(0);
   });
 
-  it("find_by_attribute includes matched_value in results", () => {
-    const result = findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF" });
+  it("find_by_attribute includes matched_value in results", async () => {
+    const result = await findByAttribute(setup.ctx, { attribute: "flags", value: "FIREPROOF" });
     for (const r of result.data.records) {
       expect(r.matched_value).toBeTruthy();
     }

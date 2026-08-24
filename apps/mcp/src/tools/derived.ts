@@ -18,13 +18,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEFAULT_QUALITY_SCORING_CONFIG } from "@roguelike-games-ib/materializer";
+import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { McpContext } from "../context.ts";
 import { envelope } from "../envelope.ts";
 import { paginate } from "../pagination.ts";
 import { NotFoundError, ValidationError } from "../errors.ts";
 import { SENSATION_MAP } from "./sensation-map.ts";
 
-export function findSemanticRecords(
+export async function findSemanticRecords(
   ctx: McpContext,
   input: {
     source_id?: string;
@@ -40,7 +41,8 @@ export function findSemanticRecords(
   if (input.semantic_type) filters.semantic_type = input.semantic_type;
   if (input.kind) filters.kind = input.kind;
 
-  let records = ctx.store.records.filter((r) => {
+  const allRecords = await ctx.store.findAllRecords();
+  let records = allRecords.filter((r) => {
     if (r.record_type !== "semantic_record") return false;
     if (input.semantic_type) {
       const st = (r as unknown as Record<string, unknown>)["semantic_type"];
@@ -81,13 +83,13 @@ export function findSemanticRecords(
   });
 }
 
-export function getDerivedSummary(
+export async function getDerivedSummary(
   ctx: McpContext,
   _input: unknown,
 ) {
-  const records = ctx.store.records;
-  const claims = ctx.store.claims;
-  const relations = ctx.store.relations;
+  const records = await ctx.store.findAllRecords();
+  const claims = await ctx.store.findAllClaims();
+  const relations = await ctx.store.findAllRelations();
 
   const recordCounts: Record<string, number> = {};
   for (const r of records) {
@@ -135,7 +137,7 @@ export function getDerivedSummary(
   });
 }
 
-export function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.records[number]): Set<string> {
+export async function getConceptSourceIds(ctx: McpContext, concept: CanonicalRecord): Promise<Set<string>> {
   const result = new Set<string>();
   const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
     Record<string, unknown> | undefined;
@@ -145,7 +147,7 @@ export function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.r
   const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
   if (implRefs) {
     for (const refId of implRefs) {
-      const refRecord = ctx.store.resolveRecordById(refId);
+      const refRecord = await ctx.store.resolveRecordById(refId);
       if (refRecord) {
         const si = (refRecord as unknown as Record<string, unknown>)["source_identity"] as
           Record<string, unknown> | undefined;
@@ -156,10 +158,9 @@ export function getConceptSourceIds(ctx: McpContext, concept: typeof ctx.store.r
   return result;
 }
 
-function resolveRefsBySource(ctx: McpContext, refIds: string[], sourceId: string) {
-  return refIds
-    .map((refId) => ctx.store.resolveRecordById(refId))
-    .filter((r): r is NonNullable<typeof r> => {
+async function resolveRefsBySource(ctx: McpContext, refIds: string[], sourceId: string) {
+  const resolved = await Promise.all(refIds.map((refId) => ctx.store.resolveRecordById(refId)));
+  return resolved.filter((r): r is CanonicalRecord => {
       if (!r) return false;
       const si = (r as unknown as Record<string, unknown>)["source_identity"] as
         Record<string, unknown> | undefined;
@@ -167,9 +168,10 @@ function resolveRefsBySource(ctx: McpContext, refIds: string[], sourceId: string
     });
 }
 
-export function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>) {
-  const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
-  const sourceIds = ctx.store.sources.map((s) => s.source_id).sort();
+export async function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>) {
+  const concepts = await ctx.store.findRecords({ record_type: "concept" });
+  const sources = await ctx.store.findAllSources();
+  const sourceIds = sources.map((s) => s.source_id).sort();
   const conceptTypes = new Set<string>();
   const matrix: Record<string, Record<string, number>> = {};
   for (const sid of sourceIds) {
@@ -179,7 +181,7 @@ export function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>
   for (const concept of concepts) {
     const ct = (concept as unknown as Record<string, unknown>)["concept_type"] as string ?? "unknown";
     conceptTypes.add(ct);
-    const coveredGames = getConceptSourceIds(ctx, concept);
+    const coveredGames = await getConceptSourceIds(ctx, concept);
     for (const sid of coveredGames) {
       if (matrix[sid]) {
         matrix[sid][ct] = (matrix[sid][ct] ?? 0) + 1;
@@ -194,7 +196,7 @@ export function getCoverageMatrix(ctx: McpContext, _input: Record<string, never>
   });
 }
 
-export function getConceptCoverage(
+export async function getConceptCoverage(
   ctx: McpContext,
   input: { record_id?: string; key?: string; limit?: number },
 ) {
@@ -205,11 +207,11 @@ export function getConceptCoverage(
     throw new ValidationError("Only one of record_id or key is allowed");
   }
 
-  let concept;
+  let concept: CanonicalRecord | undefined;
   if (input.record_id) {
-    concept = ctx.store.resolveRecordById(input.record_id);
+    concept = await ctx.store.resolveRecordById(input.record_id);
   } else {
-    concept = ctx.store.resolveRecordByKey(input.key!);
+    concept = await ctx.store.resolveRecordByKey(input.key!);
   }
 
   if (!concept) {
@@ -228,12 +230,13 @@ export function getConceptCoverage(
   const derivedFrom = (ancestry?.["derived_from"] as string[]) ?? [];
   const allRefs = [...new Set([...(implRefs ?? []), ...derivedFrom])];
 
-  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const sources = await ctx.store.findAllSources();
+  const allSourceIds = sources.map((s) => s.source_id);
   const coverageByGame: Record<string, unknown> = {};
   const gaps: string[] = [];
 
   for (const sid of allSourceIds) {
-    const gameRecords = resolveRefsBySource(ctx, allRefs, sid);
+    const gameRecords = await resolveRefsBySource(ctx, allRefs, sid);
 
     const hasSourceGame = sourceGames.includes(sid);
 
@@ -289,7 +292,7 @@ function loadImplementationNotes(): Record<string, Record<string, Implementation
   return implementationNotesCache;
 }
 
-export function compareConceptImplementations(
+export async function compareConceptImplementations(
   ctx: McpContext,
   input: { concept_key: string; source_ids?: string[] },
 ) {
@@ -297,7 +300,7 @@ export function compareConceptImplementations(
     throw new ValidationError("concept_key is required");
   }
 
-  const concept = ctx.store.resolveRecordByKey(input.concept_key);
+  const concept = await ctx.store.resolveRecordByKey(input.concept_key);
   if (!concept) {
     throw new NotFoundError(`Concept not found: ${input.concept_key}`);
   }
@@ -306,29 +309,32 @@ export function compareConceptImplementations(
   }
 
   const notes = loadImplementationNotes();
-  const allSourceIds = input.source_ids ?? ctx.store.sources.map((s) => s.source_id);
+  const sources = await ctx.store.findAllSources();
+  const allSourceIds = input.source_ids ?? sources.map((s) => s.source_id);
   const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as string[] | undefined;
   const derivedFrom = ((concept as unknown as Record<string, unknown>)["ancestry"] as
     Record<string, unknown> | undefined)?.["derived_from"] as string[] | undefined;
   const allRefs = [...new Set([...(implRefs ?? []), ...(derivedFrom ?? [])])];
 
-  const comparisons = allSourceIds.map((sid) => {
-    const note = notes[input.concept_key]?.[sid];
-    const exemplarRecords = resolveRefsBySource(ctx, allRefs, sid)
-      .slice(0, 5)
-      .map((r) => ({
-        record_id: r.id,
-        record_key: r.key,
-        title: (r as unknown as Record<string, unknown>)["title"] ?? null,
-      }));
+  const comparisons = await Promise.all(
+    allSourceIds.map(async (sid) => {
+      const note = notes[input.concept_key]?.[sid];
+      const exemplarRecords = (await resolveRefsBySource(ctx, allRefs, sid))
+        .slice(0, 5)
+        .map((r) => ({
+          record_id: r.id,
+          record_key: r.key,
+          title: (r as unknown as Record<string, unknown>)["title"] ?? null,
+        }));
 
-    return {
-      source_id: sid,
-      implementation_summary: note?.summary ?? null,
-      distinguishing_attributes: note?.distinguishingAttributes ?? {},
-      exemplar_records: exemplarRecords,
-    };
-  });
+      return {
+        source_id: sid,
+        implementation_summary: note?.summary ?? null,
+        distinguishing_attributes: note?.distinguishingAttributes ?? {},
+        exemplar_records: exemplarRecords,
+      };
+    }),
+  );
 
   return envelope(ctx, {
     concept: {
@@ -340,18 +346,19 @@ export function compareConceptImplementations(
   });
 }
 
-export function findConceptGaps(
+export async function findConceptGaps(
   ctx: McpContext,
   input: { concept_type?: string; source_id?: string },
 ) {
-  let concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  let concepts = await ctx.store.findRecords({ record_type: "concept" });
   if (input.concept_type) {
     concepts = concepts.filter(
       (r) => (r as unknown as Record<string, unknown>)["concept_type"] === input.concept_type,
     );
   }
 
-  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const sources = await ctx.store.findAllSources();
+  const allSourceIds = sources.map((s) => s.source_id);
   const gaps: Array<{
     concept_key: string;
     concept_title: string | null;
@@ -364,7 +371,7 @@ export function findConceptGaps(
   for (const sid of allSourceIds) gapCounts[sid] = 0;
 
   for (const concept of concepts) {
-    const coveredGames = getConceptSourceIds(ctx, concept);
+    const coveredGames = await getConceptSourceIds(ctx, concept);
     const missing = allSourceIds.filter((sid) => !coveredGames.has(sid));
     const present = allSourceIds.filter((sid) => coveredGames.has(sid));
 
@@ -408,7 +415,7 @@ export function findConceptGaps(
   });
 }
 
-export function getConceptQuality(
+export async function getConceptQuality(
   ctx: McpContext,
   input: { record_id?: string; key?: string; min_score?: number },
 ) {
@@ -417,11 +424,11 @@ export function getConceptQuality(
   }
 
   if (input.record_id || input.key) {
-    let concept;
+    let concept: CanonicalRecord | undefined;
     if (input.record_id) {
-      concept = ctx.store.resolveRecordById(input.record_id!);
+      concept = await ctx.store.resolveRecordById(input.record_id!);
     } else {
-      concept = ctx.store.resolveRecordByKey(input.key!);
+      concept = await ctx.store.resolveRecordByKey(input.key!);
     }
 
     if (!concept) {
@@ -446,14 +453,14 @@ export function getConceptQuality(
     return envelope(ctx, {
       concept_key: concept.key,
       quality_score: qualityScore,
-      coverage_detail: buildCoverageDetail(ctx, concept),
-      evidence_detail: buildEvidenceDetail(ctx, concept),
-      richness_detail: buildRichnessDetail(ctx, concept),
+      coverage_detail: await buildCoverageDetail(ctx, concept),
+      evidence_detail: await buildEvidenceDetail(ctx, concept),
+      richness_detail: await buildRichnessDetail(ctx, concept),
     });
   }
 
   const minScore = input.min_score ?? 0;
-  const concepts = ctx.store.records.filter((r) => r.record_type === "concept");
+  const concepts = await ctx.store.findRecords({ record_type: "concept" });
   const results = concepts
     .map((c) => ({
       concept_key: c.key,
@@ -471,42 +478,44 @@ export function getConceptQuality(
   });
 }
 
-function buildCoverageDetail(
+async function buildCoverageDetail(
   ctx: McpContext,
-  concept: typeof ctx.store.records[number],
-): { covered_games: string[]; missing_games: string[] } {
+  concept: CanonicalRecord,
+): Promise<{ covered_games: string[]; missing_games: string[] }> {
   const ancestry = (concept as unknown as Record<string, unknown>)["ancestry"] as
     Record<string, unknown> | undefined;
   const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
-  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const sources = await ctx.store.findAllSources();
+  const allSourceIds = sources.map((s) => s.source_id);
   const covered = sourceGames.filter((g) => allSourceIds.includes(g));
   const missing = allSourceIds.filter((sid) => !sourceGames.includes(sid));
   return { covered_games: covered, missing_games: missing };
 }
 
-function buildEvidenceDetail(
+async function buildEvidenceDetail(
   ctx: McpContext,
-  concept: typeof ctx.store.records[number],
-): { ref_count: number; target: number } {
+  concept: CanonicalRecord,
+): Promise<{ ref_count: number; target: number }> {
   const implRefs = (concept as unknown as Record<string, unknown>)["implementation_refs"] as
     string[] | undefined;
   if (!implRefs) return { ref_count: 0, target: DEFAULT_QUALITY_SCORING_CONFIG.evidence_target };
   let validCount = 0;
   for (const ref of implRefs) {
-    if (ctx.store.resolveRecordById(ref)) validCount++;
+    if (await ctx.store.resolveRecordById(ref)) validCount++;
   }
   return { ref_count: validCount, target: DEFAULT_QUALITY_SCORING_CONFIG.evidence_target };
 }
 
-function buildRichnessDetail(
+async function buildRichnessDetail(
   ctx: McpContext,
-  concept: typeof ctx.store.records[number],
-): { mutation_vectors: number; knobs: number; counterplay: number; failure_modes: number } {
+  concept: CanonicalRecord,
+): Promise<{ mutation_vectors: number; knobs: number; counterplay: number; failure_modes: number }> {
   const detail = { mutation_vectors: 0, knobs: 0, counterplay: 0, failure_modes: 0 };
   const conceptType = (concept as unknown as Record<string, unknown>)["concept_type"] as string | undefined;
   if (conceptType !== "design_primitive") return detail;
 
-  for (const rel of ctx.store.relations) {
+  const allRelations = await ctx.store.findAllRelations();
+  for (const rel of allRelations) {
     if (rel.source_record_id !== concept.id) continue;
     switch (rel.relation_type) {
       case "HAS_MUTATION_VECTOR": detail.mutation_vectors++; break;
@@ -529,15 +538,15 @@ export async function searchDesignSpace(
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
   const overfetchLimit = input.concept_type ? limit * 3 : limit;
 
-  const result = await ctx.searchIndex.search({
+  const result = await ctx.searchBackend.search({
     text: input.query,
     filters: { record_type: "concept" },
     limit: overfetchLimit,
   });
 
-  const concepts = result.hits
-    .map((hit) => {
-      const stored = ctx.store.resolveRecordById(hit.record.id);
+  const concepts = (await Promise.all(
+    result.hits.map(async (hit) => {
+      const stored = await ctx.store.resolveRecordById(hit.record.id);
       const fullRecord = (stored as unknown as Record<string, unknown>)
         ?? (JSON.parse(hit.record.json) as Record<string, unknown>);
       const conceptType = fullRecord["concept_type"] as string | undefined;
@@ -556,8 +565,8 @@ export async function searchDesignSpace(
         quality_score: qualityScore ?? null,
         score: hit.scores.final_score,
       };
-    })
-    .filter((c): c is NonNullable<typeof c> => c !== null)
+    }),
+  )).filter((c): c is NonNullable<typeof c> => c !== null)
     .slice(0, limit);
 
   return envelope(ctx, {
@@ -567,11 +576,12 @@ export async function searchDesignSpace(
   });
 }
 
-export function findDesignPatterns(
+export async function findDesignPatterns(
   ctx: McpContext,
   input: { game?: string; primitive_key?: string },
 ) {
-  let patterns = ctx.store.records.filter((r) => {
+  const allRecords = await ctx.store.findAllRecords();
+  let patterns = allRecords.filter((r) => {
     if (r.record_type !== "concept") return false;
     const ct = (r as unknown as Record<string, unknown>)["concept_type"] as string | undefined;
     return ct === "design_pattern";
@@ -612,7 +622,7 @@ export function findDesignPatterns(
   });
 }
 
-export function getPatternExamples(
+export async function getPatternExamples(
   ctx: McpContext,
   input: { pattern_key: string },
 ) {
@@ -620,7 +630,7 @@ export function getPatternExamples(
     throw new ValidationError("pattern_key is required");
   }
 
-  const pattern = ctx.store.resolveRecordByKey(input.pattern_key);
+  const pattern = await ctx.store.resolveRecordByKey(input.pattern_key);
   if (!pattern) {
     throw new NotFoundError(`Pattern not found: ${input.pattern_key}`);
   }
@@ -638,7 +648,7 @@ export function getPatternExamples(
   const examplesByGame: Record<string, Array<{ primitive_key: string; description: string; record_refs: string[]; source_file: string }>> = {};
 
   for (const primKey of memberPrimitiveKeys) {
-    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    const primRecord = await ctx.store.resolveRecordByKey(primKey);
     if (!primRecord) continue;
     const concreteExamples = (primRecord as unknown as Record<string, unknown>)["concrete_examples"] as
       | Array<{ game: string; description: string; record_refs: string[]; source_file: string }>
@@ -757,8 +767,8 @@ export async function generateDesignSeed(
   }
 
   const excludedMechanicsFiltered: { requested_exclusion: string; filtered_concepts: string[] }[] = [];
-  const filterExcluded = (key: string): boolean => {
-    const record = ctx.store.resolveRecordByKey(key);
+  const filterExcluded = async (key: string): Promise<boolean> => {
+    const record = await ctx.store.resolveRecordByKey(key);
     if (!record) return false;
     const ra = record as unknown as Record<string, unknown>;
     const result = isExcluded(ra, excluded);
@@ -774,12 +784,18 @@ export async function generateDesignSeed(
     return true;
   };
 
-  const activePrimitiveKeys = primitiveKeys.filter(filterExcluded);
-  const activePressureKeys = pressureKeys.filter(filterExcluded);
-  const activePatternKeys = patternKeys.filter(filterExcluded);
+  const activePrimitiveKeys = (await Promise.all(
+    primitiveKeys.map(async (key) => ({ key, keep: await filterExcluded(key) })),
+  )).filter((e) => e.keep).map((e) => e.key);
+  const activePressureKeys = (await Promise.all(
+    pressureKeys.map(async (key) => ({ key, keep: await filterExcluded(key) })),
+  )).filter((e) => e.keep).map((e) => e.key);
+  const activePatternKeys = (await Promise.all(
+    patternKeys.map(async (key) => ({ key, keep: await filterExcluded(key) })),
+  )).filter((e) => e.keep).map((e) => e.key);
 
-  const buildDossierConcept = (key: string): DossierConcept | null => {
-    const record = ctx.store.resolveRecordByKey(key);
+  const buildDossierConcept = async (key: string): Promise<DossierConcept | null> => {
+    const record = await ctx.store.resolveRecordByKey(key);
     if (!record) return null;
     const ra = record as unknown as Record<string, unknown>;
     const title = (ra["title"] as string) ?? key;
@@ -796,20 +812,22 @@ export async function generateDesignSeed(
     };
   };
 
-  const relevantPrimitives = activePrimitiveKeys
-    .map(buildDossierConcept)
-    .filter((c): c is DossierConcept => c !== null);
+  const relevantPrimitives = (await Promise.all(
+    activePrimitiveKeys.map(buildDossierConcept),
+  )).filter((c): c is DossierConcept => c !== null);
 
-  const relevantPressures = activePressureKeys
-    .map(buildDossierConcept)
-    .filter((c): c is DossierConcept => c !== null);
+  const relevantPressures = (await Promise.all(
+    activePressureKeys.map(buildDossierConcept),
+  )).filter((c): c is DossierConcept => c !== null);
 
   const mutationVectors: DossierMutationVector[] = [];
   const ancestryTrail: { step: number; type: "source_structure" | "mutation" | "possibility"; ref: string; description: string }[] = [];
   let stepCounter = 1;
 
+  const allRelations = await ctx.store.findAllRelations();
+
   for (const primKey of activePrimitiveKeys) {
-    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    const primRecord = await ctx.store.resolveRecordByKey(primKey);
     if (!primRecord) continue;
     const primRa = primRecord as unknown as Record<string, unknown>;
     const primTitle = (primRa["title"] as string) ?? primKey;
@@ -821,22 +839,22 @@ export async function generateDesignSeed(
       description: `Canonical primitive: ${primTitle}`,
     });
 
-    for (const rel of ctx.store.relations) {
+    for (const rel of allRelations) {
       if (rel.relation_type !== "HAS_MUTATION_VECTOR" || rel.source_record_id !== primRecord.id) continue;
-      const mutRecord = ctx.store.resolveRecordById(rel.target_record_id);
+      const mutRecord = await ctx.store.resolveRecordById(rel.target_record_id);
       if (!mutRecord) continue;
       const mutRa = mutRecord as unknown as Record<string, unknown>;
       const mutTitle = (mutRa["title"] as string) ?? mutRecord.key;
       const mutDef = (mutRa["definition"] as string) ?? "";
 
       const knobs: string[] = [];
-      for (const knobRel of ctx.store.relations) {
+      for (const knobRel of allRelations) {
         if (knobRel.relation_type !== "IMPLEMENTED_AS" || knobRel.source_record_id !== mutRecord.id) continue;
-        const knobRecord = ctx.store.resolveRecordById(knobRel.target_record_id);
+        const knobRecord = await ctx.store.resolveRecordById(knobRel.target_record_id);
         if (knobRecord) knobs.push(knobRecord.key);
       }
 
-      if (!filterExcluded(mutRecord.key)) continue;
+      if (!await filterExcluded(mutRecord.key)) continue;
 
       mutationVectors.push({
         key: mutRecord.key,
@@ -853,8 +871,8 @@ export async function generateDesignSeed(
       });
 
       for (const knobKey of knobs) {
-        if (!filterExcluded(knobKey)) continue;
-        const knobRecord = ctx.store.resolveRecordByKey(knobKey);
+        if (!await filterExcluded(knobKey)) continue;
+        const knobRecord = await ctx.store.resolveRecordByKey(knobKey);
         const knobTitle = knobRecord ? ((knobRecord as unknown as Record<string, unknown>)["title"] as string) ?? knobKey : knobKey;
         ancestryTrail.push({
           step: stepCounter++,
@@ -868,7 +886,7 @@ export async function generateDesignSeed(
 
   const concreteExamples: DossierExample[] = [];
   for (const primKey of activePrimitiveKeys) {
-    const primRecord = ctx.store.resolveRecordByKey(primKey);
+    const primRecord = await ctx.store.resolveRecordByKey(primKey);
     if (!primRecord) continue;
     const primRa = primRecord as unknown as Record<string, unknown>;
     const examples = primRa["concrete_examples"] as
@@ -887,13 +905,13 @@ export async function generateDesignSeed(
   const designTensions: { tension: string; description: string }[] = [];
   const tensionPairs = new Set<string>();
   for (const pressureKey of activePressureKeys) {
-    const pressureRecord = ctx.store.resolveRecordByKey(pressureKey);
+    const pressureRecord = await ctx.store.resolveRecordByKey(pressureKey);
     if (!pressureRecord) continue;
-    for (const rel of ctx.store.relations) {
+    for (const rel of allRelations) {
       if (rel.relation_type !== "tensions_with") continue;
       if (rel.source_record_id !== pressureRecord.id && rel.target_record_id !== pressureRecord.id) continue;
-      const source = ctx.store.resolveRecordById(rel.source_record_id);
-      const target = ctx.store.resolveRecordById(rel.target_record_id);
+      const source = await ctx.store.resolveRecordById(rel.source_record_id);
+      const target = await ctx.store.resolveRecordById(rel.target_record_id);
       if (!source || !target) continue;
       const pairKey = [source.key, target.key].sort().join(" ↔ ");
       if (tensionPairs.has(pairKey)) continue;
@@ -938,7 +956,8 @@ export async function recommendGames(
   const limit = Math.min(Math.max(input.limit ?? 10, 1), 100);
   const minScore = input.min_score ?? 0.1;
 
-  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+  const sources = await ctx.store.findAllSources();
+  const allSourceIds = sources.map((s) => s.source_id);
 
   type ConceptRef = { key: string; concept_type: string };
   const sensationConceptsMap = new Map<string, ConceptRef[]>();
@@ -993,7 +1012,7 @@ export async function recommendGames(
       let matchedCount = 0;
 
       for (const conceptRef of concepts) {
-        const record = ctx.store.resolveRecordByKey(conceptRef.key);
+        const record = await ctx.store.resolveRecordByKey(conceptRef.key);
         if (!record) continue;
 
         const ra = record as unknown as Record<string, unknown>;
@@ -1048,19 +1067,21 @@ export async function recommendGames(
     let rationale: string;
     if (matchedPatterns.length > 0) {
       const patternTitles = matchedPatterns.map((p) => p.title).join(", ");
-      const patternDetails = matchedPatterns.map((p) => {
-        const patternRecord = ctx.store.resolveRecordByKey(p.key);
-        if (!patternRecord) return p.title;
-        const pra = patternRecord as unknown as Record<string, unknown>;
-        const memberPrimitives = (pra["member_primitives"] as string[]) ?? [];
-        const primitiveNames = memberPrimitives
-          .map((mk) => {
-            const mr = ctx.store.resolveRecordByKey(mk);
-            return mr ? ((mr as unknown as Record<string, unknown>)["title"] as string) ?? mk : mk;
-          })
-          .join(" + ");
-        return `${p.title} (${primitiveNames})`;
-      }).join("; ");
+      const patternDetails = (await Promise.all(
+        matchedPatterns.map(async (p) => {
+          const patternRecord = await ctx.store.resolveRecordByKey(p.key);
+          if (!patternRecord) return p.title;
+          const pra = patternRecord as unknown as Record<string, unknown>;
+          const memberPrimitives = (pra["member_primitives"] as string[]) ?? [];
+          const primitiveNames = (await Promise.all(
+            memberPrimitives.map(async (mk) => {
+              const mr = await ctx.store.resolveRecordByKey(mk);
+              return mr ? ((mr as unknown as Record<string, unknown>)["title"] as string) ?? mk : mk;
+            }),
+          )).join(" + ");
+          return `${p.title} (${primitiveNames})`;
+        }),
+      )).join("; ");
       rationale = `${sourceId} scores ${scorePercent}% for [${sensationsList}] because it implements ${patternTitles} (${patternDetails}). ${totalMatchedCount} of ${totalCount} relevant concepts are present.`;
     } else {
       rationale = `${sourceId} scores ${scorePercent}% for [${sensationsList}] based on ${totalMatchedCount} of ${totalCount} relevant design primitives.`;

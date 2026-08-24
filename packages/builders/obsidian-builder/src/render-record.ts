@@ -13,7 +13,7 @@
 import type { CanonicalRecord } from "@roguelike-games-ib/materializer";
 import type { ClaimRecord, RelationRecord } from "@roguelike-games-ib/knowledge-core";
 import type { PublicEvidence } from "@roguelike-games-ib/materializer";
-import type { ProjectionStore } from "@roguelike-games-ib/projection-sdk";
+import type { ProjectionStore, IProjectionStore } from "@roguelike-games-ib/projection-sdk";
 import { buildEvidenceUrl } from "@roguelike-games-ib/projection-sdk";
 import { groupRelationsByType } from "@roguelike-games-ib/projection-sdk";
 import { createFrontmatter, serializeFrontmatter } from "./frontmatter.ts";
@@ -46,7 +46,7 @@ function renderProperties(record: CanonicalRecord): string {
 }
 
 function renderConceptDetails(
-  store: ProjectionStore,
+  store: IProjectionStore,
   resolver: PathResolver,
   aliasMap: AliasMap,
   record: CanonicalRecord,
@@ -107,13 +107,13 @@ function renderConceptDetails(
   return sections.join("\n");
 }
 
-function renderRelations(
-  store: ProjectionStore,
+async function renderRelations(
+  store: IProjectionStore,
   resolver: PathResolver,
   aliasMap: AliasMap,
   recordId: string,
-): string {
-  const { outgoing, incoming } = store.relationsForRecord(recordId);
+): Promise<string> {
+  const { outgoing, incoming } = await store.relationsForRecord(recordId);
   if (outgoing.length === 0 && incoming.length === 0) return "";
 
   const lines: string[] = ["## Relations"];
@@ -142,14 +142,14 @@ function renderRelations(
   return lines.join("\n");
 }
 
-function renderClaims(
-  store: ProjectionStore,
+async function renderClaims(
+  store: IProjectionStore,
   resolver: PathResolver,
   aliasMap: AliasMap,
   recordId: string,
-): string {
-  const claims = store.claimsForRecord(recordId);
-  const refClaims = store.claimsReferencingRecord(recordId);
+): Promise<string> {
+  const claims = await store.claimsForRecord(recordId);
+  const refClaims = await store.claimsReferencingRecord(recordId);
   if (claims.length === 0 && refClaims.length === 0) return "";
 
   const lines: string[] = ["## Claims"];
@@ -164,7 +164,7 @@ function renderClaims(
     }
     lines.push(`- **${claim.predicate}**: ${valueStr}${state}`);
 
-    const ev = store.evidenceForClaim(claim.evidence_refs);
+    const ev = await store.evidenceForClaim(claim.evidence_refs);
     if (ev.length > 0) {
       for (const e of ev) {
         const excerpt = e.excerpt ? ` — *"${e.excerpt}"*` : "";
@@ -179,16 +179,17 @@ function renderClaims(
   return lines.join("\n");
 }
 
-function renderEvidence(
+async function renderEvidence(
   store: ProjectionStore,
   record: CanonicalRecord,
-): string {
+): Promise<string> {
   const recordEvidenceRefs = ((record as Record<string, unknown>)["evidence_refs"] as string[]) ?? [];
-  const claimEvidenceRefs = store.claimsForRecord(record.id).flatMap((c) => c.evidence_refs);
+  const claims = await store.claimsForRecord(record.id);
+  const claimEvidenceRefs = claims.flatMap((c) => c.evidence_refs);
   const allRefs = [...recordEvidenceRefs, ...claimEvidenceRefs];
   if (allRefs.length === 0) return "";
 
-  const ev = store.evidenceForClaim(allRefs);
+  const ev = await store.evidenceForClaim(allRefs);
   if (ev.length === 0) return "";
 
   const lines: string[] = ["## Evidence"];
@@ -216,11 +217,11 @@ function renderEvidence(
   return lines.join("\n");
 }
 
-export function renderRecordNote(
+export async function renderRecordNote(
   store: ProjectionStore,
   resolver: PathResolver,
   record: CanonicalRecord,
-): string {
+): Promise<string> {
   const aliasMap = store.aliasMap;
   const fm = createFrontmatter(record, store.canonicalHash);
   const fmText = serializeFrontmatter(fm);
@@ -241,17 +242,17 @@ export function renderRecordNote(
     sections.push(conceptDetails);
   }
 
-  const rels = renderRelations(store, resolver, aliasMap, record.id);
+  const rels = await renderRelations(store, resolver, aliasMap, record.id);
   if (rels) {
     sections.push(rels, "");
   }
 
-  const claims = renderClaims(store, resolver, aliasMap, record.id);
+  const claims = await renderClaims(store, resolver, aliasMap, record.id);
   if (claims) {
     sections.push(claims, "");
   }
 
-  const evidence = renderEvidence(store, record);
+  const evidence = await renderEvidence(store, record);
   if (evidence) {
     sections.push(evidence, "");
   }

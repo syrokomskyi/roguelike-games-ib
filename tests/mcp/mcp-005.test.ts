@@ -61,9 +61,10 @@ describe("MCP-005: arbitrary source file access impossible", () => {
 
   it("get_evidence does not expose raw artifact file content", async () => {
     const { getEvidence } = await import("@roguelike-games-ib/mcp");
-    const evidence = setup.ctx.store.evidence;
+    const store = setup.ctx.store as unknown as { evidence: Array<{ id: string }> };
+    const evidence = store.evidence;
     if (evidence.length > 0) {
-      const result = getEvidence(setup.ctx, { evidence_id: evidence[0].id });
+      const result = await getEvidence(setup.ctx, { evidence_id: evidence[0].id });
       expect(result.data.artifact_path).not.toContain("..");
       expect(result.data).not.toHaveProperty("file_content");
       expect(result.data).not.toHaveProperty("raw_bytes");

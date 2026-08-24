@@ -27,8 +27,8 @@ describe("OBS-005: generated warning is present", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("README.md contains the generated warning", () => {
-    const result = buildObsidianVault({
+  it("README.md contains the generated warning", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -39,8 +39,8 @@ describe("OBS-005: generated warning is present", () => {
     expect(readme).toContain("DO NOT EDIT AS CANONICAL KNOWLEDGE");
   });
 
-  it("_meta/generated.txt contains the warning", () => {
-    const result = buildObsidianVault({
+  it("_meta/generated.txt contains the warning", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

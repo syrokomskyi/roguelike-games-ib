@@ -36,8 +36,8 @@ describe("OBS-001: every note carries id/key/hash/generated frontmatter", () => 
 
   afterEach(() => setup.cleanup());
 
-  it("every generated note has required frontmatter fields", () => {
-    const result = buildObsidianVault({
+  it("every generated note has required frontmatter fields", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -60,8 +60,8 @@ describe("OBS-001: every note carries id/key/hash/generated frontmatter", () => 
     }
   });
 
-  it("frontmatter canonical_hash matches current build hash", () => {
-    const result = buildObsidianVault({
+  it("frontmatter canonical_hash matches current build hash", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

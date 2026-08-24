@@ -33,23 +33,23 @@ describe("MCP-009: MCP exposes CC-BY-4.0 metadata", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("get_dataset_info returns CC-BY-4.0 license", () => {
-    const result = getDatasetInfo(setup.ctx);
+  it("get_dataset_info returns CC-BY-4.0 license", async () => {
+    const result = await getDatasetInfo(setup.ctx);
     expect(result.data.license).toBe("CC-BY-4.0");
   });
 
-  it("response envelope includes license", () => {
-    const result = getDatasetInfo(setup.ctx);
+  it("response envelope includes license", async () => {
+    const result = await getDatasetInfo(setup.ctx);
     expect(result.dataset.license).toBe("CC-BY-4.0");
   });
 
-  it("response envelope includes canonical hash", () => {
-    const result = getDatasetInfo(setup.ctx);
+  it("response envelope includes canonical hash", async () => {
+    const result = await getDatasetInfo(setup.ctx);
     expect(result.dataset.canonical_hash).toBe(setup.canonicalHash);
   });
 
-  it("dataset info includes source count and record counts", () => {
-    const result = getDatasetInfo(setup.ctx);
+  it("dataset info includes source count and record counts", async () => {
+    const result = await getDatasetInfo(setup.ctx);
     expect(result.data.source_count).toBe(1);
     expect(result.data.record_counts).toBeTruthy();
     expect(result.data.total_records).toBeGreaterThan(0);

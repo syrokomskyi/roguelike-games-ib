@@ -49,41 +49,41 @@ describe("MCP-007: traversal depth hard max enforced", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("depth 1 returns only direct neighbors", () => {
-    const result = traverseRelations(setup.ctx, { record_id: testId(1), depth: 1 });
+  it("depth 1 returns only direct neighbors", async () => {
+    const result = await traverseRelations(setup.ctx, { record_id: testId(1), depth: 1 });
     expect(result.data.edges).toHaveLength(1);
     expect(result.data.edges[0].record_key).toBe("kobold");
     expect(result.data.edges[0].depth).toBe(1);
   });
 
-  it("depth 2 returns neighbors and their neighbors", () => {
-    const result = traverseRelations(setup.ctx, { record_id: testId(1), depth: 2 });
+  it("depth 2 returns neighbors and their neighbors", async () => {
+    const result = await traverseRelations(setup.ctx, { record_id: testId(1), depth: 2 });
     const keys = result.data.edges.map((e) => e.record_key);
     expect(keys).toContain("kobold");
     expect(keys).toContain("dragon");
     expect(result.data.edges.some((e) => e.depth === 2)).toBe(true);
   });
 
-  it("depth 3 returns up to 3 hops", () => {
-    const result = traverseRelations(setup.ctx, { record_id: testId(1), depth: 3 });
+  it("depth 3 returns up to 3 hops", async () => {
+    const result = await traverseRelations(setup.ctx, { record_id: testId(1), depth: 3 });
     const keys = result.data.edges.map((e) => e.record_key);
     expect(keys).toContain("kobold");
     expect(keys).toContain("dragon");
     expect(keys).toContain("wraith");
   });
 
-  it("depth 4 is clamped to hard max 3", () => {
-    const result = traverseRelations(setup.ctx, { record_id: testId(1), depth: 4 });
+  it("depth 4 is clamped to hard max 3", async () => {
+    const result = await traverseRelations(setup.ctx, { record_id: testId(1), depth: 4 });
     expect(result.data.max_depth).toBe(3);
     const keys = result.data.edges.map((e) => e.record_key);
     expect(keys).toContain("wraith");
   });
 
-  it("depth 0 throws ValidationError", () => {
-    expect(() => traverseRelations(setup.ctx, { record_id: testId(1), depth: 0 })).toThrow(ValidationError);
+  it("depth 0 throws ValidationError", async () => {
+    await expect(traverseRelations(setup.ctx, { record_id: testId(1), depth: 0 })).rejects.toThrow(ValidationError);
   });
 
-  it("depth negative throws ValidationError", () => {
-    expect(() => traverseRelations(setup.ctx, { record_id: testId(1), depth: -1 })).toThrow(ValidationError);
+  it("depth negative throws ValidationError", async () => {
+    await expect(traverseRelations(setup.ctx, { record_id: testId(1), depth: -1 })).rejects.toThrow(ValidationError);
   });
 });

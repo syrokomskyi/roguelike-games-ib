@@ -18,21 +18,21 @@ export interface ResolvedRecord {
   currentKey: string;
 }
 
-export function resolveRecordRoute(
+export async function resolveRecordRoute(
   store: ProjectionStore,
   identifier: string,
-): ResolvedRecord | undefined {
-  const byId = store.resolveRecordById(identifier);
+): Promise<ResolvedRecord | undefined> {
+  const byId = await store.resolveRecordById(identifier);
   if (byId) {
     return { record: byId, resolvedFrom: "id", currentKey: byId.key };
   }
 
-  const byKey = store.resolveRecordByKey(identifier);
+  const byKey = await store.resolveRecordByKey(identifier);
   if (byKey) {
     return { record: byKey, resolvedFrom: "key", currentKey: byKey.key };
   }
 
-  const byAlias = store.resolveRecordByAlias(identifier);
+  const byAlias = await store.resolveRecordByAlias(identifier);
   if (byAlias) {
     return { record: byAlias, resolvedFrom: "alias", currentKey: byAlias.key };
   }

@@ -33,8 +33,8 @@ describe("OBS-003: duplicate path collision is disambiguated", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("disambiguates two records that map to same note path", () => {
-    const result = buildObsidianVault({
+  it("disambiguates two records that map to same note path", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,

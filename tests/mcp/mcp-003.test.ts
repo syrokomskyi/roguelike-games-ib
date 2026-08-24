@@ -26,35 +26,35 @@ describe("MCP-003: pagination stable for equal sort values", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("paginates sources with stable key ASC ordering", () => {
-    const page1 = listSources(setup.ctx, { limit: 10 });
+  it("paginates sources with stable key ASC ordering", async () => {
+    const page1 = await listSources(setup.ctx, { limit: 10 });
     expect(page1.data.sources).toHaveLength(10);
     expect(page1.data.sources[0].source_id).toBe("src-00");
     expect(page1.data.sources[9].source_id).toBe("src-09");
     expect(page1.data.cursor).not.toBeNull();
 
-    const page2 = listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
+    const page2 = await listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
     expect(page2.data.sources).toHaveLength(10);
     expect(page2.data.sources[0].source_id).toBe("src-10");
     expect(page2.data.sources[9].source_id).toBe("src-19");
 
-    const page3 = listSources(setup.ctx, { limit: 10, cursor: page2.data.cursor! });
+    const page3 = await listSources(setup.ctx, { limit: 10, cursor: page2.data.cursor! });
     expect(page3.data.sources).toHaveLength(5);
     expect(page3.data.cursor).toBeNull();
   });
 
-  it("same cursor produces same results deterministically", () => {
-    const page1 = listSources(setup.ctx, { limit: 10 });
-    const page2a = listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
-    const page2b = listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
+  it("same cursor produces same results deterministically", async () => {
+    const page1 = await listSources(setup.ctx, { limit: 10 });
+    const page2a = await listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
+    const page2b = await listSources(setup.ctx, { limit: 10, cursor: page1.data.cursor! });
     expect(page2a.data.sources).toEqual(page2b.data.sources);
   });
 
-  it("all sources are returned across pages without gaps or duplicates", () => {
+  it("all sources are returned across pages without gaps or duplicates", async () => {
     const allSources: string[] = [];
     let cursor: string | undefined;
     do {
-      const page = listSources(setup.ctx, { limit: 10, cursor });
+      const page = await listSources(setup.ctx, { limit: 10, cursor });
       allSources.push(...page.data.sources.map((s) => s.source_id));
       cursor = page.data.cursor ?? undefined;
     } while (cursor);

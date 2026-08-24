@@ -20,6 +20,8 @@ export { computeScores, rankHits, ftsScoreMap, vectorScoreMap, mergeCandidateIds
 export { hybridSearch } from "./hybrid.ts";
 export type { HybridSearchOptions } from "./hybrid.ts";
 export { encodeCursor, validateCursor, createCursor, computeCursorHash } from "./cursor.ts";
+export { LocalSearchBackend, RemoteSearchBackend } from "./search-backend.ts";
+export type { SearchBackend } from "./search-backend.ts";
 
 export type {
   SearchRecord,

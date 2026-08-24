@@ -29,23 +29,23 @@ describe("WEB-002: record route resolves alias to current record", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("resolves by key", () => {
-    const resolved = resolveRecordRoute(setup.ctx.store, "goblin");
+  it("resolves by key", async () => {
+    const resolved = await resolveRecordRoute(setup.ctx.store, "goblin");
     expect(resolved).toBeDefined();
     expect(resolved!.record.id).toBe(testId(1));
     expect(resolved!.resolvedFrom).toBe("key");
     expect(resolved!.currentKey).toBe("goblin");
   });
 
-  it("resolves by id", () => {
-    const resolved = resolveRecordRoute(setup.ctx.store, testId(1));
+  it("resolves by id", async () => {
+    const resolved = await resolveRecordRoute(setup.ctx.store, testId(1));
     expect(resolved).toBeDefined();
     expect(resolved!.record.key).toBe("goblin");
     expect(resolved!.resolvedFrom).toBe("id");
   });
 
-  it("resolves alias to current key", () => {
-    const resolved = resolveRecordRoute(setup.ctx.store, "gremlin");
+  it("resolves alias to current key", async () => {
+    const resolved = await resolveRecordRoute(setup.ctx.store, "gremlin");
     expect(resolved).toBeDefined();
     expect(resolved!.record.id).toBe(testId(1));
     expect(resolved!.record.key).toBe("goblin");
@@ -53,8 +53,8 @@ describe("WEB-002: record route resolves alias to current record", () => {
     expect(resolved!.currentKey).toBe("goblin");
   });
 
-  it("returns undefined for unknown key", () => {
-    const resolved = resolveRecordRoute(setup.ctx.store, "nonexistent");
+  it("returns undefined for unknown key", async () => {
+    const resolved = await resolveRecordRoute(setup.ctx.store, "nonexistent");
     expect(resolved).toBeUndefined();
   });
 });

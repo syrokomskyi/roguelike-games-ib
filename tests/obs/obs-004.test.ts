@@ -28,12 +28,12 @@ describe("OBS-004: vault build never changes canonical files", () => {
 
   afterEach(() => setup.cleanup());
 
-  it("canonical files are unchanged after vault build", () => {
+  it("canonical files are unchanged after vault build", async () => {
     const canonicalFile = join(setup.canonicalRoot, "creature", "brogue-ce/creature/goblin.jsonl");
     const beforeContent = readFileSync(canonicalFile, "utf-8");
     const beforeMtime = statSync(canonicalFile).mtimeMs;
 
-    buildObsidianVault({
+    await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
@@ -46,8 +46,8 @@ describe("OBS-004: vault build never changes canonical files", () => {
     expect(afterMtime).toBe(beforeMtime);
   });
 
-  it("vault output is under generated root, not canonical root", () => {
-    const result = buildObsidianVault({
+  it("vault output is under generated root, not canonical root", async () => {
+    const result = await await buildObsidianVault({
       workspaceRoot: setup.workspace,
       distDir: setup.distDir,
       vaultDir: setup.vaultDir,
