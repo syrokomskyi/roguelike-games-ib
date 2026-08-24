@@ -28,3 +28,9 @@ jobs:
         env:
           SEARCH_API_URL: ${{ secrets.SEARCH_API_URL }}
           INDEXING_TOKEN: ${{ secrets.INDEXING_TOKEN }}
+      - name: Build web app
+        run: pnpm exec turbo run build:web
+      - name: Deploy Web App
+        run: pnpm --filter @roguelike-games-ib/web exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

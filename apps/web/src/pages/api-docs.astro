@@ -1,0 +1,163 @@
+---
+/*
+<MODULE_CONTRACT>
+<purpose>Static API documentation page — describes all public search API endpoints, query parameters, example requests, response shapes, CORS policy, and MCP tools overview.</purpose>
+<non-goals>
+  <item>Does not fetch data from the API — all content is static documentation.</item>
+  <item>Does not implement an interactive API explorer — examples are copy-paste curl commands.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0018: Initial creation — API documentation page with endpoint reference, examples, and CORS policy.</item>
+</CHANGE_SUMMARY>
+*/
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="API Documentation" activeNav="api-docs">
+  <div class="space-y-14">
+    <header class="border-b border-ib-border pb-12">
+      <p class="atlas-label text-ib-accent">Public API</p>
+      <h1 class="mt-5 text-5xl font-medium leading-[1.02] tracking-[-.045em] sm:text-7xl">API Reference</h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-ib-muted">The Roguelike Inspiration Base exposes a read-only semantic search API on Cloudflare Workers. All endpoints return JSON and require no authentication.</p>
+    </header>
+
+    <section class="space-y-6">
+      <h2 class="text-2xl font-bold text-ib-text">Endpoints</h2>
+
+      <div class="border border-ib-border bg-ib-surface p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="rounded bg-ib-accent px-2 py-1 font-mono text-xs font-bold text-white">GET</span>
+          <code class="font-mono text-sm text-ib-text">/api/search</code>
+        </div>
+        <p class="text-sm text-ib-muted">Semantic search across all knowledge base records. Returns records ranked by embedding similarity to the query.</p>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Parameters</p>
+          <table class="mt-2 w-full text-sm">
+            <thead>
+              <tr class="border-b border-ib-border text-left text-ib-muted">
+                <th class="py-2 pr-4 font-mono text-xs">Name</th>
+                <th class="py-2 pr-4 font-mono text-xs">Type</th>
+                <th class="py-2 font-mono text-xs">Description</th>
+              </tr>
+            </thead>
+            <tbody class="text-ib-text">
+              <tr class="border-b border-ib-border"><td class="py-2 pr-4 font-mono text-xs text-ib-accent">q</td><td class="py-2 pr-4 text-ib-muted">string (required)</td><td class="py-2">Search query — natural language text</td></tr>
+              <tr class="border-b border-ib-border"><td class="py-2 pr-4 font-mono text-xs text-ib-accent">source</td><td class="py-2 pr-4 text-ib-muted">string</td><td class="py-2">Filter by source ID (e.g. <code class="font-mono text-xs">crawl</code>, <code class="font-mono text-xs">broguece</code>, <code class="font-mono text-xs">cataclysm-bn</code>)</td></tr>
+              <tr class="border-b border-ib-border"><td class="py-2 pr-4 font-mono text-xs text-ib-accent">type</td><td class="py-2 pr-4 text-ib-muted">string</td><td class="py-2">Filter by record type (e.g. <code class="font-mono text-xs">entity</code>, <code class="font-mono text-xs">concept</code>)</td></tr>
+              <tr class="border-b border-ib-border"><td class="py-2 pr-4 font-mono text-xs text-ib-accent">kind</td><td class="py-2 pr-4 text-ib-muted">string</td><td class="py-2">Filter by kind (e.g. <code class="font-mono text-xs">monster</code>, <code class="font-mono text-xs">vault</code>, <code class="font-mono text-xs">design_pattern</code>)</td></tr>
+              <tr class="border-b border-ib-border"><td class="py-2 pr-4 font-mono text-xs text-ib-accent">concept_type</td><td class="py-2 pr-4 text-ib-muted">string</td><td class="py-2">Filter by concept type (e.g. <code class="font-mono text-xs">design_pattern</code>, <code class="font-mono text-xs">mutation_vector</code>)</td></tr>
+              <tr><td class="py-2 pr-4 font-mono text-xs text-ib-accent">limit</td><td class="py-2 pr-4 text-ib-muted">integer</td><td class="py-2">Max results (default: 20, max: 50)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/search?q=permadeath&limit=5"</code></pre>
+        </div>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Response</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>{`{
+  "hits": [
+    {
+      "id": "crawl:concept:permadeath",
+      "source_id": "crawl",
+      "record_type": "concept",
+      "kind": "design_pattern",
+      "name": "Permadeath",
+      "score": 0.89,
+      "metadata": { "concept_type": "design_pattern" }
+    }
+  ],
+  "total": 1,
+  "query": "permadeath",
+  "mode": "semantic"
+}`}</code></pre>
+        </div>
+      </div>
+
+      <div class="border border-ib-border bg-ib-surface p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="rounded bg-ib-accent px-2 py-1 font-mono text-xs font-bold text-white">GET</span>
+          <code class="font-mono text-sm text-ib-text">/api/design-search</code>
+        </div>
+        <p class="text-sm text-ib-muted">Semantic search across design concepts only. Returns design patterns, mutation vectors, and other concept-type records.</p>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Parameters</p>
+          <table class="mt-2 w-full text-sm">
+            <thead>
+              <tr class="border-b border-ib-border text-left text-ib-muted">
+                <th class="py-2 pr-4 font-mono text-xs">Name</th>
+                <th class="py-2 pr-4 font-mono text-xs">Type</th>
+                <th class="py-2 font-mono text-xs">Description</th>
+              </tr>
+            </thead>
+            <tbody class="text-ib-text">
+              <tr><td class="py-2 pr-4 font-mono text-xs text-ib-accent">q</td><td class="py-2 pr-4 text-ib-muted">string (required)</td><td class="py-2">Search query — natural language text</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/design-search?q=resource scarcity"</code></pre>
+        </div>
+      </div>
+
+      <div class="border border-ib-border bg-ib-surface p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="rounded bg-ib-accent px-2 py-1 font-mono text-xs font-bold text-white">GET</span>
+          <code class="font-mono text-sm text-ib-text">/api/health</code>
+        </div>
+        <p class="text-sm text-ib-muted">Health check endpoint. Returns the current status and configured embedding model.</p>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Example</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>curl "https://roguelike-ib-search-api.workers.dev/api/health"</code></pre>
+        </div>
+
+        <div class="mt-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ib-muted">Response</p>
+          <pre class="mt-2 overflow-x-auto border border-ib-border bg-ib-bg p-4 font-mono text-xs text-ib-text"><code>{`{
+  "status": "ok",
+  "model": "@cf/baai/bge-m3"
+}`}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-6">
+      <h2 class="text-2xl font-bold text-ib-text">CORS Policy</h2>
+      <div class="border border-ib-border bg-ib-surface p-6">
+        <p class="text-sm text-ib-muted">The API uses an origin allowlist (<code class="font-mono text-xs text-ib-accent">ALLOWED_ORIGINS</code>) configured in the Worker. Only requests from approved origins receive CORS headers. Requests without an <code class="font-mono text-xs text-ib-accent">Origin</code> header (e.g. curl, server-side) receive JSON without CORS headers.</p>
+        <p class="mt-3 text-sm text-ib-muted">To add a new origin, update <code class="font-mono text-xs text-ib-accent">ALLOWED_ORIGINS</code> in <code class="font-mono text-xs text-ib-accent">apps/search-api/wrangler.jsonc</code> and redeploy.</p>
+      </div>
+    </section>
+
+    <section class="space-y-6">
+      <h2 class="text-2xl font-bold text-ib-text">MCP Server</h2>
+      <div class="border border-ib-border bg-ib-surface p-6">
+        <p class="text-sm text-ib-muted">The knowledge base also exposes an MCP (Model Context Protocol) server with 30+ read-only tools for querying records, traversing relations, comparing games, and generating design reports. The MCP server is being deployed as a remote endpoint on Cloudflare Workers — see <a href="https://github.com/syrokomskyi/roguelike-games-ib/blob/main/docs/rfcs/rfc-0020-mcp-server-workers-deployment-d1-backed-remote-mcp-endpoint.md" class="text-ib-accent underline">RFC-0020</a> for details.</p>
+        <p class="mt-3 text-sm text-ib-muted">For local usage, the MCP server runs via stdio transport. See the <a href="https://github.com/syrokomskyi/roguelike-games-ib" class="text-ib-accent underline">repository README</a> for setup instructions.</p>
+      </div>
+    </section>
+
+    <section class="space-y-6">
+      <h2 class="text-2xl font-bold text-ib-text">Usage Guidelines</h2>
+      <div class="border border-ib-border bg-ib-surface p-6 space-y-3">
+        <ul class="space-y-2 text-sm text-ib-muted">
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>All endpoints are <strong class="text-ib-text">read-only</strong>. No authentication required.</span></li>
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>Max query length: <strong class="text-ib-text">1,000 characters</strong>.</span></li>
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>Max results per request: <strong class="text-ib-text">50</strong>.</span></li>
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>Embedding model: <code class="font-mono text-xs text-ib-accent">@cf/baai/bge-m3</code> (via Cloudflare Workers AI).</span></li>
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>The API is hosted on Cloudflare Workers free tier. If traffic exceeds limits, upgrade to Workers Paid.</span></li>
+          <li class="flex gap-3"><span class="text-ib-accent">—</span><span>Dataset is licensed under <a href="https://github.com/syrokomskyi/roguelike-games-ib/blob/main/LICENSES/CC-BY-4.0.txt" class="text-ib-accent underline">CC-BY-4.0</a>. Please cite the dataset when using API results.</span></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</Base>
