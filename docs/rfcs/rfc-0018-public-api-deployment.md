@@ -1,7 +1,7 @@
 ---
 id: RFC-0018
 title: "Public API and deployment — Cloudflare Workers for search-api and web app"
-status: accepted
+status: implemented
 kind: policy
 scope: workspace
 owners:
@@ -10,6 +10,7 @@ reviewers:
   - human:andrii-syrokomskyi
 createdAt: 2026-08-24
 updatedAt: 2026-08-24
+implementedAt: 2026-08-24
 enhancedAt: 2026-08-24
 closedAt:
 supersedes: []
