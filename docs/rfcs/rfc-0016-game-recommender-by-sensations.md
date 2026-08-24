@@ -1,7 +1,7 @@
 ---
 id: RFC-0016
 title: "Game recommender by sensations — match player preferences to game design profiles"
-status: draft
+status: accepted
 kind: policy
 scope: workspace
 owners:
