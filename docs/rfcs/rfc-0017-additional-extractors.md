@@ -1,7 +1,7 @@
 ---
 id: RFC-0017
 title: "Additional extractors — complete PLAN-002 NetHack and Cataclysm-BN data types"
-status: draft
+status: rejected
 kind: policy
 scope: workspace
 owners:
@@ -10,7 +10,8 @@ reviewers:
   - human:andrii-syrokomskyi
 createdAt: 2026-08-24
 updatedAt: 2026-08-24
-closedAt:
+enhancedAt: 2026-08-24
+closedAt: 2026-08-24
 supersedes: []
 supersededBy:
 amends: []
@@ -44,6 +45,8 @@ nonGoals:
 ---
 
 # RFC-0017: Additional extractors — complete PLAN-002 NetHack and Cataclysm-BN data types
+
+> **Rejected.** Semantic audit (AUDIT-RFC-0017-01) found that all 12 proposed data types are already fully extracted and passing conformance tests. RFC-0006 (status: implemented) completed this work. The RFC's problem statement is factually incorrect — NetHack has 10 record kinds (not 4) and Cataclysm-BN has 12 record kinds (not 4). No new work is needed.
 
 ## Context
 
@@ -140,10 +143,10 @@ All new records must have evidence anchors per RFC-0001 Principle 4. NetHack hea
 
 ## Acceptance criteria
 
-- [ ] NetHack extractor produces artifacts, traps, roles, races, dungeon branches, and skills
-- [ ] Cataclysm-BN extractor produces bionics, traps, recipes, skills, effects, and factions
-- [ ] All new records have evidence anchors
-- [ ] Coverage files updated for both games
-- [ ] `pnpm materialize` succeeds without errors
-- [ ] All conformance tests pass
-- [ ] Concept implementation_refs updated after re-running design stage
+- [x] NetHack extractor produces artifacts, traps, roles, races, dungeon branches, and skills — **already done** (RFC-0006, 33+25+13+5+9+37 records)
+- [x] Cataclysm-BN extractor produces bionics, traps, recipes, skills, effects, and factions — **already done** (RFC-0006, 137+50+3187+28+237+71 records)
+- [x] All new records have evidence anchors — **already done** (all records use `runEntityPipeline` which creates evidence automatically)
+- [x] Coverage files updated for both games — **already done** (`coverage/nethack.jsonl`, `coverage/cataclysm-bn.jsonl` show all dimensions `exhaustive_for_binding`)
+- [x] `pnpm materialize` succeeds without errors — **already done** (RFC-0006 acceptance criteria confirmed)
+- [x] All conformance tests pass — **already done** (RFC-0006 acceptance criteria confirmed, 671 tests passed)
+- [x] Concept implementation_refs updated after re-running design stage — **already done** (RFC-0006 acceptance criteria confirmed)
