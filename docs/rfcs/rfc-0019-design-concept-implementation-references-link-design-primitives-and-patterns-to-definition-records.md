@@ -15,6 +15,7 @@ owners:
 reviewers: []
 createdAt: 2026-08-24
 updatedAt: 2026-08-24
+enhancedAt: 2026-08-24
 implementedAt:
 closedAt:
 supersedes: []
@@ -49,8 +50,7 @@ commands:
   removed: []
 appsImpacted: []
 # List only packages actually impacted. Leave empty if unknown.
-packagesImpacted:
-  - builders/obsidian-builder
+packagesImpacted: []
 successSignals:
   - All design primitives have non-empty implementation_refs linking to definition records
   - All design patterns have non-empty implementation_refs linking to definition records
@@ -132,7 +132,7 @@ The design stage script (`scripts/run-stage-design.ts`) gains a two-step LLM-bas
 
 ### Matching algorithm
 
-The new step (Step 7.5, after concrete examples generation in Step 7, before design pattern generation in Step 8) performs two-step LLM-based matching for each design primitive:
+The new step (Step 6.5, after failure mode generation in Step 6, before concrete examples generation in Step 7) performs two-step LLM-based matching for each design primitive. Running the matching step before concrete examples allows the results to be reused for both `record_refs` in concrete examples (Step 7) and `implementation_refs` on design patterns (Step 8):
 
 **Step A — Kind selection:** For each `(primitive, game)` pair, send the LLM a prompt containing:
 - The primitive title and definition
@@ -144,7 +144,7 @@ The LLM returns a JSON array of relevant kinds (e.g. `["recipe", "item", "skill"
 - The primitive title and definition
 - A sample of record names from that kind (up to 50 records, or all if fewer)
 
-The LLM returns a JSON array of record IDs that implement the primitive. The union across all selected kinds forms the `implementation_refs` for that `(primitive, game)` pair.
+The LLM returns a JSON object: `{"select_all": boolean, "record_ids": string[]}`. If `select_all` is `true`, all record IDs of that kind are added to `implementation_refs` (the LLM determined the entire kind is relevant, e.g. all `recipe` records for `crafting_system`). If `select_all` is `false`, only the specified `record_ids` (from the sample) are added. The union across all selected kinds forms the `implementation_refs` for that `(primitive, game)` pair.
 
 The final `implementation_refs` for a primitive is the union of record IDs across all 4 games.
 
@@ -152,7 +152,7 @@ For design patterns, the same two-step process is applied, using the pattern def
 
 ### Concrete examples integration
 
-Step 7 (concrete examples) is extended: after generating the text description for each `(primitive, game)` pair, the matching results from Step 7.5 are used to populate `record_refs` in the concrete example. This avoids a separate LLM call — the same matched record IDs are reused.
+Step 7 (concrete examples) is extended: after generating the text description for each `(primitive, game)` pair, the matching results from Step 6.5 are used to populate `record_refs` in the concrete example. This avoids a separate LLM call — the same matched record IDs are reused.
 
 ### LLM caching
 
@@ -160,9 +160,11 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 
 ### Token budget
 
-- Step A: ~200 tokens per prompt (kind list + primitive description). 14 primitives × 4 games = 56 calls.
-- Step B: ~500-2000 tokens per prompt (up to 50 record names + primitive description). ~56 × 2-3 kinds average = ~140 calls.
-- Total: ~200 LLM calls, all cacheable. Using `gpt-4o-mini` at existing temperature 0.7.
+- Step A (primitives): ~200 tokens per prompt (kind list + primitive description). 14 primitives × 4 games = 56 calls.
+- Step B (primitives): ~500-2000 tokens per prompt (up to 50 record names + primitive description). ~56 × 2-3 kinds average = ~140 calls.
+- Step A (patterns): ~200 tokens per prompt. 10 patterns × 4 games = 40 calls.
+- Step B (patterns): ~500-2000 tokens per prompt. ~40 × 2-3 kinds average = ~100 calls.
+- Total: ~340 LLM calls, all cacheable. Using `gpt-4o-mini` at existing temperature 0.7.
 
 ### File system responsibilities
 
@@ -171,7 +173,7 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 | `scripts/run-stage-design.ts` | Primary file — add matching step, populate implementation_refs and record_refs |
 | `knowledge/concept/cross-game/concept/design-*.jsonl` | Output — design primitive concepts with populated implementation_refs |
 | `knowledge/concept/cross-game/concept/pattern-*.jsonl` | Output — design pattern concepts with populated implementation_refs |
-| `tests/conformance/c17-design-implementation-refs.test.ts` | New conformance test |
+| `tests/conformance/c20-design-implementation-refs.test.ts` | New conformance test |
 | `systems-cache/llm-design-cache.json` | LLM response cache (existing, extended with new prompts) |
 
 ### Failure modes
@@ -201,9 +203,9 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 
 - **LLM matching false positives** — the LLM may select records that are not actually relevant to a design primitive. Mitigation: the two-step process (kind selection → record selection) narrows the scope. The conformance test checks ref *existence*, not ref *correctness*. False positives are acceptable — a primitive with some irrelevant refs is better than a primitive with no refs.
 
-- **LLM cost** — ~200 additional LLM calls per design stage run. Mitigation: all calls are cached in `systems-cache/llm-design-cache.json`. Subsequent runs use the cache. The cost is one-time.
+- **LLM cost** — ~340 additional LLM calls per design stage run. Mitigation: all calls are cached in `systems-cache/llm-design-cache.json`. Subsequent runs use the cache. The cost is one-time.
 
-- **Token budget for large record sets** — Cataclysm-BN has 5886 items and 3187 recipes. Step B samples up to 50 records per kind, which may miss relevant records. Mitigation: 50 records is sufficient for the LLM to identify the *kind* as relevant; the primitive's `implementation_refs` can include all records of a relevant kind if the LLM determines the entire kind is relevant.
+- **Token budget for large record sets** — Cataclysm-BN has 5886 items and 3187 recipes. Step B samples up to 50 records per kind, which may miss relevant records. Mitigation: the `select_all` flag in the Step B response schema allows the LLM to indicate that all records of a kind are relevant, even if only 50 were sampled. When `select_all: true`, all record IDs of that kind are added to `implementation_refs`.
 
 - **Agent misinterpretation** — agents may assume that `implementation_refs` on design primitives is an exhaustive list of all records implementing the primitive. It is not — it is an LLM-selected subset. Mitigation: the RFC explicitly states this in Implementation notes.
 
@@ -214,7 +216,7 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 - [ ] All 14 design primitives have non-empty `implementation_refs` linking to definition records from at least 1 game
 - [ ] All design patterns have non-empty `implementation_refs` linking to definition records from at least 1 game
 - [ ] `concrete_examples` for all primitives have non-empty `record_refs` for at least 2 games
-- [ ] Conformance test `c17-design-implementation-refs.test.ts` passes — verifies all primitive/pattern `implementation_refs` resolve to existing definition records
+- [ ] Conformance test `c20-design-implementation-refs.test.ts` passes — verifies all primitive/pattern `implementation_refs` resolve to existing definition records
 - [ ] `pnpm materialize` succeeds without errors after re-running design stage
 - [ ] All existing tests still pass (`pnpm exec vitest --run`)
 - [ ] `rfc.validate` passes on this file before merging
@@ -226,7 +228,7 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 - Agents MUST use the existing `systems-cache/llm-design-cache.json` cache — do not create a separate cache file.
 - Agents MUST NOT populate `implementation_refs` on mutation vectors or failure modes — these remain `[]` by design.
 - Agents MUST reuse the matching results to populate `concrete_examples[].record_refs` — do not make separate LLM calls for examples.
-- Agents MUST use test naming `c17-design-implementation-refs.test.ts` (not `c16` — `c16-game-recommender.test.ts` already exists).
+- Agents MUST use test naming `c20-design-implementation-refs.test.ts` (c16 through c19 are already taken by existing conformance tests).
 - `implementation_refs` on design primitives is an LLM-selected subset, NOT an exhaustive list of all records implementing the primitive. Agents MUST NOT treat it as exhaustive.
 - Agents MUST run `scripts/run-stage-design.ts` after implementation to regenerate concepts with populated refs.
 - Agents MUST NOT weaken or remove enforcement rules established by this RFC without a new RFC that supersedes it.
