@@ -214,13 +214,13 @@ The matching step uses the existing `llm()` / `llmJson()` functions which alread
 
 ## Acceptance criteria
 
-- [ ] All 14 design primitives have non-empty `implementation_refs` linking to definition records from at least 1 game
-- [ ] All design patterns have non-empty `implementation_refs` linking to definition records from at least 1 game
-- [ ] `concrete_examples` for all primitives have non-empty `record_refs` for at least 2 games
-- [ ] Conformance test `c20-design-implementation-refs.test.ts` passes — verifies all primitive/pattern `implementation_refs` resolve to existing definition records
-- [ ] `pnpm materialize` succeeds without errors after re-running design stage
-- [ ] All existing tests still pass (`pnpm exec vitest --run`)
-- [ ] `rfc.validate` passes on this file before merging
+- [x] All 14 design primitives have non-empty `implementation_refs` linking to definition records from at least 1 game (evidence: tests/conformance/c20-design-implementation-refs.test.ts:87, c20 test passes)
+- [x] All design patterns have non-empty `implementation_refs` linking to definition records from at least 1 game (evidence: tests/conformance/c20-design-implementation-refs.test.ts:100, c20 test passes)
+- [x] `concrete_examples` for all primitives have non-empty `record_refs` for at least 2 games (evidence: tests/conformance/c20-design-implementation-refs.test.ts:113, c20 test passes)
+- [x] Conformance test `c20-design-implementation-refs.test.ts` passes — verifies all primitive/pattern `implementation_refs` resolve to existing definition records (evidence: tests/conformance/c20-design-implementation-refs.test.ts, 6/6 tests pass)
+- [x] `pnpm materialize` succeeds without errors after re-running design stage (evidence: canonical hash d9e92e68a904b1790f9217bbb080b59adb133d9b9d4cbe5618c91c6385183529)
+- [x] All existing tests still pass (`pnpm exec vitest --run`) (evidence: 777 tests pass across 104 test files)
+- [x] `rfc.validate` passes on this file before merging (evidence: rfc.validate status=pass, 0 violations)
 
 ## Implementation notes for agents
 
