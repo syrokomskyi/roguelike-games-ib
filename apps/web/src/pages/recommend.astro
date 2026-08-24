@@ -1,0 +1,133 @@
+---
+/*
+<MODULE_CONTRACT>
+<purpose>Recommend page — lets users select sensations and see ranked game recommendations based on pattern presence, primitive coverage, and quality scores (RFC-0016).</purpose>
+<non-goals>
+  <item>Does not call any server endpoint — all computation is client-side from build-time data.</item>
+  <item>Does not persist user preferences — stateless recommendation only.</item>
+</non-goals>
+</MODULE_CONTRACT>
+<CHANGE_SUMMARY>
+  <item>RFC-0016: Initial creation — sensation selector and ranked game recommendation cards.</item>
+</CHANGE_SUMMARY>
+*/
+import Base from "../layouts/Base.astro";
+import { createWebContext } from "../lib/context";
+import { getPageMetadata } from "../lib/metadata";
+import { buildRecommendationData } from "../lib/recommend";
+
+const distDir = Astro.locals.distDir ?? "";
+const ctx = await createWebContext(distDir);
+const meta = getPageMetadata(ctx);
+
+const recData = buildRecommendationData(ctx.store);
+const recDataJson = JSON.stringify(recData);
+---
+
+<Base title="Recommend" metadata={meta} activeNav="recommend">
+  <header class="grid gap-10 border-b border-ib-border pb-14 lg:grid-cols-[1fr_auto] lg:items-end">
+    <div>
+      <p class="atlas-label text-ib-accent">Discovery</p>
+      <h1 class="mt-6 max-w-4xl text-5xl font-medium leading-[1.02] tracking-[-.045em] sm:text-7xl">Find your game.</h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-ib-muted">Select sensations you want to experience. Get ranked game recommendations based on design pattern presence, primitive coverage, and concept quality scores.</p>
+    </div>
+    <div class="font-mono text-8xl text-ib-accent/30">★</div>
+  </header>
+
+  <section class="border-b border-ib-border py-10">
+    <p class="atlas-label text-ib-accent">Select sensations</p>
+    <div id="rec-sensations" class="mt-6 flex flex-wrap gap-3">
+      {recData.sensations.map((s) => (
+        <label class="cursor-pointer border border-ib-border bg-ib-surface px-4 py-2.5 font-mono text-sm text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-accent has-[:checked]:border-ib-accent has-[:checked]:bg-ib-accent/10 has-[:checked]:text-ib-accent">
+          <input type="checkbox" value={s.key} class="sr-only" />
+          {s.label}
+        </label>
+      ))}
+    </div>
+    <div class="mt-6 flex items-center justify-between gap-4">
+      <p class="font-mono text-xs text-ib-muted" id="rec-status">Select one or more sensations to get recommendations.</p>
+      <button id="rec-clear" class="border border-ib-border px-4 py-2 font-mono text-xs uppercase tracking-wider text-ib-muted transition-colors hover:border-ib-accent hover:text-ib-accent">Clear</button>
+    </div>
+    <noscript>
+      <p class="mt-4 font-mono text-xs text-ib-muted">Enable JavaScript to get recommendations, or visit <a href="/laboratory" class="text-ib-accent underline">the Laboratory</a> for design seed generation.</p>
+    </noscript>
+  </section>
+
+  <section id="rec-results" class="py-14 hidden">
+  </section>
+</Base>
+
+<script type="application/json" id="rec-data" set:html={recDataJson} />
+
+<script>
+  import { computeRecommendations, type RecommendationData, type RecommendationItem } from "../lib/recommend";
+
+  const data: RecommendationData = JSON.parse(document.getElementById("rec-data")?.textContent || "{}");
+  const sensationsContainer = document.getElementById("rec-sensations") as HTMLElement;
+  const resultsSection = document.getElementById("rec-results") as HTMLElement;
+  const statusEl = document.getElementById("rec-status") as HTMLElement;
+  const clearBtn = document.getElementById("rec-clear") as HTMLButtonElement;
+
+  function getSelectedSensations(): string[] {
+    const checkboxes = sensationsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map((cb) => cb.value);
+  }
+
+  function renderResults(recs: RecommendationItem[]): string {
+    if (recs.length === 0) {
+      return '<div class="border border-ib-border bg-ib-surface p-8"><p class="text-lg text-ib-muted">No games match the selected sensations. Try different combinations.</p></div>';
+    }
+
+    return recs.map((rec, i) => {
+      const scorePercent = Math.round(rec.score * 100);
+      const patternsHtml = rec.matched_patterns.map((p) =>
+        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-accent hover:bg-ib-accent/10">${p.title}</a>`
+      ).join(" ");
+
+      const primitivesHtml = rec.matched_primitives.map((p) =>
+        `<a href="/records/${encodeURIComponent(p.key)}/" class="border border-ib-border px-2.5 py-1 font-mono text-xs text-ib-muted hover:text-ib-accent">${p.title}</a>`
+      ).join(" ");
+
+      return `
+        <div class="border border-ib-border bg-ib-surface p-6">
+          <div class="flex items-start justify-between gap-6">
+            <div>
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-xs text-ib-muted">#${i + 1}</span>
+                <a href="/games/${encodeURIComponent(rec.source_id)}/" class="text-2xl font-medium hover:text-ib-accent">${rec.source_id}</a>
+              </div>
+              <p class="mt-3 text-ib-muted leading-7">${rec.rationale}</p>
+            </div>
+            <div class="flex-shrink-0 text-right">
+              <div class="text-4xl font-medium text-ib-accent">${scorePercent}<span class="text-lg text-ib-muted">%</span></div>
+            </div>
+          </div>
+          ${patternsHtml ? `<div class="mt-4"><p class="atlas-label text-ib-muted mb-2">Patterns</p><div class="flex flex-wrap gap-2">${patternsHtml}</div></div>` : ""}
+          ${primitivesHtml ? `<div class="mt-3"><p class="atlas-label text-ib-muted mb-2">Primitives</p><div class="flex flex-wrap gap-2">${primitivesHtml}</div></div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function update() {
+    const selected = getSelectedSensations();
+
+    if (selected.length === 0) {
+      resultsSection.classList.add("hidden");
+      statusEl.textContent = "Select one or more sensations to get recommendations.";
+      return;
+    }
+
+    const recs = computeRecommendations(data, selected);
+    resultsSection.classList.remove("hidden");
+    resultsSection.innerHTML = renderResults(recs);
+    statusEl.textContent = `${recs.length} game${recs.length === 1 ? "" : "s"} recommended for ${selected.length} sensation${selected.length === 1 ? "" : "s"}.`;
+  }
+
+  sensationsContainer.addEventListener("change", update);
+  clearBtn.addEventListener("click", () => {
+    const checkboxes = sensationsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes.forEach((cb) => (cb.checked = false));
+    update();
+  });
+</script>
