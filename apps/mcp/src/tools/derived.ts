@@ -1,6 +1,6 @@
 /*
 <MODULE_CONTRACT>
-<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, concept quality scoring, semantic design-space search, and AI design seed generation.</purpose>
+<purpose>Derived data tools: semantic record search, derived summary, coverage matrix, concept coverage, concept implementation comparison, concept gap analysis, concept quality scoring, semantic design-space search, AI design seed generation, and game recommendation by sensations.</purpose>
 <non-goals>
   <item>Does not mutate or create records — all tools are read-only.</item>
 </non-goals>
@@ -12,6 +12,7 @@
   <item>RFC-0010: Added search_design_space tool for semantic concept search.</item>
   <item>RFC-0011: Added find_design_patterns and get_pattern_examples tools for design pattern library.</item>
   <item>RFC-0013: Added generate_design_seed tool for sensation-to-structure dossier generation.</item>
+  <item>RFC-0016: Added recommend_games tool for content-based game recommendation by sensations.</item>
 </CHANGE_SUMMARY>
 */
 import { readFileSync } from "node:fs";
@@ -924,4 +925,161 @@ export async function generateDesignSeed(
   };
 
   return envelope(ctx, dossier);
+}
+
+export async function recommendGames(
+  ctx: McpContext,
+  input: { sensations: string[]; limit?: number; min_score?: number },
+) {
+  if (!input.sensations || input.sensations.length === 0) {
+    return envelope(ctx, { recommendations: [], total: 0 });
+  }
+
+  const limit = Math.min(Math.max(input.limit ?? 10, 1), 100);
+  const minScore = input.min_score ?? 0.1;
+
+  const allSourceIds = ctx.store.sources.map((s) => s.source_id);
+
+  type ConceptRef = { key: string; concept_type: string };
+  const sensationConceptsMap = new Map<string, ConceptRef[]>();
+
+  for (const sensation of input.sensations) {
+    const lowerSensation = sensation.toLowerCase();
+    const sensationEntry = SENSATION_MAP[lowerSensation];
+    const concepts: ConceptRef[] = [];
+
+    if (sensationEntry) {
+      for (const key of sensationEntry.patterns) {
+        concepts.push({ key, concept_type: "design_pattern" });
+      }
+      for (const key of sensationEntry.primitives) {
+        concepts.push({ key, concept_type: "design_primitive" });
+      }
+      for (const key of sensationEntry.pressures) {
+        concepts.push({ key, concept_type: "design_pressure" });
+      }
+    } else {
+      const fallbackResult = await searchDesignSpace(ctx, {
+        query: sensation,
+        limit: 20,
+      });
+      const fallbackData = fallbackResult.data as { concepts: Array<{ key: string; concept_type: string }> };
+      for (const concept of fallbackData.concepts) {
+        concepts.push({ key: concept.key, concept_type: concept.concept_type });
+      }
+    }
+
+    sensationConceptsMap.set(sensation, concepts);
+  }
+
+  const recommendations: Array<{
+    source_id: string;
+    score: number;
+    matched_patterns: Array<{ key: string; title: string }>;
+    matched_primitives: Array<{ key: string; title: string }>;
+    rationale: string;
+  }> = [];
+
+  for (const sourceId of allSourceIds) {
+    const perSensationScores: number[] = [];
+    const allMatchedPatterns = new Map<string, string>();
+    const allMatchedPrimitives = new Map<string, string>();
+    let totalMatchedCount = 0;
+    let totalCount = 0;
+
+    for (const [sensation, concepts] of sensationConceptsMap) {
+      let weightedSum = 0;
+      let totalWeight = 0;
+      let matchedCount = 0;
+
+      for (const conceptRef of concepts) {
+        const record = ctx.store.resolveRecordByKey(conceptRef.key);
+        if (!record) continue;
+
+        const ra = record as unknown as Record<string, unknown>;
+        const qualityScore = ra["quality_score"] as
+          | { coverage: number; evidence: number; richness: number; overall: number }
+          | undefined;
+        const weight = qualityScore?.overall ?? 1.0;
+
+        let present = false;
+        if (conceptRef.concept_type === "design_pattern") {
+          const gamesPresent = (ra["games_where_present"] as string[]) ?? [];
+          present = gamesPresent.includes(sourceId);
+        } else {
+          const ancestry = ra["ancestry"] as Record<string, unknown> | undefined;
+          const sourceGames = (ancestry?.["source_games"] as string[]) ?? [];
+          present = sourceGames.includes(sourceId);
+        }
+
+        totalWeight += weight;
+        if (present) {
+          weightedSum += weight;
+          matchedCount++;
+          totalCount++;
+
+          const title = (ra["title"] as string) ?? conceptRef.key;
+          if (conceptRef.concept_type === "design_pattern") {
+            allMatchedPatterns.set(conceptRef.key, title);
+          } else if (conceptRef.concept_type === "design_primitive") {
+            allMatchedPrimitives.set(conceptRef.key, title);
+          }
+        }
+      }
+
+      const sensationScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+      perSensationScores.push(sensationScore);
+      totalMatchedCount += matchedCount;
+    }
+
+    if (perSensationScores.length === 0) continue;
+
+    const finalScore = perSensationScores.reduce((a, b) => a + b, 0) / perSensationScores.length;
+
+    if (finalScore < minScore) continue;
+
+    const matchedPatterns = Array.from(allMatchedPatterns.entries()).map(([key, title]) => ({ key, title }));
+    const matchedPrimitives = Array.from(allMatchedPrimitives.entries()).map(([key, title]) => ({ key, title }));
+
+    const scorePercent = Math.round(finalScore * 100);
+    const sensationsList = input.sensations.join(", ");
+
+    let rationale: string;
+    if (matchedPatterns.length > 0) {
+      const patternTitles = matchedPatterns.map((p) => p.title).join(", ");
+      const patternDetails = matchedPatterns.map((p) => {
+        const patternRecord = ctx.store.resolveRecordByKey(p.key);
+        if (!patternRecord) return p.title;
+        const pra = patternRecord as unknown as Record<string, unknown>;
+        const memberPrimitives = (pra["member_primitives"] as string[]) ?? [];
+        const primitiveNames = memberPrimitives
+          .map((mk) => {
+            const mr = ctx.store.resolveRecordByKey(mk);
+            return mr ? ((mr as unknown as Record<string, unknown>)["title"] as string) ?? mk : mk;
+          })
+          .join(" + ");
+        return `${p.title} (${primitiveNames})`;
+      }).join("; ");
+      rationale = `${sourceId} scores ${scorePercent}% for [${sensationsList}] because it implements ${patternTitles} (${patternDetails}). ${totalMatchedCount} of ${totalCount} relevant concepts are present.`;
+    } else {
+      rationale = `${sourceId} scores ${scorePercent}% for [${sensationsList}] based on ${totalMatchedCount} of ${totalCount} relevant design primitives.`;
+    }
+
+    recommendations.push({
+      source_id: sourceId,
+      score: finalScore,
+      matched_patterns: matchedPatterns,
+      matched_primitives: matchedPrimitives,
+      rationale,
+    });
+  }
+
+  recommendations.sort((a, b) => b.score - a.score);
+
+  const result = recommendations.slice(0, limit);
+
+  return envelope(ctx, {
+    recommendations: result,
+    total: result.length,
+  });
 }

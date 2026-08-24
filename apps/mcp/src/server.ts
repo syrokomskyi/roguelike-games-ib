@@ -22,7 +22,7 @@ import { getClaims } from "./tools/claims.ts";
 import { getEvidence } from "./tools/evidence.ts";
 import { compareRecords, compareGames } from "./tools/compare.ts";
 import { findCrossGameConcepts, findDesignPrimitives, queryDesignSpace } from "./tools/design.ts";
-import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples, generateDesignSeed } from "./tools/derived.ts";
+import { findSemanticRecords, getDerivedSummary, getCoverageMatrix, getConceptCoverage, compareConceptImplementations, findConceptGaps, getConceptQuality, searchDesignSpace, findDesignPatterns, getPatternExamples, generateDesignSeed, recommendGames } from "./tools/derived.ts";
 import { getCoverage } from "./tools/coverage.ts";
 import { getClaimsByPredicate, getConceptMembers, getDesignTensions, findByAttribute } from "./tools/queries.ts";
 import { generateComparisonReport } from "./tools/report.ts";
@@ -626,6 +626,23 @@ export function createMcpToolRegistry(): ToolRegistry {
     readOnly: true,
   });
 
+  registry.register({
+    name: "recommend_games",
+    description: "Recommend games by sensations. Returns a ranked list of games that best match the requested sensations, based on pattern presence, primitive coverage, and quality scores. Each recommendation includes a rationale.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        sensations: { type: "array", items: { type: "string" }, description: "Sensation words (e.g. ['dread', 'discovery'])" },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+        min_score: { type: "number", minimum: 0, maximum: 1 },
+      },
+      required: ["sensations"],
+      additionalProperties: false,
+    },
+    handler: recommendGames,
+    readOnly: true,
+  });
+
   return registry;
 }
 
@@ -683,4 +700,5 @@ export const REQUIRED_TOOLS = [
   "get_pattern_examples",
   "generate_comparison_report",
   "generate_design_seed",
+  "recommend_games",
 ];
