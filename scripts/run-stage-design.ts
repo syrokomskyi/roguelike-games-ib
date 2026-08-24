@@ -127,7 +127,7 @@ function findRecordsByKeywords(state: { records: any[] }, keywords: string[], li
   const matches: { id: string; score: number }[] = [];
   for (const record of state.records) {
     if (record.record_type !== "definition") continue;
-    const name = String((record as any).name || record.key || "").toLowerCase();
+    const name = String((record as any).name?.canonical || (record as any).name || record.key || "").toLowerCase();
     let score = 0;
     for (const kw of keywords) {
       if (name.includes(kw.toLowerCase())) score++;
@@ -135,6 +135,153 @@ function findRecordsByKeywords(state: { records: any[] }, keywords: string[], li
     if (score > 0) matches.push({ id: record.id, score });
   }
   return matches.sort((a, b) => b.score - a.score).slice(0, limit).map(m => m.id);
+}
+
+function getGameKinds(state: { records: any[] }, game: string): { kind: string; count: number }[] {
+  const kindCounts = new Map<string, number>();
+  for (const record of state.records) {
+    if (record.record_type !== "definition") continue;
+    const sid = record.source_identity?.source_id ?? "";
+    if (sid !== game) continue;
+    const kind = record.kind ?? "unknown";
+    kindCounts.set(kind, (kindCounts.get(kind) ?? 0) + 1);
+  }
+  return [...kindCounts.entries()]
+    .map(([kind, count]) => ({ kind, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function getRecordsByKind(state: { records: any[] }, game: string, kind: string, limit = 50): { id: string; name: string }[] {
+  const results: { id: string; name: string }[] = [];
+  for (const record of state.records) {
+    if (record.record_type !== "definition") continue;
+    const sid = record.source_identity?.source_id ?? "";
+    if (sid !== game) continue;
+    if ((record.kind ?? "unknown") !== kind) continue;
+    const name = String(record.name?.canonical || record.name || record.key || "");
+    results.push({ id: record.id, name });
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+async function matchPrimitiveToGame(
+  state: { records: any[] },
+  primitive: { slug: string; title: string; definition: string },
+  game: string,
+): Promise<string[]> {
+  const kinds = getGameKinds(state, game);
+  if (kinds.length === 0) return [];
+
+  let relevantKinds: string[];
+  try {
+    const prompt = `You are a game design expert analyzing roguelike games.
+
+Given the design primitive "${primitive.title}" (definition: ${primitive.definition}), and the following record kinds available in the game "${game}" with their counts:
+
+${kinds.map(k => `- ${k.kind}: ${k.count} records`).join("\n")}
+
+Which of these record kinds are relevant to implementing this design primitive? Select only kinds that contain records directly implementing or embodying this primitive.
+
+Respond with JSON array of kind strings, e.g. ["creature", "item"]`;
+    relevantKinds = await llmJson<string[]>(prompt);
+  } catch (e) {
+    console.warn(`  [WARN] Step A failed for ${primitive.slug}/${game}:`, e instanceof Error ? e.message : e);
+    return [];
+  }
+
+  const allRefs: string[] = [];
+  for (const kind of relevantKinds) {
+    const sample = getRecordsByKind(state, game, kind, 50);
+    if (sample.length === 0) continue;
+
+    try {
+      const prompt = `You are a game design expert analyzing roguelike games.
+
+Given the design primitive "${primitive.title}" (definition: ${primitive.definition}), and the following ${kind} records from "${game}" (showing up to 50 of ${kinds.find(k => k.kind === kind)?.count ?? sample.length} total):
+
+${sample.map(r => `- ${r.id}: ${r.name}`).join("\n")}
+
+Select the record IDs that implement or embody this design primitive. If ALL records of this kind are relevant, set select_all to true.
+
+Respond with JSON: {"select_all": false, "record_ids": ["urn:..."]}`;
+      const result = await llmJson<{ select_all: boolean; record_ids: string[] }>(prompt);
+      if (result.select_all) {
+        const allRecords = getRecordsByKind(state, game, kind, Infinity);
+        allRefs.push(...allRecords.map(r => r.id));
+      } else {
+        allRefs.push(...(result.record_ids || []));
+      }
+    } catch (e) {
+      console.warn(`  [WARN] Step B failed for ${primitive.slug}/${game}/${kind}:`, e instanceof Error ? e.message : e);
+    }
+  }
+  return allRefs;
+}
+
+async function matchPatternToGame(
+  state: { records: any[] },
+  pattern: { slug: string; title: string; definition: string; member_primitives: string[] },
+  game: string,
+  primitiveTitles: Map<string, string>,
+): Promise<string[]> {
+  const kinds = getGameKinds(state, game);
+  if (kinds.length === 0) return [];
+
+  const memberContext = pattern.member_primitives
+    .map(slug => `- ${primitiveTitles.get(slug) ?? slug}`)
+    .join("\n");
+
+  let relevantKinds: string[];
+  try {
+    const prompt = `You are a game design expert analyzing roguelike games.
+
+Given the design pattern "${pattern.title}" (definition: ${pattern.definition}), which combines these design primitives:
+${memberContext}
+
+And the following record kinds available in the game "${game}" with their counts:
+
+${kinds.map(k => `- ${k.kind}: ${k.count} records`).join("\n")}
+
+Which of these record kinds are relevant to implementing this design pattern? Select only kinds that contain records directly implementing or embodying this pattern.
+
+Respond with JSON array of kind strings, e.g. ["creature", "item"]`;
+    relevantKinds = await llmJson<string[]>(prompt);
+  } catch (e) {
+    console.warn(`  [WARN] Step A failed for pattern ${pattern.slug}/${game}:`, e instanceof Error ? e.message : e);
+    return [];
+  }
+
+  const allRefs: string[] = [];
+  for (const kind of relevantKinds) {
+    const sample = getRecordsByKind(state, game, kind, 50);
+    if (sample.length === 0) continue;
+
+    try {
+      const prompt = `You are a game design expert analyzing roguelike games.
+
+Given the design pattern "${pattern.title}" (definition: ${pattern.definition}), which combines these design primitives:
+${memberContext}
+
+And the following ${kind} records from "${game}" (showing up to 50 of ${kinds.find(k => k.kind === kind)?.count ?? sample.length} total):
+
+${sample.map(r => `- ${r.id}: ${r.name}`).join("\n")}
+
+Select the record IDs that implement or embody this design pattern. If ALL records of this kind are relevant, set select_all to true.
+
+Respond with JSON: {"select_all": false, "record_ids": ["urn:..."]}`;
+      const result = await llmJson<{ select_all: boolean; record_ids: string[] }>(prompt);
+      if (result.select_all) {
+        const allRecords = getRecordsByKind(state, game, kind, Infinity);
+        allRefs.push(...allRecords.map(r => r.id));
+      } else {
+        allRefs.push(...(result.record_ids || []));
+      }
+    } catch (e) {
+      console.warn(`  [WARN] Step B failed for pattern ${pattern.slug}/${game}/${kind}:`, e instanceof Error ? e.message : e);
+    }
+  }
+  return allRefs;
 }
 
 function makeEvidenceEnvelope(key: string, id: string) {
@@ -632,7 +779,8 @@ async function main() {
 
   // Estimate total LLM calls for progress reporting
   const totalDims = DESIGN_PRIMITIVES.reduce((sum, dp) => sum + dp.mutation_dimensions.length, 0);
-  llmTotalCalls = totalDims * 2 + 34 + DESIGN_PRIMITIVES.length + DESIGN_PRIMITIVES.length * 4; // vectors + knobs + counterplay + failure modes + concrete examples
+  const matchingCalls = DESIGN_PRIMITIVES.length * 4 * 3 + DESIGN_PATTERNS.length * 3 * 3; // Step A + Step B (avg 2-3 kinds) for primitives + patterns
+  llmTotalCalls = totalDims * 2 + 34 + DESIGN_PRIMITIVES.length + DESIGN_PRIMITIVES.length * 4 + matchingCalls; // vectors + knobs + counterplay + failure modes + concrete examples + matching
 
   console.log("Reading canonical state...");
   const state = readCanonicalState(CANONICAL_ROOT);
@@ -1001,10 +1149,26 @@ Respond with JSON array:
   }
   console.log(`Generated ${failureModeCount} failure modes`);
 
+  // === Step 6.5: Match primitives and patterns to definition records ===
+  console.log("\n=== Matching primitives to definition records ===");
+  const GAMES = ["nethack", "broguece", "crawl", "cataclysm-bn"];
+  const primitiveRefs = new Map<string, string[]>(); // slug -> record IDs
+  for (const dp of DESIGN_PRIMITIVES) {
+    const allRefs: string[] = [];
+    for (const game of GAMES) {
+      const refs = await matchPrimitiveToGame(state, dp, game);
+      allRefs.push(...refs);
+      console.log(`  ${dp.slug}/${game}: ${refs.length} refs`);
+    }
+    primitiveRefs.set(dp.slug, allRefs);
+    const primConcept = concepts.find((c) => c.key === `cross-game/concept/design-${dp.slug}`);
+    if (primConcept) primConcept.implementation_refs = allRefs;
+  }
+  console.log(`Matched implementation_refs for ${primitiveRefs.size} primitives`);
+
   // === Step 7: Generate concrete examples for design primitives ===
   console.log("\n=== Generating concrete examples for design primitives ===");
   let exampleCount = 0;
-  const GAMES = ["nethack", "broguece", "crawl", "cataclysm-bn"];
   for (const dp of DESIGN_PRIMITIVES) {
     const primId = primitiveConceptIds.get(dp.slug)!;
     const primConcept = concepts.find((c) => c.id === primId);
@@ -1024,7 +1188,13 @@ Respond with JSON:
         console.warn(`  [WARN] LLM failed for example ${dp.slug}/${game}:`, e instanceof Error ? e.message : e);
         example = { description: `${dp.title} in ${game}.`, record_refs: [], source_file: "" };
       }
-      examples.push({ game, ...example });
+      // Populate record_refs from matching results (Step 6.5)
+      const allMatchedRefs = primitiveRefs.get(dp.slug) ?? [];
+      const gameRefs = allMatchedRefs.filter(id => {
+        const rec = state.records.find((r: any) => r.id === id) as any;
+        return rec?.source_identity?.source_id === game;
+      });
+      examples.push({ game, ...example, record_refs: gameRefs });
       exampleCount++;
     }
 
@@ -1069,6 +1239,24 @@ Respond with JSON:
     });
   }
   console.log(`Generated ${DESIGN_PATTERNS.length} design pattern records`);
+
+  // === Step 8.5: Match design patterns to definition records ===
+  console.log("\n=== Matching design patterns to definition records ===");
+  const primitiveTitlesMap = new Map<string, string>();
+  for (const dp of DESIGN_PRIMITIVES) {
+    primitiveTitlesMap.set(dp.slug, dp.title);
+  }
+  for (const pattern of DESIGN_PATTERNS) {
+    const allRefs: string[] = [];
+    for (const game of pattern.games_where_present) {
+      const refs = await matchPatternToGame(state, pattern, game, primitiveTitlesMap);
+      allRefs.push(...refs);
+      console.log(`  pattern ${pattern.slug}/${game}: ${refs.length} refs`);
+    }
+    const patConcept = concepts.find((c) => c.key === `cross-game/concept/pattern-${pattern.slug}`);
+    if (patConcept) patConcept.implementation_refs = allRefs;
+  }
+  console.log(`Matched implementation_refs for design patterns`);
 
   // === Step 9: Generate anti-pattern relations ===
   console.log("\n=== Generating anti-pattern relations ===");
