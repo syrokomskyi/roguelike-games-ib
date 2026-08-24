@@ -180,7 +180,6 @@ const PRIMITIVE_KIND_MAP: Record<string, string[]> = {
   magic_and_spellcasting: ["spell", "ability", "mutation"],
   crafting_system: ["recipe", "item", "bionic"],
   skill_training: ["skill", "ability"],
-  // Aliases used by DESIGN_PATTERNS member_primitives
   character_progression: ["species", "profession", "role", "race"],
   skill_progression: ["skill", "ability"],
 };
@@ -208,12 +207,10 @@ async function matchPatternToGame(
   state: { records: any[] },
   pattern: { slug: string; title: string; definition: string; member_primitives: string[] },
   game: string,
-  _primitiveTitles: Map<string, string>,
 ): Promise<string[]> {
   const gameKinds = new Set(getGameKinds(state, game).map(k => k.kind));
   if (gameKinds.size === 0) return [];
 
-  // Collect relevant kinds from all member primitives
   const targetKinds = new Set<string>();
   for (const memberSlug of pattern.member_primitives) {
     for (const kind of PRIMITIVE_KIND_MAP[memberSlug] ?? []) {
@@ -1188,14 +1185,10 @@ Respond with JSON:
 
   // === Step 8.5: Match design patterns to definition records ===
   console.log("\n=== Matching design patterns to definition records ===");
-  const primitiveTitlesMap = new Map<string, string>();
-  for (const dp of DESIGN_PRIMITIVES) {
-    primitiveTitlesMap.set(dp.slug, dp.title);
-  }
   for (const pattern of DESIGN_PATTERNS) {
     const allRefs: string[] = [];
     for (const game of pattern.games_where_present) {
-      const refs = await matchPatternToGame(state, pattern, game, primitiveTitlesMap);
+      const refs = await matchPatternToGame(state, pattern, game);
       allRefs.push(...refs);
       console.log(`  pattern ${pattern.slug}/${game}: ${refs.length} refs`);
     }
